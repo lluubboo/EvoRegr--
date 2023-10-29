@@ -6,5 +6,5 @@ CXX_DEFINES =
 
 CXX_INCLUDES = @CMakeFiles/EVOREGR++.dir/includes_CXX.rsp
 
-CXX_FLAGS = -O3 -DNDEBUG -std=c++23 -march=native -fopenmp
+CXX_FLAGS = -g -std=c++23 -Wall -Wpedantic -Wextra -fexceptions -fopenmp
 

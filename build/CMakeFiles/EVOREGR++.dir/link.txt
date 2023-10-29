@@ -1,3 +1,3 @@
 C:\Users\lubomir.balaz\SWLibraries\cmake-3.27.4-windows-x86_64\bin\cmake.exe -E rm -f CMakeFiles\EVOREGR++.dir/objects.a
 C:\msys64\mingw64\bin\ar.exe qc CMakeFiles\EVOREGR++.dir/objects.a @CMakeFiles\EVOREGR++.dir\objects1.rsp
-C:\msys64\mingw64\bin\g++.exe -O3 -DNDEBUG -Wl,--whole-archive CMakeFiles\EVOREGR++.dir/objects.a -Wl,--no-whole-archive -o EVOREGR++.exe -Wl,--out-implib,libEVOREGR++.dll.a -Wl,--major-image-version,0,--minor-image-version,0 @CMakeFiles\EVOREGR++.dir\linkLibs.rsp
+C:\msys64\mingw64\bin\g++.exe -g -Wl,--whole-archive CMakeFiles\EVOREGR++.dir/objects.a -Wl,--no-whole-archive -o EVOREGR++.exe -Wl,--out-implib,libEVOREGR++.dll.a -Wl,--major-image-version,0,--minor-image-version,0 @CMakeFiles\EVOREGR++.dir\linkLibs.rsp

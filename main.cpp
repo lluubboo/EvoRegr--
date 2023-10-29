@@ -6,9 +6,9 @@ using namespace std;
 int main(int, char**) {
 
     std::cout << "\n\n" << "Loading data...";
-    EvoAPI api = EvoAPI("C:/Users/lubomir.balaz/Desktop/Projekty 2023/EvoRegr++/data/TestDataSpan.csv");
+    EvoAPI api = EvoAPI("C:/Users/lubomir.balaz/Desktop/Projekty 2023/EvoRegr++/data/TestDataEfficiency.csv");
 
-    api.setBoundaryConditions(10000, 500);
+    api.setBoundaryConditions(100, 100);
 
     std::cout << "\n\n" << "Predicting...";
 
@@ -19,7 +19,7 @@ int main(int, char**) {
     std::cout << "\n\n" << "Result is :";
     api.showMeBest();
 
-    cout << "\n\n" << "Elapsed time: " << chrono::duration_cast<chrono::milliseconds>(end - start).count() / 1000. << "s" << "\n\n";
+    cout << "\n\n" << "Elapsed time: " << chrono::duration_cast<chrono::microseconds>(end - start).count() / 1000000. << "s" << "\n\n";
     system("pause");
 
     return 0;
