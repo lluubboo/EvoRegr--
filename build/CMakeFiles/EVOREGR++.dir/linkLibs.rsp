@@ -1,0 +1,1 @@
+ include/libincludes_lib.a src/libsources_lib.a external/libexternals_lib.a include/libincludes_lib.a C:/msys64/mingw64/lib/libgomp.dll.a C:/msys64/mingw64/lib/libmingwthrd.a external/libexternals_lib.a -lkernel32 -luser32 -lgdi32 -lwinspool -lshell32 -lole32 -loleaut32 -luuid -lcomdlg32 -ladvapi32 

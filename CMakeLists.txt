@@ -1,0 +1,39 @@
+cmake_minimum_required(VERSION 3.5.0)
+
+project(EVOREGR++ VERSION 0.1.0 LANGUAGES C CXX)
+
+# set C++ standards
+set(CMAKE_CXX_STANDARD 23)
+set(CMAKE_CXX_STANDARD_REQUIRED On)
+set(CMAKE_CXX_EXTENSIONS Off)
+
+set(CMAKE_BUILD_TYPE Release)
+
+if (CMAKE_BUILD_TYPE STREQUAL "Debug") 
+    add_compile_options(-Wall -Wpedantic -Wextra -fexceptions)
+elseif (CMAKE_BUILD_TYPE STREQUAL "Release")
+    add_compile_options(-march=native)
+endif()
+
+add_executable(EVOREGR++ main.cpp)
+
+# list cmake_prefix_path append eigen custom install directory cmake files
+list(APPEND CMAKE_PREFIX_PATH "C:/Users/lubomir.balaz/SWLibraries/eigen-3.4.0-install/share/eigen3/cmake")
+
+# Eigen
+find_package(Eigen3 3.3 REQUIRED NO_MODULE)
+
+# OpenMP
+find_package(OpenMP)
+
+add_subdirectory(external)
+add_subdirectory(include)
+add_subdirectory(src)
+
+target_link_libraries (${PROJECT_NAME} PRIVATE OpenMP::OpenMP_CXX Eigen3::Eigen includes_lib sources_lib externals_lib)
+target_include_directories(${PROJECT_NAME} PRIVATE "${PROJECT_BINARY_DIR}")
+
+# packs, but what thez are doing?find out.....
+set(CPACK_PROJECT_NAME ${PROJECT_NAME})
+set(CPACK_PROJECT_VERSION ${PROJECT_VERSION})
+include(CPack)

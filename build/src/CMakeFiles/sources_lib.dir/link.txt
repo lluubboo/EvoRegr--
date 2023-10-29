@@ -1,0 +1,2 @@
+C:\msys64\mingw64\bin\ar.exe qc libsources_lib.a CMakeFiles/sources_lib.dir/IOTools.cpp.obj CMakeFiles/sources_lib.dir/EvoAPI.cpp.obj CMakeFiles/sources_lib.dir/EvoGene.cpp.obj CMakeFiles/sources_lib.dir/RegressionSolver.cpp.obj CMakeFiles/sources_lib.dir/EvoIndividual.cpp.obj CMakeFiles/sources_lib.dir/EvoLibrary.cpp.obj CMakeFiles/sources_lib.dir/RandomNumberGenerator.cpp.obj
+C:\msys64\mingw64\bin\ranlib.exe libsources_lib.a

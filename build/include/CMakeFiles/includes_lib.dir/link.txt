@@ -1,0 +1,2 @@
+C:\msys64\mingw64\bin\ar.exe qc libincludes_lib.a CMakeFiles/includes_lib.dir/emptyfile.cpp.obj
+C:\msys64\mingw64\bin\ranlib.exe libincludes_lib.a
