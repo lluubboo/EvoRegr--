@@ -44,7 +44,7 @@ public:
     EvoGene(int);
     EvoGene(int, XoshiroCpp::Xoshiro256Plus& random_engine);
     virtual ~EvoGene();
-    virtual Eigen::MatrixXf& transform(Eigen::MatrixXf&) = 0;
+    virtual Eigen::MatrixXd& transform(Eigen::MatrixXd&) = 0;
     virtual std::string to_string() const = 0;
 
 protected:
@@ -57,8 +57,8 @@ class MergeAllele : EvoGene {
 public:
     MergeAllele(int, XoshiroCpp::Xoshiro256Plus&);
     ~MergeAllele();
-    Eigen::MatrixXf& modifyMatrixAccordingToTwin(MergeTwin const&, Eigen::MatrixXf&);
-    Eigen::MatrixXf& transform(Eigen::MatrixXf&) override;
+    Eigen::MatrixXd& modifyMatrixAccordingToTwin(MergeTwin const&, Eigen::MatrixXd&);
+    Eigen::MatrixXd& transform(Eigen::MatrixXd&) override;
     std::string to_string() const override;
     std::vector<MergeTwin> allele;
 };
@@ -68,7 +68,7 @@ class TransformXAllele : EvoGene {
 public:
     TransformXAllele(int, XoshiroCpp::Xoshiro256Plus&);
     ~TransformXAllele();
-    Eigen::MatrixXf& transform(Eigen::MatrixXf&) override;
+    Eigen::MatrixXd& transform(Eigen::MatrixXd&) override;
     std::string to_string() const override;
     Transform_operator allele;
 };
@@ -77,10 +77,10 @@ class TransformYAllele : EvoGene {
 public:
     TransformYAllele(int, XoshiroCpp::Xoshiro256Plus&);
     ~TransformYAllele();
-    Eigen::MatrixXf& transform(Eigen::MatrixXf&) override;
+    Eigen::MatrixXd& transform(Eigen::MatrixXd&) override;
     std::string to_string() const override;
-    Eigen::VectorXf& transformVector(Eigen::VectorXf&);
-    Eigen::VectorXf& transformBack(Eigen::VectorXf&);
+    Eigen::VectorXd& transformVector(Eigen::VectorXd&);
+    Eigen::VectorXd& transformBack(Eigen::VectorXd&);
     void resetCharacteristicNumber(int);
     Transform_operator allele;
 };
@@ -90,8 +90,8 @@ public:
     RobustAllele();
     ~RobustAllele();
     RobustAllele createRandomAllele(int, XoshiroCpp::Xoshiro256Plus&);
-    Eigen::MatrixXf& transform(Eigen::MatrixXf&) override;
+    Eigen::MatrixXd& transform(Eigen::MatrixXd&) override;
     std::string to_string() const override;
-    Eigen::VectorXf& transformVector(Eigen::VectorXf&);
+    Eigen::VectorXd& transformVector(Eigen::VectorXd&);
     std::vector<int> allele;
 };

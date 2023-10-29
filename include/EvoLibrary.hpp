@@ -8,7 +8,7 @@
 std::vector<EvoIndividual> sort_by_fitness_desc(std::vector<EvoIndividual>&);
 
 namespace Factory {
-    EvoIndividual getRandomEvoIndividual(Eigen::MatrixXf predictor, Eigen::VectorXf predicate, XoshiroCpp::Xoshiro256Plus& random_engine);
+    EvoIndividual getRandomEvoIndividual(Eigen::MatrixXd predictor, Eigen::VectorXd predicate, XoshiroCpp::Xoshiro256Plus& random_engine);
     MergeAllele getRandomMergeAllele(int column_index, int predictor_column_count, XoshiroCpp::Xoshiro256Plus& random_engine);
     TransformXAllele getRandomTransformXAllele(int column_index, XoshiroCpp::Xoshiro256Plus& random_engine);
     TransformYAllele getRandomTransformYAllele(XoshiroCpp::Xoshiro256Plus& random_engine);
@@ -35,10 +35,10 @@ namespace Mutation {
 
 namespace Transform {
 
-    Eigen::MatrixXf full_predictor_transform(Eigen::MatrixXf&, EvoIndividual&);
-    Eigen::MatrixXf half_predictor_transform(Eigen::MatrixXf&, EvoIndividual&);
-    Eigen::MatrixXf robust_predictor_transform(Eigen::MatrixXf&, EvoIndividual&);
-    Eigen::VectorXf full_target_transform(Eigen::VectorXf&, EvoIndividual&);
+    Eigen::MatrixXd full_predictor_transform(Eigen::MatrixXd&, EvoIndividual&);
+    Eigen::MatrixXd half_predictor_transform(Eigen::MatrixXd&, EvoIndividual&);
+    Eigen::MatrixXd robust_predictor_transform(Eigen::MatrixXd&, EvoIndividual&);
+    Eigen::VectorXd full_target_transform(Eigen::VectorXd&, EvoIndividual&);
     
 }
 
@@ -48,6 +48,6 @@ namespace Reproduction {
 
 namespace FitnessEvaluator {
 
-    float get_fitness(Eigen::MatrixXf const& predictor, Eigen::VectorXf const& target);
+    double get_fitness(Eigen::MatrixXd const& predictor, Eigen::VectorXd const& target);
 
 }

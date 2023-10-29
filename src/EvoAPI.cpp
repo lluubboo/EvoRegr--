@@ -14,11 +14,11 @@ EvoAPI::EvoAPI(const std::string& filename) {
     create_regression_input(parse_csv(filename));
 }
 
-void EvoAPI::create_regression_input(std::tuple<int, int, std::vector<float>> input) {
+void EvoAPI::create_regression_input(std::tuple<int, int, std::vector<double>> input) {
 
     int m{ std::get<0>(input) };
     int n{ std::get<1>(input) };
-    std::vector<float> data = std::get<2>(input);
+    std::vector<double> data = std::get<2>(input);
 
     x.resize(m, n - 1);
     y.resize(m, 1);
@@ -89,14 +89,14 @@ void EvoAPI::predict() {
     }
 
 #pragma omp declare reduction(merge_individuals : std::vector<EvoIndividual> : omp_out.insert(omp_out.end(), omp_in.begin(), omp_in.end())) initializer(omp_priv = omp_orig)
-#pragma omp declare reduction(merge_cache : std::unordered_map<std::string, float> : omp_out.merge(omp_in)) initializer(omp_priv = omp_orig)
+#pragma omp declare reduction(merge_cache : std::unordered_map<std::string, double> : omp_out.merge(omp_in)) initializer(omp_priv = omp_orig)
     for (int gen_index = 1; gen_index < generation_count_limit; gen_index++) {
 
         if (gen_index % 100 == 0) std::cout << "\n\n" << gen_index;
 
         std::vector<EvoIndividual> generation = population[1];
         std::vector<EvoIndividual> past_generation = population[0];
-        std::unordered_map<std::string, float> local_cache;
+        std::unordered_map<std::string, double> local_cache;
 
 #pragma omp parallel for shared(random_engines, past_generation, cache, x, y) reduction (merge_individuals : generation) reduction (merge_cache : local_cache)
         for (int entity_index = 0; entity_index < generation_size_limit; entity_index++) {
@@ -125,11 +125,11 @@ void EvoAPI::predict() {
 
 void EvoAPI::showMeBest() {
 
-    Eigen::MatrixXf predictor = x;
-    Eigen::VectorXf target = y;
+    Eigen::MatrixXd predictor = x;
+    Eigen::VectorXd target = y;
 
-    Eigen::MatrixXf calculation_history_summary(fitness_history.size(), 2);
-    Eigen::MatrixXf summary_regression(x.rows(), 4);
+    Eigen::MatrixXd calculation_history_summary(fitness_history.size(), 2);
+    Eigen::MatrixXd summary_regression(x.rows(), 4);
 
     int chromosomes_size = titan.merger_chromosome.size();
 
@@ -158,8 +158,8 @@ void EvoAPI::showMeBest() {
     summary_regression.col(2) = target - result.predicton;
     summary_regression.col(3) = 100 - ((summary_regression.col(1).array() / summary_regression.col(0).array()) * 100);
 
-    calculation_history_summary.col(0) = Eigen::Map<Eigen::VectorXf>(fitness_history.data(), fitness_history.size());
-    calculation_history_summary.col(1) = Eigen::Map<Eigen::VectorXf>(titan_history.data(), fitness_history.size());
+    calculation_history_summary.col(0) = Eigen::Map<Eigen::VectorXd>(fitness_history.data(), fitness_history.size());
+    calculation_history_summary.col(1) = Eigen::Map<Eigen::VectorXd>(titan_history.data(), fitness_history.size());
 
     std::cout << "\n\n" << "Titan Y comparison:" << "\n\n" << summary_regression;
     std::cout << "\n\n" << "Titan history is:" << "\n\n" << calculation_history_summary;
@@ -169,7 +169,7 @@ void EvoAPI::showMeBest() {
     std::cout << "\n\n" << "Cache size : \n" << cache.size();
 }
 
-EvoDataSet EvoAPI::data_transformation_cacheless(Eigen::MatrixXf predictor, Eigen::VectorXf target, EvoIndividual& individual) {
+EvoDataSet EvoAPI::data_transformation_cacheless(Eigen::MatrixXd predictor, Eigen::VectorXd target, EvoIndividual& individual) {
     EvoDataSet dataset{};
     Transform::half_predictor_transform(predictor, individual);
     Transform::robust_predictor_transform(predictor, individual);

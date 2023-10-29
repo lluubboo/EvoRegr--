@@ -11,7 +11,7 @@ std::vector<EvoIndividual> sort_by_fitness_desc(std::vector<EvoIndividual>& sour
     return source;
 };
 
-EvoIndividual Factory::getRandomEvoIndividual(Eigen::MatrixXf predictor, Eigen::VectorXf target, XoshiroCpp::Xoshiro256Plus& random_engine) {
+EvoIndividual Factory::getRandomEvoIndividual(Eigen::MatrixXd predictor, Eigen::VectorXd target, XoshiroCpp::Xoshiro256Plus& random_engine) {
 
     EvoIndividual individual{};
 
@@ -148,7 +148,7 @@ EvoIndividual Reproduction::reproduction(EvoIndividual const& parent1, EvoIndivi
     return individual;
 };
 
-Eigen::MatrixXf Transform::full_predictor_transform(Eigen::MatrixXf& matrix, EvoIndividual& individual) {
+Eigen::MatrixXd Transform::full_predictor_transform(Eigen::MatrixXd& matrix, EvoIndividual& individual) {
 
     //edit rows
     individual.robuster_chromosome.at(0).transform(matrix);
@@ -168,7 +168,7 @@ Eigen::MatrixXf Transform::full_predictor_transform(Eigen::MatrixXf& matrix, Evo
     return matrix;
 };
 
-Eigen::MatrixXf Transform::half_predictor_transform(Eigen::MatrixXf& matrix, EvoIndividual& individual) {
+Eigen::MatrixXd Transform::half_predictor_transform(Eigen::MatrixXd& matrix, EvoIndividual& individual) {
     //merge predictors
     for (int i = 0; i < matrix.cols(); i++)
     {
@@ -182,18 +182,18 @@ Eigen::MatrixXf Transform::half_predictor_transform(Eigen::MatrixXf& matrix, Evo
     return matrix;
 };
 
-Eigen::MatrixXf Transform::robust_predictor_transform(Eigen::MatrixXf& matrix, EvoIndividual& individual) {
+Eigen::MatrixXd Transform::robust_predictor_transform(Eigen::MatrixXd& matrix, EvoIndividual& individual) {
     individual.robuster_chromosome.at(0).transform(matrix);
     return matrix;
 };
 
-Eigen::VectorXf Transform::full_target_transform(Eigen::VectorXf& vector, EvoIndividual& individual) {
+Eigen::VectorXd Transform::full_target_transform(Eigen::VectorXd& vector, EvoIndividual& individual) {
     individual.robuster_chromosome.at(0).transformVector(vector);
     individual.y_transformer_chromosome.at(0).transformVector(vector);
     return vector;
 };
 
-float FitnessEvaluator::get_fitness(Eigen::MatrixXf const& predictor, Eigen::VectorXf const& target) {
+double FitnessEvaluator::get_fitness(Eigen::MatrixXd const& predictor, Eigen::VectorXd const& target) {
     RegressionResult result = solveSystemByLLT(predictor, target);
     return result.mean_sum_residuals_squared;
 };

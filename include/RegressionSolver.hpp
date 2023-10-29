@@ -2,15 +2,13 @@
 #include <Eigen/Dense>
 
 struct RegressionResult {
-    Eigen::VectorXf theta;
-    Eigen::VectorXf predicton;
-    Eigen::VectorXf residuals;
-    Eigen::VectorXf residuals_squared;
-    float sum_residuals_squared;
-    float mean_sum_residuals_squared;
+    Eigen::VectorXd theta;
+    Eigen::VectorXd predicton;
+    Eigen::VectorXd residuals;
+    Eigen::VectorXd residuals_squared;
+    double sum_residuals_squared;
+    double mean_sum_residuals_squared;
     bool isUsable;
 };
 
-RegressionResult solveSystemByLLT(Eigen::MatrixXf const&, Eigen::VectorXf const&);
-
-Eigen::MatrixXf feature_scale(Eigen::MatrixXf& matrix);
+RegressionResult solveSystemByLLT(Eigen::MatrixXd const&, Eigen::VectorXd const&);

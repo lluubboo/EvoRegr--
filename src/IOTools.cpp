@@ -5,9 +5,9 @@
 
 #include "csv.hpp"
     
-std::tuple<int, int, std::vector<float>> parse_csv(const std::string& filename) {
+std::tuple<int, int, std::vector<double>> parse_csv(const std::string& filename) {
 
-    std::vector<float> vectorf;
+    std::vector<double> vectorf;
     
     // get file info
     csv::CSVFileInfo info = csv::get_file_info(filename);

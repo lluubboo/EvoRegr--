@@ -2,7 +2,7 @@
 #include <iostream>
 #include "RegressionSolver.hpp"
 
-RegressionResult solveSystemByLLT(Eigen::MatrixXf const& predictors, Eigen::VectorXf const& target) {
+RegressionResult solveSystemByLLT(Eigen::MatrixXd const& predictors, Eigen::VectorXd const& target) {
     
     RegressionResult result = RegressionResult();
 
@@ -17,8 +17,8 @@ RegressionResult solveSystemByLLT(Eigen::MatrixXf const& predictors, Eigen::Vect
         result.mean_sum_residuals_squared = result.sum_residuals_squared / target.size();
     }
     else {
-        result.mean_sum_residuals_squared = std::numeric_limits<float>::max();
-        result.sum_residuals_squared = std::numeric_limits<float>::max();
+        result.mean_sum_residuals_squared = std::numeric_limits<double>::max();
+        result.sum_residuals_squared = std::numeric_limits<double>::max();
     }
 
     return result;
