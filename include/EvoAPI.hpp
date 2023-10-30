@@ -24,8 +24,6 @@ public:
     std::vector<double> fitness_history;
     std::vector<double> titan_history;
 
-    std::unordered_map<std::string, double> cache;
-
     EvoAPI(const std::string&);
     void setBoundaryConditions(unsigned int generation_size_limit, unsigned int generation_count_limit);
     void predict();

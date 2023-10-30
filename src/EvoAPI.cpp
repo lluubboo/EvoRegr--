@@ -49,9 +49,6 @@ void EvoAPI::setBoundaryConditions(unsigned int generation_size_limit, unsigned 
     std::vector<EvoIndividual> generation{ 0 };
     generation.reserve(generation_size_limit);
     population = std::vector{ 2, generation };
-
-    //reserve cache
-    cache.reserve(1000000);
 }
 
 void EvoAPI::setTitan(EvoIndividual titan, int generation_index) {
@@ -89,16 +86,14 @@ void EvoAPI::predict() {
     }
 
 #pragma omp declare reduction(merge_individuals : std::vector<EvoIndividual> : omp_out.insert(omp_out.end(), omp_in.begin(), omp_in.end())) initializer(omp_priv = omp_orig)
-#pragma omp declare reduction(merge_cache : std::unordered_map<std::string, double> : omp_out.merge(omp_in)) initializer(omp_priv = omp_orig)
     for (int gen_index = 1; gen_index < generation_count_limit; gen_index++) {
 
         if (gen_index % 100 == 0) std::cout << "\n\n" << gen_index;
 
         std::vector<EvoIndividual> generation = population[1];
         std::vector<EvoIndividual> past_generation = population[0];
-        std::unordered_map<std::string, double> local_cache;
 
-#pragma omp parallel for shared(random_engines, past_generation, cache, x, y) reduction (merge_individuals : generation) reduction (merge_cache : local_cache)
+#pragma omp parallel for shared(random_engines, past_generation, x, y) reduction (merge_individuals : generation)
         for (int entity_index = 0; entity_index < generation_size_limit; entity_index++) {
 
             //selection
@@ -118,7 +113,6 @@ void EvoAPI::predict() {
 
             generation.push_back(individual);
         }
-        cache.merge(local_cache);
         past_generation = generation; //new generation become old generation
     }
 }
@@ -166,7 +160,6 @@ void EvoAPI::showMeBest() {
     std::cout << "\n\n";
     std::cout << titan.to_string();
     std::cout << "\n\n" << "Coefficients: \n" << result.theta;
-    std::cout << "\n\n" << "Cache size : \n" << cache.size();
 }
 
 EvoDataSet EvoAPI::data_transformation_cacheless(Eigen::MatrixXd predictor, Eigen::VectorXd target, EvoIndividual& individual) {
