@@ -62,6 +62,16 @@ std::string MergeAllele::to_string() const {
     return sallele;
 }
 
+std::string MergeAllele::to_string_code() const {
+    std::string sallele;
+    sallele = "MA" + std::to_string(column_index);
+    for (auto const& twin : allele) {
+        sallele += merge_operator_names.at(twin.merge_operator) + std::to_string(twin.merge_column);
+    }
+    sallele += "E";
+    return sallele;
+}
+
 
 
 
@@ -114,6 +124,16 @@ std::string TransformXAllele::to_string() const {
     sallele = "column: " + std::to_string(column_index) + " char_number: " + std::to_string(characteristic_number);
     sallele += " transform operator: " + transform_operator_names.at(allele) + "\n\n";
     return sallele;
+}
+
+std::string TransformXAllele::to_string_code() const {
+    std::string sallele;
+    sallele = "TX" + std::to_string(column_index) + std::to_string(characteristic_number) + transform_operator_names.at(allele);
+    return sallele;
+}
+
+void TransformXAllele::resetCharacteristicNumber(int number) {
+    characteristic_number = number;
 }
 
 
@@ -218,6 +238,12 @@ std::string TransformYAllele::to_string() const {
     return sallele;
 }
 
+std::string TransformYAllele::to_string_code() const {
+    std::string sallele;
+    sallele += "TY" + std::to_string(column_index) + std::to_string(characteristic_number) + transform_operator_names.at(allele);
+    return sallele;
+}
+
 
 
 
@@ -242,8 +268,14 @@ Eigen::VectorXd& RobustAllele::transformVector(Eigen::VectorXd& matrix) {
 
 std::string RobustAllele::to_string() const {
     std::string sallele;
-    sallele += "column: " + std::to_string(column_index) + " char_number: " + std::to_string(characteristic_number);
+    sallele = "column: " + std::to_string(column_index) + " char_number: " + std::to_string(characteristic_number);
     sallele += " robust allele size: " + std::to_string(allele.size()) + "\n\n";
+    return sallele;
+}
+
+std::string RobustAllele::to_string_code() const {
+    std::string sallele;
+    sallele = "RA" + std::to_string(column_index) + std::to_string(characteristic_number) + std::string(allele.begin(), allele.end());
     return sallele;
 }
 

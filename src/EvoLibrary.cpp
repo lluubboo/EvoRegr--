@@ -66,13 +66,21 @@ MergeAllele Factory::getRandomMergeAllele(int column_index, int predictor_column
 TransformXAllele Factory::getRandomTransformXAllele(int column_index, XoshiroCpp::Xoshiro256Plus& random_engine) {
     TransformXAllele transformx_allele{ column_index, random_engine };
     transformx_allele.allele = Transform_operator{ RandomNumbers::rand_interval_int(0, transform_operator_maxindex - 1, random_engine) };
+    if (transformx_allele.allele != Transform_operator::Pow) {
+        transformx_allele.resetCharacteristicNumber(0);
+    }
     return transformx_allele;
 };
 
 TransformYAllele Factory::getRandomTransformYAllele(XoshiroCpp::Xoshiro256Plus& random_engine) {
     TransformYAllele transformy_allele{ 0, random_engine };
     transformy_allele.allele = Transform_operator{ RandomNumbers::rand_interval_int(0, transform_y_operator_maxindex - 1, random_engine) };
-    transformy_allele.resetCharacteristicNumber(RandomNumbers::rand_interval_int(0, 2, random_engine) + 1);
+    if (transformy_allele.allele != Transform_operator::Pow) {
+        transformy_allele.resetCharacteristicNumber(0);
+    }
+    else {
+        transformy_allele.resetCharacteristicNumber(RandomNumbers::rand_interval_int(0, 2, random_engine) + 1);
+    }
     return transformy_allele;
 };
 

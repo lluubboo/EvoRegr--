@@ -49,6 +49,8 @@ void EvoAPI::setBoundaryConditions(unsigned int generation_size_limit, unsigned 
     std::vector<EvoIndividual> generation{ 0 };
     generation.reserve(generation_size_limit);
     population = std::vector{ 2, generation };
+
+    cache.reserve(20000000);
 }
 
 void EvoAPI::setTitan(EvoIndividual titan, int generation_index) {
@@ -68,6 +70,63 @@ void EvoAPI::append_generation_zero(XoshiroCpp::Xoshiro256Plus& random_engine) {
         EvoIndividual individual = Factory::getRandomEvoIndividual(x, y, random_engine);
         if (individual.fitness < titan.fitness) setTitan(individual, 0);
         population[0].push_back(individual);
+    }
+}
+
+void EvoAPI::predict_with_cache() {
+
+    const std::uint64_t seed = 12346;
+    XoshiroCpp::Xoshiro256Plus master_random_engine(seed);
+    std::vector<XoshiroCpp::Xoshiro256Plus> random_engines;
+
+    append_generation_zero(master_random_engine); //generate random generation zero
+
+    //for each possible thread create its random engine with unique seed
+    for (int i = 0;i < omp_get_max_threads();i++) {
+        master_random_engine.longJump();
+        random_engines.emplace_back(master_random_engine.serialize());
+    }
+
+#pragma omp declare reduction(merge_individuals : std::vector<EvoIndividual> : omp_out.insert(omp_out.end(), omp_in.begin(), omp_in.end())) initializer(omp_priv = omp_orig)
+#pragma omp declare reduction(merge_cache : std::unordered_map<std::string, double> : omp_out.merge(omp_in)) initializer(omp_priv = omp_orig)
+    for (int gen_index = 1; gen_index < generation_count_limit; gen_index++) {
+
+        if (gen_index % 100 == 0) std::cout << "\n\n" << gen_index;
+
+        std::vector<EvoIndividual> generation = population[1];
+        std::vector<EvoIndividual> past_generation = population[0];
+        std::unordered_map<std::string, double> lcache{};
+
+#pragma omp parallel for shared(random_engines, past_generation, cache, x, y) reduction (merge_individuals : generation) reduction (merge_cache : lcache)
+        for (int entity_index = 0; entity_index < generation_size_limit; entity_index++) {
+
+            //selection
+            std::vector<EvoIndividual> parents = Selection::tournament_selection(past_generation, random_engines[omp_get_thread_num()]);
+
+            //crossover & mutation 
+            EvoIndividual individual = Reproduction::reproduction(parents[0], parents[1], x.cols(), x.rows(), random_engines[omp_get_thread_num()]);
+
+            std::string cache_key = individual.to_string_code();
+            EvoDataSet evo_data;
+
+            if (cache.contains(cache_key)) {
+                individual.fitness = cache[cache_key];
+            }
+            else {
+                //transform data
+                evo_data = data_transformation_cacheless(x, y, individual);
+                // calculate fitness
+                individual.fitness = FitnessEvaluator::get_fitness(evo_data.predictor, evo_data.target);
+                cache[cache_key] = individual.fitness;
+            }
+
+            //mark titan
+            if (individual.fitness < titan.fitness) setTitan(individual, gen_index);
+
+            generation.push_back(individual);
+        }
+        past_generation = generation; //new generation become old generation
+        cache.merge(lcache);
     }
 }
 
@@ -93,7 +152,7 @@ void EvoAPI::predict() {
         std::vector<EvoIndividual> generation = population[1];
         std::vector<EvoIndividual> past_generation = population[0];
 
-#pragma omp parallel for shared(random_engines, past_generation, x, y) reduction (merge_individuals : generation)
+#pragma omp parallel for shared(random_engines, past_generation, x, y) reduction (merge_individuals : generation) 
         for (int entity_index = 0; entity_index < generation_size_limit; entity_index++) {
 
             //selection
@@ -102,7 +161,6 @@ void EvoAPI::predict() {
             //crossover & mutation 
             EvoIndividual individual = Reproduction::reproduction(parents[0], parents[1], x.cols(), x.rows(), random_engines[omp_get_thread_num()]);
 
-            //transform data
             EvoDataSet evo_data = data_transformation_cacheless(x, y, individual);
 
             // calculate fitness
@@ -160,6 +218,7 @@ void EvoAPI::showMeBest() {
     std::cout << "\n\n";
     std::cout << titan.to_string();
     std::cout << "\n\n" << "Coefficients: \n" << result.theta;
+    std::cout << "\n\n" << "Cache: \n" << cache.size();
 }
 
 EvoDataSet EvoAPI::data_transformation_cacheless(Eigen::MatrixXd predictor, Eigen::VectorXd target, EvoIndividual& individual) {

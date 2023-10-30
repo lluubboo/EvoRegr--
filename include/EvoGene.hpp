@@ -46,6 +46,7 @@ public:
     virtual ~EvoGene();
     virtual Eigen::MatrixXd& transform(Eigen::MatrixXd&) = 0;
     virtual std::string to_string() const = 0;
+    virtual std::string to_string_code() const = 0;
 
 protected:
     int column_index;
@@ -60,6 +61,7 @@ public:
     Eigen::MatrixXd& modifyMatrixAccordingToTwin(MergeTwin const&, Eigen::MatrixXd&);
     Eigen::MatrixXd& transform(Eigen::MatrixXd&) override;
     std::string to_string() const override;
+    std::string to_string_code() const override;
     std::vector<MergeTwin> allele;
 };
 
@@ -70,6 +72,8 @@ public:
     ~TransformXAllele();
     Eigen::MatrixXd& transform(Eigen::MatrixXd&) override;
     std::string to_string() const override;
+    std::string to_string_code() const override;
+    void resetCharacteristicNumber(int);
     Transform_operator allele;
 };
 
@@ -79,6 +83,7 @@ public:
     ~TransformYAllele();
     Eigen::MatrixXd& transform(Eigen::MatrixXd&) override;
     std::string to_string() const override;
+    std::string to_string_code() const override;
     Eigen::VectorXd& transformVector(Eigen::VectorXd&);
     Eigen::VectorXd& transformBack(Eigen::VectorXd&);
     void resetCharacteristicNumber(int);
@@ -92,6 +97,7 @@ public:
     RobustAllele createRandomAllele(int, XoshiroCpp::Xoshiro256Plus&);
     Eigen::MatrixXd& transform(Eigen::MatrixXd&) override;
     std::string to_string() const override;
+    std::string to_string_code() const override;
     Eigen::VectorXd& transformVector(Eigen::VectorXd&);
     std::vector<int> allele;
 };
