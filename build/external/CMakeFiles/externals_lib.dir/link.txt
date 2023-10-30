@@ -1,2 +1,0 @@
-C:\msys64\mingw64\bin\ar.exe qc libexternals_lib.a 
-C:\msys64\mingw64\bin\ranlib.exe libexternals_lib.a
