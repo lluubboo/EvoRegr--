@@ -3,3 +3,6 @@
 
 # cmake files
 /build/
+
+# private data
+/data/
