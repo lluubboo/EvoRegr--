@@ -107,14 +107,14 @@ void EvoAPI::predict_with_cache() {
             EvoIndividual individual = Reproduction::reproduction(parents[0], parents[1], x.cols(), x.rows(), random_engines[omp_get_thread_num()]);
 
             std::string cache_key = individual.to_string_code();
-            EvoDataSet evo_data;
 
             if (cache.contains(cache_key)) {
+                //get fitness directly from cache
                 individual.fitness = cache[cache_key];
             }
             else {
                 //transform data
-                evo_data = data_transformation_cacheless(x, y, individual);
+                EvoDataSet evo_data = data_transformation_cacheless(x, y, individual);
                 // calculate fitness
                 individual.fitness = FitnessEvaluator::get_fitness(evo_data.predictor, evo_data.target);
                 cache[cache_key] = individual.fitness;

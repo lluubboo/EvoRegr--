@@ -240,7 +240,7 @@ std::string TransformYAllele::to_string() const {
 
 std::string TransformYAllele::to_string_code() const {
     std::string sallele;
-    sallele += "TY" + std::to_string(column_index) + std::to_string(characteristic_number) + transform_operator_names.at(allele);
+    sallele += "TY" + std::to_string(characteristic_number) + transform_operator_names.at(allele);
     return sallele;
 }
 
@@ -275,7 +275,7 @@ std::string RobustAllele::to_string() const {
 
 std::string RobustAllele::to_string_code() const {
     std::string sallele;
-    sallele = "RA" + std::to_string(column_index) + std::to_string(characteristic_number) + std::string(allele.begin(), allele.end());
+    sallele = "RA" + std::string(allele.begin(), allele.end());
     return sallele;
 }
 
