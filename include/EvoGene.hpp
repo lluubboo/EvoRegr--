@@ -56,7 +56,7 @@ protected:
 
 class MergeAllele : EvoGene {
 public:
-    MergeAllele(int, XoshiroCpp::Xoshiro256Plus&);
+    MergeAllele(int);
     ~MergeAllele();
     Eigen::MatrixXd& modifyMatrixAccordingToTwin(MergeTwin const&, Eigen::MatrixXd&);
     Eigen::MatrixXd& transform(Eigen::MatrixXd&) override;
@@ -68,7 +68,7 @@ public:
 
 class TransformXAllele : EvoGene {
 public:
-    TransformXAllele(int, XoshiroCpp::Xoshiro256Plus&);
+    TransformXAllele(int);
     ~TransformXAllele();
     Eigen::MatrixXd& transform(Eigen::MatrixXd&) override;
     std::string to_string() const override;
@@ -79,7 +79,7 @@ public:
 
 class TransformYAllele : EvoGene {
 public:
-    TransformYAllele(int, XoshiroCpp::Xoshiro256Plus&);
+    TransformYAllele();
     ~TransformYAllele();
     Eigen::MatrixXd& transform(Eigen::MatrixXd&) override;
     std::string to_string() const override;

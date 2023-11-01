@@ -44,7 +44,7 @@ EvoIndividual Factory::getRandomEvoIndividual(Eigen::MatrixXd predictor, Eigen::
 
 MergeAllele Factory::getRandomMergeAllele(int column_index, int predictor_column_count, XoshiroCpp::Xoshiro256Plus& random_engine) {
     
-    MergeAllele merge_allele{ column_index, random_engine};
+    MergeAllele merge_allele{column_index};
 
     std::vector<int> free_cols(predictor_column_count);
     std::iota(begin(free_cols), end(free_cols), 0);
@@ -64,23 +64,16 @@ MergeAllele Factory::getRandomMergeAllele(int column_index, int predictor_column
 };
 
 TransformXAllele Factory::getRandomTransformXAllele(int column_index, XoshiroCpp::Xoshiro256Plus& random_engine) {
-    TransformXAllele transformx_allele{ column_index, random_engine };
+    TransformXAllele transformx_allele{column_index};
     transformx_allele.allele = Transform_operator{ RandomNumbers::rand_interval_int(0, transform_operator_maxindex - 1, random_engine) };
-    if (transformx_allele.allele != Transform_operator::Pow) {
-        transformx_allele.resetCharacteristicNumber(0);
-    }
+    if (transformx_allele.allele == Transform_operator::Pow) transformx_allele.resetCharacteristicNumber(RandomNumbers::rand_interval_int(2, 3, random_engine));
     return transformx_allele;
 };
 
 TransformYAllele Factory::getRandomTransformYAllele(XoshiroCpp::Xoshiro256Plus& random_engine) {
-    TransformYAllele transformy_allele{ 0, random_engine };
+    TransformYAllele transformy_allele{};
     transformy_allele.allele = Transform_operator{ RandomNumbers::rand_interval_int(0, transform_y_operator_maxindex - 1, random_engine) };
-    if (transformy_allele.allele != Transform_operator::Pow) {
-        transformy_allele.resetCharacteristicNumber(0);
-    }
-    else {
-        transformy_allele.resetCharacteristicNumber(RandomNumbers::rand_interval_int(0, 2, random_engine) + 1);
-    }
+    if (transformy_allele.allele == Transform_operator::Pow) transformy_allele.resetCharacteristicNumber(RandomNumbers::rand_interval_int(2, 3, random_engine));
     return transformy_allele;
 };
 
@@ -106,8 +99,8 @@ EvoIndividual Crossover::cross(EvoIndividual const& number_one, EvoIndividual co
     EvoIndividual youngling{};
 
     // indexes which points to place of chromosome cut & recombination
-    int m_crossover_twist_index = RandomNumbers::rand_interval_int(0, chromosome_size + 1, random_engine);
-    int t_crossover_twist_index = RandomNumbers::rand_interval_int(0, chromosome_size + 1, random_engine);
+    int m_crossover_twist_index = RandomNumbers::rand_interval_int(0, chromosome_size, random_engine);
+    int t_crossover_twist_index = RandomNumbers::rand_interval_int(0, chromosome_size, random_engine);
     int r_crossover_twist_index = RandomNumbers::rand_interval_int(0, 1, random_engine);
     int y_crossover_twist_index = RandomNumbers::rand_interval_int(0, 1, random_engine);
 

@@ -16,14 +16,12 @@ EvoGene::EvoGene() {}
 
 EvoGene::EvoGene(int index) : column_index{ index }, characteristic_number{ 0 } {}
 
-EvoGene::EvoGene(int index, XoshiroCpp::Xoshiro256Plus& random_engine) : column_index{ index }, characteristic_number{ RandomNumbers::rand_interval_int(0, 4, random_engine) } {}
-
 EvoGene::~EvoGene() {}
 
 
 
 
-MergeAllele::MergeAllele(int index, XoshiroCpp::Xoshiro256Plus& random_engine) : EvoGene(index, random_engine), allele{} {}
+MergeAllele::MergeAllele(int index) : EvoGene(index), allele{} {}
 
 MergeAllele::~MergeAllele() {}
 
@@ -76,7 +74,7 @@ std::string MergeAllele::to_string_code() const {
 
 
 
-TransformXAllele::TransformXAllele(int index, XoshiroCpp::Xoshiro256Plus& random_engine) : EvoGene(index, random_engine), allele{} {}
+TransformXAllele::TransformXAllele(int index) : EvoGene(index), allele{} {}
 
 TransformXAllele::~TransformXAllele() {}
 
@@ -140,7 +138,7 @@ void TransformXAllele::resetCharacteristicNumber(int number) {
 
 
 
-TransformYAllele::TransformYAllele(int index, XoshiroCpp::Xoshiro256Plus& random_engine) : EvoGene(index, random_engine), allele{} {}
+TransformYAllele::TransformYAllele() : EvoGene(0), allele{} {}
 
 TransformYAllele::~TransformYAllele() {};
 
