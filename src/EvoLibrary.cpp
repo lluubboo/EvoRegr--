@@ -45,7 +45,6 @@ EvoIndividual Factory::getRandomEvoIndividual(Eigen::MatrixXd predictor, Eigen::
 MergeAllele Factory::getRandomMergeAllele(int column_index, int predictor_column_count, XoshiroCpp::Xoshiro256Plus& random_engine) {
     
     MergeAllele merge_allele{column_index};
-
     std::vector<int> free_cols(predictor_column_count);
     std::iota(begin(free_cols), end(free_cols), 0);
     std::shuffle(free_cols.begin(), free_cols.end(), random_engine);
@@ -55,7 +54,7 @@ MergeAllele Factory::getRandomMergeAllele(int column_index, int predictor_column
     for (int i = 0; i < cols_to_merged; i++) {
         MergeTwin twin = MergeTwin();
         twin.merge_column = free_cols.back();
-        twin.merge_operator = Merge_operator(RandomNumbers::rand_interval_int(0, merge_operator_maxindex - 1, random_engine));
+        twin.merge_operator = Merge_operator(RandomNumbers::rand_interval_int(0, merge_operator_maxindex, random_engine));
         merge_allele.allele.push_back(twin);
         free_cols.pop_back();
     }
@@ -84,6 +83,7 @@ RobustAllele Factory::getRandomRobustAllele(int row_count, XoshiroCpp::Xoshiro25
     std::iota(begin(choosen_rows), end(choosen_rows), 0);
     std::shuffle(choosen_rows.begin(), choosen_rows.end(), random_engine);
     choosen_rows.erase(choosen_rows.end() - rows_to_erase, choosen_rows.end());
+    std::sort(choosen_rows.begin(), choosen_rows.end());
     robust_allele.allele = choosen_rows;
     return robust_allele;
 };
