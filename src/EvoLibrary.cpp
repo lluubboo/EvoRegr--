@@ -65,14 +65,14 @@ MergeAllele Factory::getRandomMergeAllele(int column_index, int predictor_column
 
 TransformXAllele Factory::getRandomTransformXAllele(int column_index, XoshiroCpp::Xoshiro256Plus& random_engine) {
     TransformXAllele transformx_allele{column_index};
-    transformx_allele.allele = Transform_operator{ RandomNumbers::rand_interval_int(0, transform_operator_maxindex - 1, random_engine) };
+    transformx_allele.allele = Transform_operator{ RandomNumbers::rand_interval_int(0, transform_operator_maxindex, random_engine) };
     if (transformx_allele.allele == Transform_operator::Pow) transformx_allele.resetCharacteristicNumber(RandomNumbers::rand_interval_int(2, 3, random_engine));
     return transformx_allele;
 };
 
 TransformYAllele Factory::getRandomTransformYAllele(XoshiroCpp::Xoshiro256Plus& random_engine) {
     TransformYAllele transformy_allele{};
-    transformy_allele.allele = Transform_operator{ RandomNumbers::rand_interval_int(0, transform_y_operator_maxindex - 1, random_engine) };
+    transformy_allele.allele = Transform_operator{ RandomNumbers::rand_interval_int(0, transform_y_operator_maxindex, random_engine) };
     if (transformy_allele.allele == Transform_operator::Pow) transformy_allele.resetCharacteristicNumber(RandomNumbers::rand_interval_int(2, 3, random_engine));
     return transformy_allele;
 };

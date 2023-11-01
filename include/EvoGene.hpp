@@ -28,9 +28,9 @@ const std::map<Transform_operator, std::string> transform_operator_names{
     {Transform_operator::Nul, "Nul"}
 };
 
-inline constexpr int merge_operator_maxindex = 4;
-inline constexpr int transform_operator_maxindex = 11;
-inline constexpr int transform_y_operator_maxindex = 10;
+inline constexpr int merge_operator_maxindex = 3;
+inline constexpr int transform_operator_maxindex = 10;
+inline constexpr int transform_y_operator_maxindex = 9;
 
 struct MergeTwin {
     int merge_column;
