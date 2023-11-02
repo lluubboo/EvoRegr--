@@ -57,33 +57,46 @@ void EvoAPI::setTitan(EvoIndividual titan, int generation_index) {
     this->fitness_history.push_back(titan.fitness);
 }
 
-void EvoAPI::append_generation_zero(XoshiroCpp::Xoshiro256Plus& random_engine) {
+std::vector<EvoIndividual> EvoAPI::create_random_generation(XoshiroCpp::Xoshiro256Plus& random_engine, int size) {
+
+    std::vector<EvoIndividual> generation;
+    generation.reserve(size);
 
     // add first individual and make him titan
-    population[0].push_back(Factory::getRandomEvoIndividual(x, y, random_engine));
-    titan = population[0].back();
+    generation.push_back(Factory::getRandomEvoIndividual(x, y, random_engine));
+    titan = generation.back();
 
-    for (int i = 1; i < generation_size_limit; i++)
+    for (int i = 1; i < size; i++)
     {
         EvoIndividual individual = Factory::getRandomEvoIndividual(x, y, random_engine);
         if (individual.fitness < titan.fitness) setTitan(individual, 0);
         population[0].push_back(individual);
     }
+
+    return generation;
+}
+
+std::vector<XoshiroCpp::Xoshiro256Plus> EvoAPI::create_random_engines(std::uint64_t seed, int count) {
+
+    XoshiroCpp::Xoshiro256Plus master_random_engine(seed);
+    std::vector<XoshiroCpp::Xoshiro256Plus> random_engines;
+
+    //for each possible thread create its random engine with unique seed
+    for (int i = 0;i < count;i++) {
+        master_random_engine.longJump();
+        random_engines.emplace_back(master_random_engine.serialize());
+    }
+
+    return random_engines;
 }
 
 void EvoAPI::predict() {
 
-    const std::uint64_t seed = 12346;
-    XoshiroCpp::Xoshiro256Plus master_random_engine(seed);
-    std::vector<XoshiroCpp::Xoshiro256Plus> random_engines;
+    //random engines for parallel loop
+    std::vector<XoshiroCpp::Xoshiro256Plus> random_engines = create_random_engines(12345, omp_get_max_threads());
 
-    append_generation_zero(master_random_engine); //generate random generation zero
-
-    //for each possible thread create its random engine with unique seed
-    for (int i = 0;i < omp_get_max_threads();i++) {
-        master_random_engine.longJump();
-        random_engines.emplace_back(master_random_engine.serialize());
-    }
+    //generation zero
+    population.push_back(create_random_generation(random_engines[0], generation_size_limit));
 
 #pragma omp declare reduction(merge_individuals : std::vector<EvoIndividual> : omp_out.insert(omp_out.end(), omp_in.begin(), omp_in.end())) initializer(omp_priv = omp_orig)
     for (int gen_index = 1; gen_index < generation_count_limit; gen_index++) {
@@ -171,3 +184,9 @@ EvoDataSet EvoAPI::data_transformation_cacheless(Eigen::MatrixXd predictor, Eige
     dataset.target = target;
     return dataset;
 };
+
+void EvoAPI::profiler() {
+    std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
+    std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
+    std::cout << "Time difference = " << std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count()/1000000 << " [s]" << std::endl;
+}

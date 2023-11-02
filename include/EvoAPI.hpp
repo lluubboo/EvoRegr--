@@ -27,15 +27,14 @@ public:
     EvoAPI(const std::string&);
     void setBoundaryConditions(unsigned int generation_size_limit, unsigned int generation_count_limit);
     void predict();
-    void predict_with_cache();
     void showMeBest();
+    void profiler();
 
 private:
     EvoIndividual titan;
-
+    std::vector<XoshiroCpp::Xoshiro256Plus> create_random_engines(const std::uint64_t seed, int count);
     void setTitan(EvoIndividual, int);
     void create_regression_input(std::tuple<int, int, std::vector<double>>);
-    void append_generation_zero(XoshiroCpp::Xoshiro256Plus&);
-
+    std::vector<EvoIndividual> create_random_generation(XoshiroCpp::Xoshiro256Plus&, int size);
     EvoDataSet data_transformation_cacheless(Eigen::MatrixXd, Eigen::VectorXd, EvoIndividual&);
 };
