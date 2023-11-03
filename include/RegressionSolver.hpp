@@ -10,6 +10,7 @@ struct RegressionResult {
     Eigen::VectorXd residuals_squared;
     Eigen::VectorXd residuals_regression_squared;
     Eigen::VectorXd residuals_total_squared;
+    Eigen::VectorXd percentage_error;
     double sum_squares_errors;
     double sum_squares_regression;
     double sum_squares_total;

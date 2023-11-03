@@ -144,45 +144,19 @@ void EvoAPI::predict() {
 }
 
 void EvoAPI::showMeBest() {
-
     Eigen::MatrixXd predictor = x;
     Eigen::VectorXd target = y;
 
-    Eigen::MatrixXd calculation_history_summary(fitness_history.size(), 2);
-    Eigen::MatrixXd summary_regression(x.rows(), 4);
-
-    int chromosomes_size = titan.merger_chromosome.size();
-
-    //merge predictors
-    for (int i = 0; i < chromosomes_size; i++)
-    {
-        titan.merger_chromosome.at(i).transform(predictor);
-    }
-
-    //transform predictors
-    for (int i = 0; i < chromosomes_size; i++)
-    {
-        titan.x_transformer_chromosome.at(i).transform(predictor);
-    }
-
-    //transform target
-    titan.y_transformer_chromosome.at(0).transformVector(target);
+    Transform::half_predictor_transform(predictor, titan);
+    Transform::half_target_transform(target, titan);
 
     RegressionResult result = solve_system_by_llt_detailed(predictor, target);
 
     titan.y_transformer_chromosome.at(0).transformBack(target);
     titan.y_transformer_chromosome.at(0).transformBack(result.predicton);
 
-    summary_regression.col(0) = target;
-    summary_regression.col(1) = result.predicton;
-    summary_regression.col(2) = target - result.predicton;
-    summary_regression.col(3) = 100 - ((summary_regression.col(1).array() / summary_regression.col(0).array()) * 100);
-
-    calculation_history_summary.col(0) = Eigen::Map<Eigen::VectorXd>(fitness_history.data(), fitness_history.size());
-    calculation_history_summary.col(1) = Eigen::Map<Eigen::VectorXd>(titan_history.data(), fitness_history.size());
-
-    std::cout << "\n\n" << "Titan Y comparison:" << "\n\n" << summary_regression;
-    std::cout << "\n\n" << "Titan history is:" << "\n\n" << calculation_history_summary;
+    std::cout << "\n\n" << "Titan Y comparison:" << "\n\n" << get_regression_summary_matrix(result);
+    std::cout << "\n\n" << "Titan history is:" << "\n\n" << get_regression_history_summary(fitness_history, titan_history);
     std::cout << "\n\n";
     std::cout << titan.to_string();
     std::cout << "\n\n" << "Coefficients: \n" << result.theta;
@@ -203,4 +177,20 @@ void EvoAPI::profiler() {
     std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
     std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
     std::cout << "Time difference = " << std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count() / 1000000 << " [s]" << std::endl;
+}
+
+Eigen::MatrixXd EvoAPI::get_regression_summary_matrix(RegressionResult const& result) {
+    Eigen::MatrixXd summary_regression(result.predicton.rows(), 4);
+    summary_regression.col(0) = y;
+    summary_regression.col(1) = result.predicton;
+    summary_regression.col(2) = result.residuals;
+    summary_regression.col(3) = result.percentage_error;
+    return summary_regression;
+}
+
+Eigen::MatrixXd EvoAPI::get_regression_history_summary(std::vector<double> fitness_history, std::vector<double> titan_history) {
+    Eigen::MatrixXd regression_history_summary(fitness_history.size(), 4);
+    regression_history_summary.col(0) = Eigen::Map<Eigen::VectorXd>(fitness_history.data(), fitness_history.size());
+    regression_history_summary.col(1) = Eigen::Map<Eigen::VectorXd>(titan_history.data(), fitness_history.size());
+    return regression_history_summary;
 }

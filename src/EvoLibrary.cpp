@@ -152,9 +152,6 @@ Eigen::MatrixXd Transform::full_predictor_transform(Eigen::MatrixXd& matrix, Evo
     // erase some rows
     individual.robuster_chromosome.at(0).transform(matrix);
 
-    // add inter
-    //individual.interactioner_chromosome.at(0).transform(matrix);
-
     //merge predictors
     for (int i = 0; i < matrix.cols(); i++)
     {
@@ -191,6 +188,11 @@ Eigen::MatrixXd Transform::robust_predictor_transform(Eigen::MatrixXd& matrix, E
 
 Eigen::VectorXd Transform::full_target_transform(Eigen::VectorXd& vector, EvoIndividual& individual) {
     individual.robuster_chromosome.at(0).transformVector(vector);
+    individual.y_transformer_chromosome.at(0).transformVector(vector);
+    return vector;
+};
+
+Eigen::VectorXd Transform::half_target_transform(Eigen::VectorXd& vector, EvoIndividual& individual) {
     individual.y_transformer_chromosome.at(0).transformVector(vector);
     return vector;
 };

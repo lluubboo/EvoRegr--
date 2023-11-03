@@ -39,7 +39,7 @@ namespace Transform {
     Eigen::MatrixXd half_predictor_transform(Eigen::MatrixXd&, EvoIndividual&);
     Eigen::MatrixXd robust_predictor_transform(Eigen::MatrixXd&, EvoIndividual&);
     Eigen::VectorXd full_target_transform(Eigen::VectorXd&, EvoIndividual&);
-    
+    Eigen::VectorXd half_target_transform(Eigen::VectorXd&, EvoIndividual&);
 }
 
 namespace Reproduction {

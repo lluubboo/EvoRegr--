@@ -15,6 +15,7 @@ RegressionResult solve_system_by_llt_detailed(Eigen::MatrixXd const& predictors,
         result.residuals = target - result.predicton;
         result.residuals_regression = result.predicton.array() - target.mean();
         result.residuals_total = target.array() - target.mean();
+        result.percentage_error = 100. - ((result.predicton.array() / target.array()) * 100);
 
         result.residuals_squared = result.residuals.array().square();
         result.residuals_regression_squared = result.residuals_regression.array().square();

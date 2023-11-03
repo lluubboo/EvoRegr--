@@ -3,6 +3,7 @@
 #include <iostream>
 #include <tuple>
 #include <vector>
+#include "RegressionSolver.hpp"
 #include "EvoIndividual.hpp"
 #include "XoshiroCpp.hpp"
 
@@ -38,4 +39,6 @@ private:
     void create_regression_input(std::tuple<int, int, std::vector<double>>);
     std::vector<EvoIndividual> create_random_generation(XoshiroCpp::Xoshiro256Plus&, int size);
     EvoDataSet data_transformation_cacheless(Eigen::MatrixXd, Eigen::VectorXd, EvoIndividual&);
+    Eigen::MatrixXd get_regression_summary_matrix(RegressionResult const& result);
+    Eigen::MatrixXd get_regression_history_summary(std::vector<double> fitness_history, std::vector<double> titan_history);
 };
