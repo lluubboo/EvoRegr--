@@ -144,6 +144,7 @@ void EvoAPI::predict() {
 }
 
 void EvoAPI::showMeBest() {
+
     Eigen::MatrixXd predictor = x;
     Eigen::VectorXd target = y;
 
@@ -157,8 +158,7 @@ void EvoAPI::showMeBest() {
 
     std::cout << "\n\n" << "Titan Y comparison:" << "\n\n" << get_regression_summary_matrix(result);
     std::cout << "\n\n" << "Titan history is:" << "\n\n" << get_regression_history_summary(fitness_history, titan_history);
-    std::cout << "\n\n";
-    std::cout << titan.to_string();
+    std::cout << "\n\n" << titan.to_string();
     std::cout << "\n\n" << "Coefficients: \n" << result.theta;
     std::cout << "\n\n" << "R-squared: \n" << result.rsquared;
     std::cout << "\n\n" << "R-squared Adj: \n" << result.rsquaredadj;

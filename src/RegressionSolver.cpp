@@ -25,7 +25,7 @@ RegressionResult solve_system_by_llt_detailed(Eigen::MatrixXd const& predictors,
         result.sum_squares_regression = result.residuals_regression_squared.array().sum();
         result.sum_squares_total = result.residuals_total_squared.array().sum();
 
-        result.rsquared = 1 - result.sum_squares_errors / result.sum_squares_total;
+        result.rsquared = 1 - (result.sum_squares_errors / result.sum_squares_total);
         result.rsquaredadj = 1 - ((1 - result.rsquared) * ((predictors.rows() - 1) / (predictors.rows() - predictors.cols() - 1))); //Mordecai Ezekiel
     }
     else {
