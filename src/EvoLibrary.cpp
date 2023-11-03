@@ -16,7 +16,7 @@ EvoIndividual Factory::getRandomEvoIndividual(Eigen::MatrixXd predictor, Eigen::
     EvoIndividual individual{};
 
     int predictor_count, predictor_entity_count;
-    
+
     predictor_count = predictor.cols();
     predictor_entity_count = predictor.rows();
 
@@ -63,14 +63,14 @@ MergeAllele Factory::getRandomMergeAllele(int column_index, int predictor_column
 TransformXAllele Factory::getRandomTransformXAllele(int column_index, XoshiroCpp::Xoshiro256Plus& random_engine) {
     TransformXAllele transformx_allele{column_index};
     transformx_allele.allele = Transform_operator{ RandomNumbers::rand_interval_int(0, transform_operator_maxindex, random_engine) };
-    if (transformx_allele.allele == Transform_operator::Pow) transformx_allele.resetCharacteristicNumber(RandomNumbers::rand_interval_float(1, 3, random_engine));
+    if (transformx_allele.allele == Transform_operator::Pow || transformx_allele.allele == Transform_operator::Wek) transformx_allele.resetCharacteristicNumber(RandomNumbers::rand_interval_float(1, 3, random_engine));
     return transformx_allele;
 };
 
 TransformYAllele Factory::getRandomTransformYAllele(XoshiroCpp::Xoshiro256Plus& random_engine) {
     TransformYAllele transformy_allele{};
     transformy_allele.allele = Transform_operator{ RandomNumbers::rand_interval_int(0, transform_y_operator_maxindex, random_engine) };
-    if (transformy_allele.allele == Transform_operator::Pow) transformy_allele.resetCharacteristicNumber(RandomNumbers::rand_interval_float(1, 3, random_engine));
+    if (transformy_allele.allele == Transform_operator::Pow || transformy_allele.allele == Transform_operator::Wek) transformy_allele.resetCharacteristicNumber(RandomNumbers::rand_interval_float(1, 3, random_engine));
     return transformy_allele;
 };
 
@@ -149,8 +149,11 @@ EvoIndividual Reproduction::reproduction(EvoIndividual const& parent1, EvoIndivi
 
 Eigen::MatrixXd Transform::full_predictor_transform(Eigen::MatrixXd& matrix, EvoIndividual& individual) {
 
-    //edit rows
+    // erase some rows
     individual.robuster_chromosome.at(0).transform(matrix);
+
+    // add inter
+    //individual.interactioner_chromosome.at(0).transform(matrix);
 
     //merge predictors
     for (int i = 0; i < matrix.cols(); i++)

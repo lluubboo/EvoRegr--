@@ -13,10 +13,6 @@ struct EvoDataSet {
 
 class EvoAPI {
 public:
-
-    int generation_size_limit;
-    int generation_count_limit;
-
     Eigen::MatrixXd x;
     Eigen::MatrixXd y;
 
@@ -25,13 +21,18 @@ public:
     std::vector<double> titan_history;
 
     EvoAPI(const std::string&);
-    void setBoundaryConditions(unsigned int generation_size_limit, unsigned int generation_count_limit);
+    void setBoundaryConditions(unsigned int generation_size_limit, unsigned int generation_count_limit, unsigned int interaction_cols);
     void predict();
     void showMeBest();
     void profiler();
 
 private:
+    int generation_size_limit;
+    int generation_count_limit;
+    int interaction_cols;
     EvoIndividual titan;
+    std::string filename;
+
     std::vector<XoshiroCpp::Xoshiro256Plus> create_random_engines(const std::uint64_t seed, int count);
     void setTitan(EvoIndividual, int);
     void create_regression_input(std::tuple<int, int, std::vector<double>>);

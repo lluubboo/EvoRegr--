@@ -14,5 +14,6 @@ public:
     std::vector<TransformXAllele> x_transformer_chromosome;
     std::vector<TransformYAllele> y_transformer_chromosome;
     std::vector<RobustAllele> robuster_chromosome;
+    
     double fitness;
 };

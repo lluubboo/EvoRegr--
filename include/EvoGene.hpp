@@ -102,3 +102,4 @@ public:
     Eigen::VectorXd& transformVector(Eigen::VectorXd&);
     std::vector<int> allele;
 };
+

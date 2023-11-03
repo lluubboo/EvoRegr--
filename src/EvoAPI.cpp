@@ -11,44 +11,57 @@
 #include "omp.h"
 
 EvoAPI::EvoAPI(const std::string& filename) {
-    create_regression_input(parse_csv(filename));
+    this->filename = filename;
 }
 
 void EvoAPI::create_regression_input(std::tuple<int, int, std::vector<double>> input) {
 
     int m{ std::get<0>(input) };
     int n{ std::get<1>(input) };
+
+    int n_modified = n + interaction_cols - 1; // we exluded target from columns count
+    int target_col_index = n - 1; // indexed from 0
+
     std::vector<double> data = std::get<2>(input);
 
-    x.resize(m, n - 1);
+    x.resize(m, n_modified);
     y.resize(m, 1);
 
     for (int row = 0; row < m; ++row)
     {
-        for (int col = 0; col < n; ++col)
+        for (int col = 0; col < n_modified; ++col)
         {
-            if (col == n - 1) {
 
-                //last column is always Y or in other words regressant, dependant variable
+            // last column is always Y or in other words regressant, dependant variable
+            if (col == target_col_index) {
                 y(row, 0) = data[col + n * row];
             }
-            else {
+
+            // fill predictor
+            if (col < target_col_index) {
                 x(row, col) = data[col + n * row];
+                
+            } else {
+                x(row, col) = 1;
             }
         }
     }
 }
 
-void EvoAPI::setBoundaryConditions(unsigned int generation_size_limit, unsigned int generation_count_limit) {
+void EvoAPI::setBoundaryConditions(unsigned int generation_size_limit, unsigned int generation_count_limit, unsigned int interaction_cols) {
 
     this->generation_size_limit = generation_size_limit;
     this->generation_count_limit = generation_count_limit;
+    this->interaction_cols = interaction_cols;
 
     // initialize generation vector with given capacity
     //we want to avoid memory realocation
     std::vector<EvoIndividual> generation{ 0 };
     generation.reserve(generation_size_limit);
     population = std::vector{ 2, generation };
+
+    //silently load data 
+    create_regression_input(parse_csv(filename));
 }
 
 void EvoAPI::setTitan(EvoIndividual titan, int generation_index) {
@@ -93,7 +106,7 @@ std::vector<XoshiroCpp::Xoshiro256Plus> EvoAPI::create_random_engines(std::uint6
 void EvoAPI::predict() {
 
     //random engines for parallel loop
-    std::vector<XoshiroCpp::Xoshiro256Plus> random_engines = create_random_engines(12346, omp_get_max_threads());
+    std::vector<XoshiroCpp::Xoshiro256Plus> random_engines = create_random_engines(12345, omp_get_max_threads());
 
     //generation zero
     population.push_back(create_random_generation(random_engines[0], generation_size_limit));
@@ -179,8 +192,7 @@ void EvoAPI::showMeBest() {
 
 EvoDataSet EvoAPI::data_transformation_cacheless(Eigen::MatrixXd predictor, Eigen::VectorXd target, EvoIndividual& individual) {
     EvoDataSet dataset{};
-    Transform::half_predictor_transform(predictor, individual);
-    Transform::robust_predictor_transform(predictor, individual);
+    Transform::full_predictor_transform(predictor, individual);
     Transform::full_target_transform(target, individual);
     dataset.predictor = predictor;
     dataset.target = target;

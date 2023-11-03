@@ -6,9 +6,9 @@ using namespace std;
 int main(int, char**) {
 
     std::cout << "\n\n" << "Loading data...";
-    EvoAPI api = EvoAPI("C:/Users/lubomir.balaz/Desktop/Projekty 2023/EvoRegr++/data/TestDataWeight.csv");
+    EvoAPI api = EvoAPI("C:/Users/lubomir.balaz/Desktop/Projekty 2023/EvoRegr++/data/TestDataSpan.csv");
 
-    api.setBoundaryConditions(5000, 500);
+    api.setBoundaryConditions(100, 100, 3);
 
     std::cout << "\n\n" << "Predicting...";
 

@@ -45,6 +45,6 @@ std::string EvoIndividual::to_string_code() const {
 
     // robuster chromosome
     string_genome += robuster_chromosome.at(0).to_string_code();
-
+    
     return string_genome;
 }
