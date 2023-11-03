@@ -5,7 +5,7 @@
 #include "XoshiroCpp.hpp"
 
 enum class Merge_operator { Add, Sub, Mul, Div };
-enum class Transform_operator { Exp, Sqr, Cub, Pow, Wek, Sqt, Csqt, Let, Log, Log10, Log2, Sin, Cos, Nul };
+enum class Transform_operator { Sqr, Cub, Pow, Wek, Sqt, Csqt, Let, Log, Log10, Log2, Sin, Cos, Nul };
 
 const std::map<Merge_operator, std::string> merge_operator_names{
     {Merge_operator::Add, "Add"},
@@ -15,7 +15,6 @@ const std::map<Merge_operator, std::string> merge_operator_names{
 };
 
 const std::map<Transform_operator, std::string> transform_operator_names{
-    {Transform_operator::Exp, "Exp"},
     {Transform_operator::Sqr, "Sqr"} ,
     {Transform_operator::Cub, "Cub"} ,
     {Transform_operator::Pow, "Pow"} ,
@@ -32,8 +31,8 @@ const std::map<Transform_operator, std::string> transform_operator_names{
 };
 
 inline constexpr int merge_operator_maxindex = 3;
-inline constexpr int transform_operator_maxindex = 13;
-inline constexpr int transform_y_operator_maxindex = 12;
+inline constexpr int transform_operator_maxindex = 12;
+inline constexpr int transform_y_operator_maxindex = 11;
 
 struct MergeTwin {
     int merge_column;
@@ -75,7 +74,7 @@ public:
     Eigen::MatrixXd& transform(Eigen::MatrixXd&) override;
     std::string to_string() const override;
     std::string to_string_code() const override;
-    void resetCharacteristicNumber(int);
+    void resetCharacteristicNumber(float);
     Transform_operator allele;
 };
 
@@ -88,7 +87,7 @@ public:
     std::string to_string_code() const override;
     Eigen::VectorXd& transformVector(Eigen::VectorXd&);
     Eigen::VectorXd& transformBack(Eigen::VectorXd&);
-    void resetCharacteristicNumber(int);
+    void resetCharacteristicNumber(float);
     Transform_operator allele;
 };
 

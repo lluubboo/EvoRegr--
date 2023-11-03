@@ -80,9 +80,6 @@ TransformXAllele::~TransformXAllele() {}
 
 Eigen::MatrixXd& TransformXAllele::transform(Eigen::MatrixXd& matrix) {
     switch (allele) {
-    case Transform_operator::Exp:
-        matrix.col(column_index) = matrix.col(column_index).unaryExpr([&](const auto s) { return (double)exp(s); });
-        break;
     case Transform_operator::Sqr:
         matrix.col(column_index) = matrix.col(column_index).unaryExpr([&](const auto s) { return s * s; });
         break;
@@ -139,7 +136,7 @@ std::string TransformXAllele::to_string_code() const {
     return sallele;
 }
 
-void TransformXAllele::resetCharacteristicNumber(int number) {
+void TransformXAllele::resetCharacteristicNumber(float number) {
     characteristic_number = number;
 }
 
@@ -151,7 +148,7 @@ TransformYAllele::TransformYAllele() : EvoGene(0), allele{} {}
 
 TransformYAllele::~TransformYAllele() {};
 
-void TransformYAllele::resetCharacteristicNumber(int number) {
+void TransformYAllele::resetCharacteristicNumber(float number) {
     characteristic_number = number;
 }
 
@@ -161,9 +158,6 @@ Eigen::MatrixXd& TransformYAllele::transform(Eigen::MatrixXd& matrix) {
 
 Eigen::VectorXd& TransformYAllele::transformVector(Eigen::VectorXd& vector) {
     switch (allele) {
-    case Transform_operator::Exp:
-        vector = vector.unaryExpr([&](const auto s) { return (double)exp(s); });
-        break;
     case Transform_operator::Sqr:
         vector = vector.unaryExpr([&](const auto s) { return s*s; });
         break;
@@ -210,9 +204,6 @@ Eigen::VectorXd& TransformYAllele::transformVector(Eigen::VectorXd& vector) {
 
 Eigen::VectorXd& TransformYAllele::transformBack(Eigen::VectorXd& vector) {
     switch (allele) {
-    case Transform_operator::Exp:
-        vector = vector.unaryExpr([&](const auto s) { return (double)log(s); });
-        break;
     case Transform_operator::Sqr:
         vector = vector.unaryExpr([&](const auto s) { return (double)sqrt(s); });
         break;

@@ -8,9 +8,9 @@ int main(int, char**) {
     std::cout << "\n\n" << "Loading data...";
     EvoAPI api = EvoAPI("C:/Users/lubomir.balaz/Desktop/Projekty 2023/EvoRegr++/data/TestDataSpan.csv");
 
-    api.setBoundaryConditions(100, 100, 3);
+    api.setBoundaryConditions(5000, 1000, 1);
 
-    std::cout << "\n\n" << "Predicting...";
+    std::cout << "\n\n" << "Predicting..." << std::endl;
 
     auto start = chrono::steady_clock::now();
     api.predict();

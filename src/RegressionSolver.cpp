@@ -30,7 +30,7 @@ RegressionResult solve_system_by_llt_detailed(Eigen::MatrixXd const& predictors,
     }
     else {
         result.sum_squares_regression = std::numeric_limits<double>::max();
-        result.sum_squares_errors = std::numeric_limits<double>::max();
+        result.rsquared = 0.;
     }
 
     return result;

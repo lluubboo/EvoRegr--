@@ -135,7 +135,10 @@ void EvoAPI::predict() {
             individual.fitness = FitnessEvaluator::get_fitness(evo_data.predictor, evo_data.target);
 
             //mark titan
-            if (individual.fitness < titan.fitness) setTitan(individual, gen_index);
+            if (individual.fitness < titan.fitness) {
+                setTitan(individual, gen_index);
+                std::cout << std::endl << "New titan found!!! fitness: " << individual.fitness << std::endl;
+            }
 
             generation.push_back(individual);
         }
@@ -183,13 +186,13 @@ Eigen::MatrixXd EvoAPI::get_regression_summary_matrix(RegressionResult const& re
     Eigen::MatrixXd summary_regression(result.predicton.rows(), 4);
     summary_regression.col(0) = y;
     summary_regression.col(1) = result.predicton;
-    summary_regression.col(2) = result.residuals;
-    summary_regression.col(3) = result.percentage_error;
+    summary_regression.col(2) = y - result.predicton;
+    summary_regression.col(3) = 100. - ((result.predicton.array() / y.array()) * 100);;
     return summary_regression;
 }
 
 Eigen::MatrixXd EvoAPI::get_regression_history_summary(std::vector<double> fitness_history, std::vector<double> titan_history) {
-    Eigen::MatrixXd regression_history_summary(fitness_history.size(), 4);
+    Eigen::MatrixXd regression_history_summary(fitness_history.size(), 2);
     regression_history_summary.col(0) = Eigen::Map<Eigen::VectorXd>(fitness_history.data(), fitness_history.size());
     regression_history_summary.col(1) = Eigen::Map<Eigen::VectorXd>(titan_history.data(), fitness_history.size());
     return regression_history_summary;
