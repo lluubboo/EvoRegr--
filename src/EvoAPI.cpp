@@ -93,7 +93,7 @@ std::vector<XoshiroCpp::Xoshiro256Plus> EvoAPI::create_random_engines(std::uint6
 void EvoAPI::predict() {
 
     //random engines for parallel loop
-    std::vector<XoshiroCpp::Xoshiro256Plus> random_engines = create_random_engines(12345, omp_get_max_threads());
+    std::vector<XoshiroCpp::Xoshiro256Plus> random_engines = create_random_engines(12346, omp_get_max_threads());
 
     //generation zero
     population.push_back(create_random_generation(random_engines[0], generation_size_limit));
@@ -155,7 +155,7 @@ void EvoAPI::showMeBest() {
     //transform target
     titan.y_transformer_chromosome.at(0).transformVector(target);
 
-    RegressionResult result = solveSystemByLLT(predictor, target);
+    RegressionResult result = solve_system_by_llt_detailed(predictor, target);
 
     titan.y_transformer_chromosome.at(0).transformBack(target);
     titan.y_transformer_chromosome.at(0).transformBack(result.predicton);
@@ -173,6 +173,8 @@ void EvoAPI::showMeBest() {
     std::cout << "\n\n";
     std::cout << titan.to_string();
     std::cout << "\n\n" << "Coefficients: \n" << result.theta;
+    std::cout << "\n\n" << "R-squared: \n" << result.rsquared;
+    std::cout << "\n\n" << "R-squared Adj: \n" << result.rsquaredadj;
 }
 
 EvoDataSet EvoAPI::data_transformation_cacheless(Eigen::MatrixXd predictor, Eigen::VectorXd target, EvoIndividual& individual) {
@@ -188,5 +190,5 @@ EvoDataSet EvoAPI::data_transformation_cacheless(Eigen::MatrixXd predictor, Eige
 void EvoAPI::profiler() {
     std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
     std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
-    std::cout << "Time difference = " << std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count()/1000000 << " [s]" << std::endl;
+    std::cout << "Time difference = " << std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count() / 1000000 << " [s]" << std::endl;
 }

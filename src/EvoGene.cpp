@@ -83,8 +83,17 @@ Eigen::MatrixXd& TransformXAllele::transform(Eigen::MatrixXd& matrix) {
     case Transform_operator::Exp:
         matrix.col(column_index) = matrix.col(column_index).unaryExpr([&](const auto s) { return (double)exp(s); });
         break;
+    case Transform_operator::Sqr:
+        matrix.col(column_index) = matrix.col(column_index).unaryExpr([&](const auto s) { return s * s; });
+        break;
+    case Transform_operator::Cub:
+        matrix.col(column_index) = matrix.col(column_index).unaryExpr([&](const auto s) { return s * s * s; });
+        break;
     case Transform_operator::Pow:
         matrix.col(column_index) = matrix.col(column_index).unaryExpr([&](const auto s) { return (double)pow(s, characteristic_number); });
+        break;
+    case Transform_operator::Wek:
+        matrix.col(column_index) = matrix.col(column_index).unaryExpr([&](const auto s) { return (double)pow(s, 1/characteristic_number); });
         break;
     case Transform_operator::Sqt:
         matrix.col(column_index) = matrix.col(column_index).unaryExpr([&](const auto s) { return (double)sqrt(s); });
@@ -155,8 +164,17 @@ Eigen::VectorXd& TransformYAllele::transformVector(Eigen::VectorXd& vector) {
     case Transform_operator::Exp:
         vector = vector.unaryExpr([&](const auto s) { return (double)exp(s); });
         break;
+    case Transform_operator::Sqr:
+        vector = vector.unaryExpr([&](const auto s) { return s*s; });
+        break;
+    case Transform_operator::Cub:
+        vector = vector.unaryExpr([&](const auto s) { return s*s*s; });
+        break;
     case Transform_operator::Pow:
         vector = vector.unaryExpr([&](const auto s) { return (double)pow(s, characteristic_number); });
+        break;
+    case Transform_operator::Wek:
+        vector = vector.unaryExpr([&](const auto s) { return (double)pow(s, 1/characteristic_number); });
         break;
     case Transform_operator::Sqt:
         vector = vector.unaryExpr([&](const auto s) { return (double)sqrt(s); });
@@ -195,14 +213,23 @@ Eigen::VectorXd& TransformYAllele::transformBack(Eigen::VectorXd& vector) {
     case Transform_operator::Exp:
         vector = vector.unaryExpr([&](const auto s) { return (double)log(s); });
         break;
+    case Transform_operator::Sqr:
+        vector = vector.unaryExpr([&](const auto s) { return (double)sqrt(s); });
+        break;
+    case Transform_operator::Cub:
+        vector = vector.unaryExpr([&](const auto s) { return (double)cbrt(s); });
+        break;
     case Transform_operator::Pow:
         vector = vector.unaryExpr([&](const auto s) { return (double)pow(s, (1 / characteristic_number)); });
         break;
+    case Transform_operator::Wek:
+        vector = vector.unaryExpr([&](const auto s) { return (double)pow(s, (characteristic_number)); });
+        break;
     case Transform_operator::Sqt:
-        vector = vector.unaryExpr([&](const auto s) { return (double)pow(s, 2); });
+        vector = vector.unaryExpr([&](const auto s) { return s*s; });
         break;
     case Transform_operator::Csqt:
-        vector = vector.unaryExpr([&](const auto s) { return (double)pow(s, 3); });
+        vector = vector.unaryExpr([&](const auto s) { return s*s*s; });
         break;
     case Transform_operator::Let:
         vector = vector.unaryExpr([&](const auto s) { return s * 1; });

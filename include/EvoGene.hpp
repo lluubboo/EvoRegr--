@@ -5,7 +5,7 @@
 #include "XoshiroCpp.hpp"
 
 enum class Merge_operator { Add, Sub, Mul, Div };
-enum class Transform_operator { Exp, Pow, Sqt, Csqt, Let, Log, Log10, Log2, Sin, Cos, Nul };
+enum class Transform_operator { Exp, Sqr, Cub, Pow, Wek, Sqt, Csqt, Let, Log, Log10, Log2, Sin, Cos, Nul };
 
 const std::map<Merge_operator, std::string> merge_operator_names{
     {Merge_operator::Add, "Add"},
@@ -16,7 +16,10 @@ const std::map<Merge_operator, std::string> merge_operator_names{
 
 const std::map<Transform_operator, std::string> transform_operator_names{
     {Transform_operator::Exp, "Exp"},
+    {Transform_operator::Sqr, "Sqr"} ,
+    {Transform_operator::Cub, "Cub"} ,
     {Transform_operator::Pow, "Pow"} ,
+    {Transform_operator::Wek, "Wek"} ,
     {Transform_operator::Sqt, "Sqt"},
     {Transform_operator::Csqt, "Csqt"},
     {Transform_operator::Let, "Let"},
@@ -29,8 +32,8 @@ const std::map<Transform_operator, std::string> transform_operator_names{
 };
 
 inline constexpr int merge_operator_maxindex = 3;
-inline constexpr int transform_operator_maxindex = 10;
-inline constexpr int transform_y_operator_maxindex = 9;
+inline constexpr int transform_operator_maxindex = 13;
+inline constexpr int transform_y_operator_maxindex = 12;
 
 struct MergeTwin {
     int merge_column;
@@ -42,7 +45,6 @@ class EvoGene {
 public:
     EvoGene();
     EvoGene(int);
-    EvoGene(int, XoshiroCpp::Xoshiro256Plus& random_engine);
     virtual ~EvoGene();
     virtual Eigen::MatrixXd& transform(Eigen::MatrixXd&) = 0;
     virtual std::string to_string() const = 0;
@@ -50,7 +52,7 @@ public:
 
 protected:
     int column_index;
-    int characteristic_number;
+    float characteristic_number;
 };
 
 
@@ -94,7 +96,6 @@ class RobustAllele : EvoGene {
 public:
     RobustAllele();
     ~RobustAllele();
-    RobustAllele createRandomAllele(int, XoshiroCpp::Xoshiro256Plus&);
     Eigen::MatrixXd& transform(Eigen::MatrixXd&) override;
     std::string to_string() const override;
     std::string to_string_code() const override;

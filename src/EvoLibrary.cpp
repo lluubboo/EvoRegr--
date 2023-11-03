@@ -16,11 +16,11 @@ EvoIndividual Factory::getRandomEvoIndividual(Eigen::MatrixXd predictor, Eigen::
     EvoIndividual individual{};
 
     int predictor_count, predictor_entity_count;
+    
     predictor_count = predictor.cols();
     predictor_entity_count = predictor.rows();
 
-    // first create alleles
-
+    // create alleles
     for (int i = 0; i < predictor_count; i++)
     {
         individual.merger_chromosome.push_back(Factory::getRandomMergeAllele(i, predictor_count, random_engine));
@@ -34,10 +34,8 @@ EvoIndividual Factory::getRandomEvoIndividual(Eigen::MatrixXd predictor, Eigen::
     Transform::full_predictor_transform(predictor, individual);
     Transform::full_target_transform(target, individual);
 
-    //solve regression
-    RegressionResult result;
-    result = solveSystemByLLT(predictor, target);
-    individual.fitness = result.mean_sum_residuals_squared;
+    // get fitness
+    individual.fitness = FitnessEvaluator::get_fitness(predictor, target);
 
     return individual;
 }
@@ -65,14 +63,14 @@ MergeAllele Factory::getRandomMergeAllele(int column_index, int predictor_column
 TransformXAllele Factory::getRandomTransformXAllele(int column_index, XoshiroCpp::Xoshiro256Plus& random_engine) {
     TransformXAllele transformx_allele{column_index};
     transformx_allele.allele = Transform_operator{ RandomNumbers::rand_interval_int(0, transform_operator_maxindex, random_engine) };
-    if (transformx_allele.allele == Transform_operator::Pow) transformx_allele.resetCharacteristicNumber(RandomNumbers::rand_interval_int(2, 3, random_engine));
+    if (transformx_allele.allele == Transform_operator::Pow) transformx_allele.resetCharacteristicNumber(RandomNumbers::rand_interval_float(1, 3, random_engine));
     return transformx_allele;
 };
 
 TransformYAllele Factory::getRandomTransformYAllele(XoshiroCpp::Xoshiro256Plus& random_engine) {
     TransformYAllele transformy_allele{};
     transformy_allele.allele = Transform_operator{ RandomNumbers::rand_interval_int(0, transform_y_operator_maxindex, random_engine) };
-    if (transformy_allele.allele == Transform_operator::Pow) transformy_allele.resetCharacteristicNumber(RandomNumbers::rand_interval_int(2, 3, random_engine));
+    if (transformy_allele.allele == Transform_operator::Pow) transformy_allele.resetCharacteristicNumber(RandomNumbers::rand_interval_float(1, 3, random_engine));
     return transformy_allele;
 };
 
@@ -195,6 +193,6 @@ Eigen::VectorXd Transform::full_target_transform(Eigen::VectorXd& vector, EvoInd
 };
 
 double FitnessEvaluator::get_fitness(Eigen::MatrixXd const& predictor, Eigen::VectorXd const& target) {
-    RegressionResult result = solveSystemByLLT(predictor, target);
-    return result.mean_sum_residuals_squared;
+    RegressionResult result = solve_system_by_llt_minimal(predictor, target);
+    return result.sum_squares_errors;
 };

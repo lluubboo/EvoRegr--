@@ -5,10 +5,18 @@ struct RegressionResult {
     Eigen::VectorXd theta;
     Eigen::VectorXd predicton;
     Eigen::VectorXd residuals;
+    Eigen::VectorXd residuals_regression;
+    Eigen::VectorXd residuals_total;
     Eigen::VectorXd residuals_squared;
-    double sum_residuals_squared;
-    double mean_sum_residuals_squared;
+    Eigen::VectorXd residuals_regression_squared;
+    Eigen::VectorXd residuals_total_squared;
+    double sum_squares_errors;
+    double sum_squares_regression;
+    double sum_squares_total;
+    double rsquared;
+    double rsquaredadj;
     bool isUsable;
 };
 
-RegressionResult solveSystemByLLT(Eigen::MatrixXd const&, Eigen::VectorXd const&);
+RegressionResult solve_system_by_llt_detailed(Eigen::MatrixXd const&, Eigen::VectorXd const&);
+RegressionResult solve_system_by_llt_minimal(Eigen::MatrixXd const&, Eigen::VectorXd const&);
