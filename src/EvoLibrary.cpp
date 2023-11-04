@@ -11,6 +11,12 @@ std::vector<EvoIndividual> sort_by_fitness_desc(std::vector<EvoIndividual>& sour
     return source;
 };
 
+std::vector<EvoIndividual> Selection::tournament_selection(std::vector<EvoIndividual> const& generation, XoshiroCpp::Xoshiro256Plus& random_engine) {
+    std::vector<EvoIndividual> sample = Random::randomChoices(generation, 4, random_engine);
+    sort_by_fitness_desc(sample);
+    return sample;
+};
+
 EvoIndividual Factory::getRandomEvoIndividual(Eigen::MatrixXd predictor, Eigen::VectorXd target, XoshiroCpp::Xoshiro256Plus& random_engine) {
 
     EvoIndividual individual{};
@@ -27,7 +33,7 @@ EvoIndividual Factory::getRandomEvoIndividual(Eigen::MatrixXd predictor, Eigen::
         individual.x_transformer_chromosome.push_back(Factory::getRandomTransformXAllele(i, random_engine));
     }
 
-    individual.robuster_chromosome.push_back(Factory::getRandomRobustAllele(predictor_entity_count ,random_engine));
+    individual.robuster_chromosome.push_back(Factory::getRandomRobustAllele(predictor_entity_count, random_engine));
     individual.y_transformer_chromosome.push_back(Factory::getRandomTransformYAllele(random_engine));
 
     // transform data
@@ -41,8 +47,8 @@ EvoIndividual Factory::getRandomEvoIndividual(Eigen::MatrixXd predictor, Eigen::
 }
 
 MergeAllele Factory::getRandomMergeAllele(int column_index, int predictor_column_count, XoshiroCpp::Xoshiro256Plus& random_engine) {
-    
-    MergeAllele merge_allele{column_index};
+
+    MergeAllele merge_allele{ column_index };
     std::vector<int> free_cols(predictor_column_count);
     std::iota(begin(free_cols), end(free_cols), 0);
     std::shuffle(free_cols.begin(), free_cols.end(), random_engine);
@@ -61,7 +67,7 @@ MergeAllele Factory::getRandomMergeAllele(int column_index, int predictor_column
 };
 
 TransformXAllele Factory::getRandomTransformXAllele(int column_index, XoshiroCpp::Xoshiro256Plus& random_engine) {
-    TransformXAllele transformx_allele{column_index};
+    TransformXAllele transformx_allele{ column_index };
     transformx_allele.allele = Transform_operator{ RandomNumbers::rand_interval_int(0, transform_operator_maxindex, random_engine) };
     if (transformx_allele.allele == Transform_operator::Pow || transformx_allele.allele == Transform_operator::Wek) transformx_allele.resetCharacteristicNumber(RandomNumbers::rand_interval_float(1, 3, random_engine));
     return transformx_allele;
@@ -84,12 +90,6 @@ RobustAllele Factory::getRandomRobustAllele(int row_count, XoshiroCpp::Xoshiro25
     std::sort(choosen_rows.begin(), choosen_rows.end());
     robust_allele.allele = choosen_rows;
     return robust_allele;
-};
-
-std::vector<EvoIndividual> Selection::tournament_selection(std::vector<EvoIndividual> const& generation, XoshiroCpp::Xoshiro256Plus& random_engine) {
-    std::vector<EvoIndividual> sample = Random::randomChoices(generation, 4, random_engine);
-    sort_by_fitness_desc(sample);
-    return sample;
 };
 
 EvoIndividual Crossover::cross(EvoIndividual const& number_one, EvoIndividual const& number_two, int chromosome_size, XoshiroCpp::Xoshiro256Plus& random_engine) {
@@ -127,7 +127,7 @@ EvoIndividual Mutation::mutate(EvoIndividual& individual, int chromosome_size, i
         }
         if (RandomNumbers::rand_interval_int(0, 3, random_engine) == 0) {
             int col = RandomNumbers::rand_interval_int(0, chromosome_size - 1, random_engine);
-            individual.merger_chromosome.at(col) = Factory::getRandomMergeAllele(col, chromosome_size ,random_engine);
+            individual.merger_chromosome.at(col) = Factory::getRandomMergeAllele(col, chromosome_size, random_engine);
         }
         if (RandomNumbers::rand_interval_int(0, 3, random_engine) == 0) {
             individual.robuster_chromosome.at(0) = Factory::getRandomRobustAllele(predictor_row_count, random_engine);
@@ -198,6 +198,7 @@ Eigen::VectorXd Transform::half_target_transform(Eigen::VectorXd& vector, EvoInd
 };
 
 double FitnessEvaluator::get_fitness(Eigen::MatrixXd const& predictor, Eigen::VectorXd const& target) {
-    RegressionResult result = solve_system_by_llt_minimal(predictor, target);
+    RegressionResult result = solve_system_by_ldlt_simple(predictor, target);
     return result.sum_squares_errors;
 };
+

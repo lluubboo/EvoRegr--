@@ -2,7 +2,7 @@
 #include <iostream>
 #include "RegressionSolver.hpp"
 
-RegressionResult solve_system_by_llt_detailed(Eigen::MatrixXd const& predictors, Eigen::VectorXd const& target) {
+RegressionResult solve_system_by_ldlt_detailed(Eigen::MatrixXd const& predictors, Eigen::VectorXd const& target) {
 
     RegressionResult result = RegressionResult();
 
@@ -36,13 +36,12 @@ RegressionResult solve_system_by_llt_detailed(Eigen::MatrixXd const& predictors,
     return result;
 }
 
-RegressionResult solve_system_by_llt_minimal(Eigen::MatrixXd const& predictors, Eigen::VectorXd const& target) {
-
+RegressionResult solve_system_by_ldlt_simple(Eigen::MatrixXd const& predictors, Eigen::VectorXd const& target) {
     RegressionResult result = RegressionResult();
 
     result.theta = (predictors.transpose() * predictors).ldlt().solve(predictors.transpose() * target);
     result.isUsable = !result.theta.hasNaN() & result.theta.allFinite();
-
+    
     if (result.isUsable) {
         result.predicton = predictors * result.theta;
         result.residuals = target - result.predicton;
@@ -51,6 +50,5 @@ RegressionResult solve_system_by_llt_minimal(Eigen::MatrixXd const& predictors, 
     else {
         result.sum_squares_errors = std::numeric_limits<double>::max();
     }
-
     return result;
 }

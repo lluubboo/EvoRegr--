@@ -51,3 +51,4 @@ namespace FitnessEvaluator {
     double get_fitness(Eigen::MatrixXd const& predictor, Eigen::VectorXd const& target);
 
 }
+

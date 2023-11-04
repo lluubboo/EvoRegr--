@@ -19,5 +19,5 @@ struct RegressionResult {
     bool isUsable;
 };
 
-RegressionResult solve_system_by_llt_detailed(Eigen::MatrixXd const&, Eigen::VectorXd const&);
-RegressionResult solve_system_by_llt_minimal(Eigen::MatrixXd const&, Eigen::VectorXd const&);
+RegressionResult solve_system_by_ldlt_detailed(Eigen::MatrixXd const&, Eigen::VectorXd const&);
+RegressionResult solve_system_by_ldlt_simple(Eigen::MatrixXd const&, Eigen::VectorXd const&);

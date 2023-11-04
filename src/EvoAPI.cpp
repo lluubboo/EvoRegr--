@@ -40,12 +40,14 @@ void EvoAPI::create_regression_input(std::tuple<int, int, std::vector<double>> i
             // fill predictor
             if (col < target_col_index) {
                 x(row, col) = data[col + n * row];
-                
-            } else {
+
+            }
+            else {
                 x(row, col) = 1;
             }
         }
     }
+    std::cout << "Data loading was succesful..." << std::endl;
 }
 
 void EvoAPI::setBoundaryConditions(unsigned int generation_size_limit, unsigned int generation_count_limit, unsigned int interaction_cols) {
@@ -68,6 +70,11 @@ void EvoAPI::setTitan(EvoIndividual titan, int generation_index) {
     this->titan = titan;
     this->titan_history.push_back(generation_index);
     this->fitness_history.push_back(titan.fitness);
+    std::cout << "Great! New titan with fitness " << titan.fitness << " was found ..." << std::endl;
+}
+
+void EvoAPI::titan_evaluation(EvoIndividual participant, int generation_index) {
+    if (participant.fitness < titan.fitness) setTitan(participant, generation_index);
 }
 
 std::vector<EvoIndividual> EvoAPI::create_random_generation(XoshiroCpp::Xoshiro256Plus& random_engine, int size) {
@@ -77,13 +84,13 @@ std::vector<EvoIndividual> EvoAPI::create_random_generation(XoshiroCpp::Xoshiro2
 
     // add first individual and make him titan
     generation.push_back(Factory::getRandomEvoIndividual(x, y, random_engine));
-    titan = generation.back();
+    setTitan(generation.back(), 0);
 
     for (int i = 1; i < size; i++)
     {
         EvoIndividual individual = Factory::getRandomEvoIndividual(x, y, random_engine);
-        if (individual.fitness < titan.fitness) setTitan(individual, 0);
-        population[0].push_back(individual);
+        titan_evaluation(individual, 0);
+        generation.push_back(individual);
     }
 
     return generation;
@@ -105,16 +112,18 @@ std::vector<XoshiroCpp::Xoshiro256Plus> EvoAPI::create_random_engines(std::uint6
 
 void EvoAPI::predict() {
 
+    std::cout << "Prediction started..." << "\n\n";
+
     //random engines for parallel loop
     std::vector<XoshiroCpp::Xoshiro256Plus> random_engines = create_random_engines(12345, omp_get_max_threads());
 
     //generation zero
-    population.push_back(create_random_generation(random_engines[0], generation_size_limit));
+    population[0] = create_random_generation(random_engines[0], generation_size_limit);
 
 #pragma omp declare reduction(merge_individuals : std::vector<EvoIndividual> : omp_out.insert(omp_out.end(), omp_in.begin(), omp_in.end())) initializer(omp_priv = omp_orig)
     for (int gen_index = 1; gen_index < generation_count_limit; gen_index++) {
 
-        if (gen_index % 100 == 0) std::cout << "\n\n" << gen_index;
+        if (gen_index % 100 == 0) std::cout << "Creating generation " << gen_index << "..." << std::endl;
 
         std::vector<EvoIndividual> generation = population[1];
         std::vector<EvoIndividual> past_generation = population[0];
@@ -135,10 +144,7 @@ void EvoAPI::predict() {
             individual.fitness = FitnessEvaluator::get_fitness(evo_data.predictor, evo_data.target);
 
             //mark titan
-            if (individual.fitness < titan.fitness) {
-                setTitan(individual, gen_index);
-                std::cout << std::endl << "New titan found!!! fitness: " << individual.fitness << std::endl;
-            }
+            titan_evaluation(individual, gen_index);
 
             generation.push_back(individual);
         }
@@ -146,7 +152,7 @@ void EvoAPI::predict() {
     }
 }
 
-void EvoAPI::showMeBest() {
+void EvoAPI::show_me_result() {
 
     Eigen::MatrixXd predictor = x;
     Eigen::VectorXd target = y;
@@ -154,7 +160,7 @@ void EvoAPI::showMeBest() {
     Transform::half_predictor_transform(predictor, titan);
     Transform::half_target_transform(target, titan);
 
-    RegressionResult result = solve_system_by_llt_detailed(predictor, target);
+    RegressionResult result = solve_system_by_ldlt_detailed(predictor, target);
 
     titan.y_transformer_chromosome.at(0).transformBack(target);
     titan.y_transformer_chromosome.at(0).transformBack(result.predicton);
@@ -176,12 +182,6 @@ EvoDataSet EvoAPI::data_transformation_cacheless(Eigen::MatrixXd predictor, Eige
     return dataset;
 };
 
-void EvoAPI::profiler() {
-    std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
-    std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
-    std::cout << "Time difference = " << std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count() / 1000000 << " [s]" << std::endl;
-}
-
 Eigen::MatrixXd EvoAPI::get_regression_summary_matrix(RegressionResult const& result) {
     Eigen::MatrixXd summary_regression(result.predicton.rows(), 4);
     summary_regression.col(0) = y;
@@ -196,4 +196,30 @@ Eigen::MatrixXd EvoAPI::get_regression_history_summary(std::vector<double> fitne
     regression_history_summary.col(0) = Eigen::Map<Eigen::VectorXd>(fitness_history.data(), fitness_history.size());
     regression_history_summary.col(1) = Eigen::Map<Eigen::VectorXd>(titan_history.data(), fitness_history.size());
     return regression_history_summary;
+}
+
+void EvoAPI::profiler() {
+
+    // random engines
+    std::vector<XoshiroCpp::Xoshiro256Plus> random_engines = create_random_engines(12345, omp_get_max_threads());
+    // test generation
+    std::vector<EvoIndividual> test_generation = create_random_generation(random_engines[0], 500);
+
+    int sample_size = 100;
+    double result;
+
+    std::cout << "\n\n" << "Benchmark starting....: \n";
+    std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
+
+    for (int j = 0; j < sample_size; j++) {
+
+        for (int i = 0;i < 200000;i++) {
+            // add function here
+        }
+
+    }
+
+    std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
+    result = (std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count() / 1000000.) / sample_size;
+    std::cout << "Mean time difference = " << result << " [s]" << "\n\n";
 }
