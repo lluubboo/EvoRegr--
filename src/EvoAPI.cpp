@@ -2,12 +2,14 @@
 #include <iostream>
 #include <vector>
 #include <chrono>
+#include <iomanip> 
 #include "EvoAPI.hpp"
 #include "IOTools.hpp"
 #include "EvoIndividual.hpp"
 #include "RegressionSolver.hpp"
 #include "EvoLibrary.hpp"
 #include "XoshiroCpp.hpp"
+#include "Stats.hpp"
 #include "omp.h"
 
 EvoAPI::EvoAPI(const std::string& filename) {
@@ -47,7 +49,7 @@ void EvoAPI::create_regression_input(std::tuple<int, int, std::vector<double>> i
             }
         }
     }
-    std::cout << "Data loading was succesful..." << std::endl;
+    std::cout << "\n" << "Data loading was succesful..." << "\n";
 }
 
 void EvoAPI::setBoundaryConditions(unsigned int generation_size_limit, unsigned int generation_count_limit, unsigned int interaction_cols) {
@@ -70,7 +72,7 @@ void EvoAPI::setTitan(EvoIndividual titan, int generation_index) {
     this->titan = titan;
     this->titan_history.push_back(generation_index);
     this->fitness_history.push_back(titan.fitness);
-    std::cout << "Great! New titan with fitness " << titan.fitness << " was found ..." << std::endl;
+    std::cout << "Great! New titan with fitness " << titan.fitness << " was found ..." << "\n";
 }
 
 void EvoAPI::titan_evaluation(EvoIndividual participant, int generation_index) {
@@ -165,12 +167,20 @@ void EvoAPI::show_me_result() {
     titan.y_transformer_chromosome.at(0).transformBack(target);
     titan.y_transformer_chromosome.at(0).transformBack(result.predicton);
 
-    std::cout << "\n\n" << "Titan Y comparison:" << "\n\n" << get_regression_summary_matrix(result);
-    std::cout << "\n\n" << "Titan history is:" << "\n\n" << get_regression_history_summary(fitness_history, titan_history);
-    std::cout << "\n\n" << titan.to_string();
-    std::cout << "\n\n" << "Coefficients: \n" << result.theta;
-    std::cout << "\n\n" << "R-squared: \n" << result.rsquared;
-    std::cout << "\n\n" << "R-squared Adj: \n" << result.rsquaredadj;
+    std::cout << "\n\n";
+    std::cout << "********************************************REGRESSION RESULT SUMMARY******************************************\n\n";
+    std::cout << get_regression_summary_matrix(result) << "\n\n";
+    std::cout << "************************************************REGRESSION HISTORY*********************************************\n\n";
+    std::cout << get_regression_history_summary(fitness_history, titan_history) << "\n\n";
+    std::cout << "***************************************************TITAN GENOME************************************************\n\n";
+    std::cout  << titan.to_string();
+    std::cout << "***********************************************REGRESSION SUMMARY**********************************************\n\n";
+    std::cout << "Regression coefficients: " << result.theta.transpose();
+    std::cout << "\n\n";
+    std::cout << "Residuals mean: " << result.residuals.mean() << " median: " << DescriptiveStatistics::median(result.residuals.data(), result.residuals.rows());
+    std::cout << "\n\n";
+    std::cout << "R-squared: " << result.rsquared << " R-squared Adj: " << result.rsquaredadj << " RMSE: " << result.rmse;
+    std::cout << "\n\n";
 }
 
 EvoDataSet EvoAPI::data_transformation_cacheless(Eigen::MatrixXd predictor, Eigen::VectorXd target, EvoIndividual& individual) {

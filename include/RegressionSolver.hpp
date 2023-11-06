@@ -14,6 +14,8 @@ struct RegressionResult {
     double sum_squares_errors;
     double sum_squares_regression;
     double sum_squares_total;
+    double mean_sum_squares_errors;
+    double rmse;
     double rsquared;
     double rsquaredadj;
     bool isUsable;
