@@ -198,7 +198,7 @@ Eigen::VectorXd Transform::half_target_transform(Eigen::VectorXd& vector, EvoInd
 };
 
 double FitnessEvaluator::get_fitness(Eigen::MatrixXd const& predictor, Eigen::VectorXd const& target) {
-    RegressionResult result = solve_system_by_ldlt_simple(predictor, target);
+    RegressionSimpleResult result = solve_system_by_ldlt_simple(predictor, target);
     return result.sum_squares_errors;
 };
 

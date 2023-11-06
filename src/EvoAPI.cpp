@@ -2,7 +2,8 @@
 #include <iostream>
 #include <vector>
 #include <chrono>
-#include <iomanip> 
+#include <numeric>
+#include <matplot/matplot.h>
 #include "EvoAPI.hpp"
 #include "IOTools.hpp"
 #include "EvoIndividual.hpp"
@@ -162,10 +163,14 @@ void EvoAPI::show_me_result() {
     Transform::half_predictor_transform(predictor, titan);
     Transform::half_target_transform(target, titan);
 
-    RegressionResult result = solve_system_by_ldlt_detailed(predictor, target);
+    RegressionDetailedResult result = solve_system_by_ldlt_detailed(predictor, target);
 
     titan.y_transformer_chromosome.at(0).transformBack(target);
     titan.y_transformer_chromosome.at(0).transformBack(result.predicton);
+
+    std::vector<double> residuals(result.residuals.data(), result.residuals.data() + target.rows());
+    std::vector<int> rindex(target.rows());
+    std::iota(rindex.begin(), rindex.end(), 0);
 
     std::cout << "\n\n";
     std::cout << "********************************************REGRESSION RESULT SUMMARY******************************************\n\n";
@@ -173,14 +178,16 @@ void EvoAPI::show_me_result() {
     std::cout << "************************************************REGRESSION HISTORY*********************************************\n\n";
     std::cout << get_regression_history_summary(fitness_history, titan_history) << "\n\n";
     std::cout << "***************************************************TITAN GENOME************************************************\n\n";
-    std::cout  << titan.to_string();
+    std::cout << titan.to_string();
     std::cout << "***********************************************REGRESSION SUMMARY**********************************************\n\n";
     std::cout << "Regression coefficients: " << result.theta.transpose();
     std::cout << "\n\n";
     std::cout << "Residuals mean: " << result.residuals.mean() << " median: " << DescriptiveStatistics::median(result.residuals.data(), result.residuals.rows());
+    std::cout << " standard deviation: " << result.standard_deviation;
     std::cout << "\n\n";
     std::cout << "R-squared: " << result.rsquared << " R-squared Adj: " << result.rsquaredadj << " RMSE: " << result.rmse;
     std::cout << "\n\n";
+    //matplot::plot(rindex, residuals, "-o");
 }
 
 EvoDataSet EvoAPI::data_transformation_cacheless(Eigen::MatrixXd predictor, Eigen::VectorXd target, EvoIndividual& individual) {
@@ -192,7 +199,7 @@ EvoDataSet EvoAPI::data_transformation_cacheless(Eigen::MatrixXd predictor, Eige
     return dataset;
 };
 
-Eigen::MatrixXd EvoAPI::get_regression_summary_matrix(RegressionResult const& result) {
+Eigen::MatrixXd EvoAPI::get_regression_summary_matrix(RegressionDetailedResult const& result) {
     Eigen::MatrixXd summary_regression(result.predicton.rows(), 4);
     summary_regression.col(0) = y;
     summary_regression.col(1) = result.predicton;

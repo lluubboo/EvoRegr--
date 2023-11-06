@@ -2,9 +2,9 @@
 #include <iostream>
 #include "RegressionSolver.hpp"
 
-RegressionResult solve_system_by_ldlt_detailed(Eigen::MatrixXd const& predictors, Eigen::VectorXd const& target) {
+RegressionDetailedResult solve_system_by_ldlt_detailed(Eigen::MatrixXd const& predictors, Eigen::VectorXd const& target) {
 
-    RegressionResult result = RegressionResult();
+    RegressionDetailedResult result = RegressionDetailedResult();
 
     result.theta = (predictors.transpose() * predictors).ldlt().solve(predictors.transpose() * target);
     result.isUsable = !result.theta.hasNaN() & result.theta.allFinite();
@@ -25,6 +25,9 @@ RegressionResult solve_system_by_ldlt_detailed(Eigen::MatrixXd const& predictors
         result.sum_squares_regression = result.residuals_regression_squared.array().sum();
         result.sum_squares_total = result.residuals_total_squared.array().sum();
 
+        result.variance = result.sum_squares_regression / (target.rows() - 1);
+        result.standard_deviation = sqrt(result.variance);
+
         result.mean_sum_squares_errors = result.sum_squares_errors / target.rows();
         result.rmse = sqrt(result.mean_sum_squares_errors);
         result.rsquared = 1 - (result.sum_squares_errors / result.sum_squares_total);
@@ -38,15 +41,14 @@ RegressionResult solve_system_by_ldlt_detailed(Eigen::MatrixXd const& predictors
     return result;
 }
 
-RegressionResult solve_system_by_ldlt_simple(Eigen::MatrixXd const& predictors, Eigen::VectorXd const& target) {
-    RegressionResult result = RegressionResult();
+RegressionSimpleResult solve_system_by_ldlt_simple(Eigen::MatrixXd const& predictors, Eigen::VectorXd const& target) {
+    RegressionSimpleResult result = RegressionSimpleResult();
 
-    result.theta = (predictors.transpose() * predictors).ldlt().solve(predictors.transpose() * target);
-    result.isUsable = !result.theta.hasNaN() & result.theta.allFinite();
-    
+    result.coefficients = (predictors.transpose() * predictors).ldlt().solve(predictors.transpose() * target);
+    result.isUsable = !result.coefficients.hasNaN() & result.coefficients.allFinite();
+
     if (result.isUsable) {
-        result.predicton = predictors * result.theta;
-        result.residuals = target - result.predicton;
+        result.residuals = target - (predictors * result.coefficients);
         result.sum_squares_errors = result.residuals.array().square().sum();
     }
     else {

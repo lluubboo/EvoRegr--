@@ -7,7 +7,7 @@ set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED On)
 set(CMAKE_CXX_EXTENSIONS Off)
 
-set(CMAKE_BUILD_TYPE Release)
+set(CMAKE_BUILD_TYPE Debug)
 
 if (CMAKE_BUILD_TYPE STREQUAL "Debug") 
     add_compile_options(-Wall -Wpedantic -Wextra -fexceptions)
@@ -19,6 +19,7 @@ add_executable(EVOREGR++ main.cpp)
 
 # list cmake_prefix_path append eigen custom install directory cmake files
 list(APPEND CMAKE_PREFIX_PATH "C:/Users/lubomir.balaz/SWLibraries/eigen-3.4.0-install/share/eigen3/cmake")
+list(APPEND CMAKE_PREFIX_PATH "C:/.local/lib/cmake/Matplot++")
 
 # Eigen
 find_package(Eigen3 3.3 REQUIRED NO_MODULE)
@@ -26,11 +27,14 @@ find_package(Eigen3 3.3 REQUIRED NO_MODULE)
 # OpenMP
 find_package(OpenMP)
 
+# Matplot++
+find_package(Matplot++ REQUIRED)
+
 add_subdirectory(external)
 add_subdirectory(include)
 add_subdirectory(src)
 
-target_link_libraries (${PROJECT_NAME} PRIVATE OpenMP::OpenMP_CXX Eigen3::Eigen includes_lib sources_lib externals_lib)
+target_link_libraries (${PROJECT_NAME} PRIVATE OpenMP::OpenMP_CXX Eigen3::Eigen Matplot++::matplot includes_lib sources_lib externals_lib)
 target_include_directories(${PROJECT_NAME} PRIVATE "${PROJECT_BINARY_DIR}")
 
 # packs, but what thez are doing?find out.....

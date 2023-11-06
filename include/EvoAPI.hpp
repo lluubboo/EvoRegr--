@@ -37,7 +37,7 @@ private:
     std::vector<XoshiroCpp::Xoshiro256Plus> create_random_engines(const std::uint64_t seed, int count);
     std::vector<EvoIndividual> create_random_generation(XoshiroCpp::Xoshiro256Plus&, int size);
     EvoDataSet data_transformation_cacheless(Eigen::MatrixXd, Eigen::VectorXd, EvoIndividual&);
-    Eigen::MatrixXd get_regression_summary_matrix(RegressionResult const& result);
+    Eigen::MatrixXd get_regression_summary_matrix(RegressionDetailedResult const& result);
     Eigen::MatrixXd get_regression_history_summary(std::vector<double> fitness_history, std::vector<double> titan_history);
     void setTitan(EvoIndividual, int);
     void create_regression_input(std::tuple<int, int, std::vector<double>>);

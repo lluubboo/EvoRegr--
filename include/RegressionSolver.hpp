@@ -1,7 +1,7 @@
 #pragma once
 #include <Eigen/Dense>
 
-struct RegressionResult {
+struct RegressionDetailedResult {
     Eigen::VectorXd theta;
     Eigen::VectorXd predicton;
     Eigen::VectorXd residuals;
@@ -15,11 +15,20 @@ struct RegressionResult {
     double sum_squares_regression;
     double sum_squares_total;
     double mean_sum_squares_errors;
+    double variance;
+    double standard_deviation;
     double rmse;
     double rsquared;
     double rsquaredadj;
     bool isUsable;
 };
 
-RegressionResult solve_system_by_ldlt_detailed(Eigen::MatrixXd const&, Eigen::VectorXd const&);
-RegressionResult solve_system_by_ldlt_simple(Eigen::MatrixXd const&, Eigen::VectorXd const&);
+struct RegressionSimpleResult {
+    Eigen::VectorXd coefficients;
+    Eigen::VectorXd residuals;
+    double sum_squares_errors;
+    bool isUsable;
+};
+
+RegressionDetailedResult solve_system_by_ldlt_detailed(Eigen::MatrixXd const&, Eigen::VectorXd const&);
+RegressionSimpleResult solve_system_by_ldlt_simple(Eigen::MatrixXd const&, Eigen::VectorXd const&);
