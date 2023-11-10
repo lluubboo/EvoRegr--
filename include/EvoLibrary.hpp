@@ -49,6 +49,7 @@ namespace Reproduction {
 namespace FitnessEvaluator {
 
     double get_fitness(Eigen::MatrixXd const& predictor, Eigen::VectorXd const& target);
+    void sort_vector_by_fitness();
 
 }
 

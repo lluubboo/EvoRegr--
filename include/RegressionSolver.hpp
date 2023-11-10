@@ -26,6 +26,7 @@ struct RegressionDetailedResult {
 struct RegressionSimpleResult {
     Eigen::VectorXd coefficients;
     Eigen::VectorXd residuals;
+    Eigen::VectorXd prediction;
     double sum_squares_errors;
     bool isUsable;
 };

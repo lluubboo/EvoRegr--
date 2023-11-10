@@ -49,18 +49,25 @@ EvoIndividual Factory::getRandomEvoIndividual(Eigen::MatrixXd predictor, Eigen::
 MergeAllele Factory::getRandomMergeAllele(int column_index, int predictor_column_count, XoshiroCpp::Xoshiro256Plus& random_engine) {
 
     MergeAllele merge_allele{ column_index };
-    std::vector<int> free_cols(predictor_column_count);
-    std::iota(begin(free_cols), end(free_cols), 0);
-    std::shuffle(free_cols.begin(), free_cols.end(), random_engine);
 
-    int cols_to_merged = RandomNumbers::rand_interval_int(0, predictor_column_count - 1, random_engine);
+    // column index 0 marks x0 (no merging)
 
-    for (int i = 0; i < cols_to_merged; i++) {
-        MergeTwin twin = MergeTwin();
-        twin.merge_column = free_cols.back();
-        twin.merge_operator = Merge_operator(RandomNumbers::rand_interval_int(0, merge_operator_maxindex, random_engine));
-        merge_allele.allele.push_back(twin);
-        free_cols.pop_back();
+    if (column_index != 0) {
+
+        std::vector<int> free_cols(predictor_column_count);
+        std::iota(begin(free_cols), end(free_cols), 0);
+        free_cols.erase(std::find(free_cols.begin(), free_cols.end(), column_index));
+        std::shuffle(free_cols.begin(), free_cols.end(), random_engine);
+
+        int cols_to_merged = RandomNumbers::rand_interval_int(0, predictor_column_count - 1, random_engine);
+
+        for (int i = 0; i < cols_to_merged; i++) {
+            MergeTwin twin = MergeTwin();
+            twin.merge_column = free_cols.back();
+            twin.merge_operator = Merge_operator(RandomNumbers::rand_interval_int(0, merge_operator_maxindex, random_engine));
+            merge_allele.allele.push_back(twin);
+            free_cols.pop_back();
+        }
     }
 
     return merge_allele;
@@ -68,8 +75,12 @@ MergeAllele Factory::getRandomMergeAllele(int column_index, int predictor_column
 
 TransformXAllele Factory::getRandomTransformXAllele(int column_index, XoshiroCpp::Xoshiro256Plus& random_engine) {
     TransformXAllele transformx_allele{ column_index };
-    transformx_allele.allele = Transform_operator{ RandomNumbers::rand_interval_int(0, transform_operator_maxindex, random_engine) };
-    if (transformx_allele.allele == Transform_operator::Pow || transformx_allele.allele == Transform_operator::Wek) transformx_allele.resetCharacteristicNumber(RandomNumbers::rand_interval_float(1, 3, random_engine));
+    if (column_index != 0) {
+        transformx_allele.allele = Transform_operator{ RandomNumbers::rand_interval_int(0, transform_operator_maxindex, random_engine) };
+        if (transformx_allele.allele == Transform_operator::Pow || transformx_allele.allele == Transform_operator::Wek) transformx_allele.resetCharacteristicNumber(RandomNumbers::rand_interval_float(1, 3, random_engine));
+    } else {
+        transformx_allele.allele = Transform_operator::Let;
+    }
     return transformx_allele;
 };
 
@@ -120,7 +131,7 @@ EvoIndividual Crossover::cross(EvoIndividual const& number_one, EvoIndividual co
 }
 
 EvoIndividual Mutation::mutate(EvoIndividual& individual, int chromosome_size, int predictor_row_count, XoshiroCpp::Xoshiro256Plus& random_engine) {
-    if (RandomNumbers::rand_interval_int(0, 7, random_engine) == 0) {
+    if (RandomNumbers::rand_interval_int(0, 10, random_engine) == 0) {
         if (RandomNumbers::rand_interval_int(0, 3, random_engine) == 0) {
             int col = RandomNumbers::rand_interval_int(0, chromosome_size - 1, random_engine);
             individual.x_transformer_chromosome.at(col) = Factory::getRandomTransformXAllele(col, random_engine);

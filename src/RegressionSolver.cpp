@@ -48,7 +48,8 @@ RegressionSimpleResult solve_system_by_ldlt_simple(Eigen::MatrixXd const& predic
     result.isUsable = !result.coefficients.hasNaN() & result.coefficients.allFinite();
 
     if (result.isUsable) {
-        result.residuals = target - (predictors * result.coefficients);
+        result.prediction = predictors * result.coefficients;
+        result.residuals = target - result.prediction;
         result.sum_squares_errors = result.residuals.array().square().sum();
     }
     else {
