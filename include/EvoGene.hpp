@@ -57,7 +57,7 @@ class MergeAllele : EvoGene {
 public:
     MergeAllele(int);
     ~MergeAllele();
-    Eigen::MatrixXd& modifyMatrixAccordingToTwin(MergeTwin const&, Eigen::MatrixXd&, Eigen::MatrixXd const&);
+    void modifyMatrixAccordingToTwin(MergeTwin const&, Eigen::MatrixXd&, Eigen::MatrixXd const&);
     Eigen::MatrixXd& transform(Eigen::MatrixXd&) override;
     std::string to_string() const override;
     std::string to_string_code() const override;

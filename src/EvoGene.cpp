@@ -33,22 +33,21 @@ Eigen::MatrixXd& MergeAllele::transform(Eigen::MatrixXd& matrix) {
     return matrix;
 }
 
-Eigen::MatrixXd& MergeAllele::modifyMatrixAccordingToTwin(MergeTwin const& twin, Eigen::MatrixXd& matrix, Eigen::MatrixXd const& original_matrix) {
+void MergeAllele::modifyMatrixAccordingToTwin(MergeTwin const& twin, Eigen::MatrixXd& matrix, Eigen::MatrixXd const& original_matrix) {
     switch (twin.merge_operator) {
     case Merge_operator::Add:
-        matrix.col(column_index) = matrix.col(column_index) + original_matrix.col(twin.merge_column);
+        matrix.col(column_index).array() += original_matrix.col(twin.merge_column).array();
         break;
     case Merge_operator::Sub:
-        matrix.col(column_index) = matrix.col(column_index) - original_matrix.col(twin.merge_column);
+        matrix.col(column_index).array() -= original_matrix.col(twin.merge_column).array();
         break;
     case Merge_operator::Mul:
-        matrix.col(column_index) = matrix.col(column_index).array() * original_matrix.col(twin.merge_column).array();
+        matrix.col(column_index).array() *= original_matrix.col(twin.merge_column).array();
         break;
     case Merge_operator::Div:
-        matrix.col(column_index) = matrix.col(column_index).array() / original_matrix.col(twin.merge_column).array();
+        matrix.col(column_index).array() /= original_matrix.col(twin.merge_column).array();
         break;
     }
-    return matrix;
 }
 
 std::string MergeAllele::to_string() const {
@@ -249,17 +248,17 @@ RobustAllele::RobustAllele() : EvoGene(0), allele{} {};
 RobustAllele::~RobustAllele() {};
 
 Eigen::MatrixXd& RobustAllele::transform(Eigen::MatrixXd& matrix) {
-    Eigen::VectorXi v = Eigen::Map<Eigen::VectorXi>(allele.data(), allele.size());
-    Eigen::MatrixXd m = matrix(v, Eigen::all);
-    matrix = m;
+    Eigen::VectorXi indices = Eigen::Map<Eigen::VectorXi>(allele.data(), allele.size());
+    Eigen::MatrixXd transformedMatrix = matrix(indices, Eigen::all);
+    matrix.swap(transformedMatrix);
     return matrix;
 }
 
-Eigen::VectorXd& RobustAllele::transformVector(Eigen::VectorXd& matrix) {
-    Eigen::VectorXi v = Eigen::Map<Eigen::VectorXi>(allele.data(), allele.size());
-    Eigen::VectorXd m = matrix(v);
-    matrix = m;
-    return matrix;
+Eigen::VectorXd& RobustAllele::transformVector(Eigen::VectorXd& vector) {
+    Eigen::VectorXi indices = Eigen::Map<Eigen::VectorXi>(allele.data(), allele.size());
+    Eigen::VectorXd transformeVector = vector(indices);
+    vector.swap(transformeVector);
+    return vector;
 }
 
 std::string RobustAllele::to_string() const {
