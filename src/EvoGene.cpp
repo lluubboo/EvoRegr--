@@ -36,10 +36,10 @@ Eigen::MatrixXd& MergeAllele::transform(Eigen::MatrixXd& matrix) {
 Eigen::MatrixXd& MergeAllele::modifyMatrixAccordingToTwin(MergeTwin const& twin, Eigen::MatrixXd& matrix, Eigen::MatrixXd const& original_matrix) {
     switch (twin.merge_operator) {
     case Merge_operator::Add:
-        matrix.col(column_index) = matrix.col(column_index).array() + original_matrix.col(twin.merge_column).array();
+        matrix.col(column_index) = matrix.col(column_index) + original_matrix.col(twin.merge_column);
         break;
     case Merge_operator::Sub:
-        matrix.col(column_index) = matrix.col(column_index).array() - original_matrix.col(twin.merge_column).array();
+        matrix.col(column_index) = matrix.col(column_index) - original_matrix.col(twin.merge_column);
         break;
     case Merge_operator::Mul:
         matrix.col(column_index) = matrix.col(column_index).array() * original_matrix.col(twin.merge_column).array();
@@ -100,10 +100,9 @@ Eigen::MatrixXd& TransformXAllele::transform(Eigen::MatrixXd& matrix) {
         matrix.col(column_index) = matrix.col(column_index).unaryExpr([&](const auto s) { return (double)cbrt(s); });
         break;
     case Transform_operator::Nul:
-        matrix.col(column_index) = matrix.col(column_index).unaryExpr([&](const auto s) { return s * 0; });
+        matrix.col(column_index) = Eigen::VectorXd::Zero(matrix.rows());
         break;
-    case Transform_operator::Let:
-        matrix.col(column_index) = matrix.col(column_index).unaryExpr([&](const auto s) { return s; });
+    case Transform_operator::Let:;
         break;
     case Transform_operator::Log:
         matrix.col(column_index) = matrix.col(column_index).unaryExpr([&](const auto s) { return (double)log(s); });
@@ -172,7 +171,6 @@ Eigen::VectorXd& TransformYAllele::transformVector(Eigen::VectorXd& vector) {
         vector = vector.unaryExpr([&](const auto s) { return (double)cbrt(s); });
         break;
     case Transform_operator::Let:
-        vector = vector.unaryExpr([&](const auto s) { return s; });
         break;
     case Transform_operator::Log:
         vector = vector.unaryExpr([&](const auto s) { return (double)log(s); });
@@ -184,7 +182,7 @@ Eigen::VectorXd& TransformYAllele::transformVector(Eigen::VectorXd& vector) {
         vector = vector.unaryExpr([&](const auto s) { return (double)log2(s); });
         break;
     case Transform_operator::Nul: //it doesnt happpen
-        vector = vector.unaryExpr([&](const auto s) { return s * 0; });
+        vector = Eigen::VectorXd::Zero(vector.rows());
         break;
     }
 
@@ -212,7 +210,6 @@ Eigen::VectorXd& TransformYAllele::transformBack(Eigen::VectorXd& vector) {
         vector = vector.unaryExpr([&](const auto s) { return s*s*s; });
         break;
     case Transform_operator::Let:
-        vector = vector.unaryExpr([&](const auto s) { return s; });
         break;
     case Transform_operator::Log:
         vector = vector.unaryExpr([&](const auto s) { return (double)exp(s); });
@@ -224,7 +221,7 @@ Eigen::VectorXd& TransformYAllele::transformBack(Eigen::VectorXd& vector) {
         vector = vector.unaryExpr([&](const auto s) { return (double)pow(2, s); });
         break;
     case Transform_operator::Nul: //it doesnt happpen
-        vector = vector.unaryExpr([&](const auto s) { return s; });
+        vector = Eigen::VectorXd::Zero(vector.rows());
         break;
     }
     return vector;
