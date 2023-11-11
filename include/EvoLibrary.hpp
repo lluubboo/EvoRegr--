@@ -35,11 +35,11 @@ namespace Mutation {
 
 namespace Transform {
 
-    Eigen::MatrixXd full_predictor_transform(Eigen::MatrixXd&, EvoIndividual&);
-    Eigen::MatrixXd half_predictor_transform(Eigen::MatrixXd&, EvoIndividual&);
-    Eigen::MatrixXd robust_predictor_transform(Eigen::MatrixXd&, EvoIndividual&);
-    Eigen::VectorXd full_target_transform(Eigen::VectorXd&, EvoIndividual&);
-    Eigen::VectorXd half_target_transform(Eigen::VectorXd&, EvoIndividual&);
+    Eigen::MatrixXd full_predictor_transform(Eigen::MatrixXd&, EvoIndividual const&);
+    Eigen::MatrixXd half_predictor_transform(Eigen::MatrixXd&, EvoIndividual const&);
+    Eigen::MatrixXd robust_predictor_transform(Eigen::MatrixXd&, EvoIndividual const&);
+    Eigen::VectorXd full_target_transform(Eigen::VectorXd&, EvoIndividual const&);
+    Eigen::VectorXd half_target_transform(Eigen::VectorXd&, EvoIndividual const&);
 }
 
 namespace Reproduction {

@@ -166,7 +166,7 @@ EvoIndividual Reproduction::reproduction(std::array<EvoIndividual, 2> const& par
     return individual;
 };
 
-Eigen::MatrixXd Transform::full_predictor_transform(Eigen::MatrixXd& matrix, EvoIndividual& individual) {
+Eigen::MatrixXd Transform::full_predictor_transform(Eigen::MatrixXd& matrix, EvoIndividual const& individual) {
 
     // erase some rows
     individual.robuster_chromosome.at(0).transform(matrix);
@@ -186,7 +186,7 @@ Eigen::MatrixXd Transform::full_predictor_transform(Eigen::MatrixXd& matrix, Evo
     return matrix;
 };
 
-Eigen::MatrixXd Transform::half_predictor_transform(Eigen::MatrixXd& matrix, EvoIndividual& individual) {
+Eigen::MatrixXd Transform::half_predictor_transform(Eigen::MatrixXd& matrix, EvoIndividual const& individual) {
     //merge predictors
     for (int i = 0; i < matrix.cols(); i++)
     {
@@ -200,18 +200,18 @@ Eigen::MatrixXd Transform::half_predictor_transform(Eigen::MatrixXd& matrix, Evo
     return matrix;
 };
 
-Eigen::MatrixXd Transform::robust_predictor_transform(Eigen::MatrixXd& matrix, EvoIndividual& individual) {
+Eigen::MatrixXd Transform::robust_predictor_transform(Eigen::MatrixXd& matrix, EvoIndividual const& individual) {
     individual.robuster_chromosome.at(0).transform(matrix);
     return matrix;
 };
 
-Eigen::VectorXd Transform::full_target_transform(Eigen::VectorXd& vector, EvoIndividual& individual) {
+Eigen::VectorXd Transform::full_target_transform(Eigen::VectorXd& vector, EvoIndividual const& individual) {
     individual.robuster_chromosome.at(0).transformVector(vector);
     individual.y_transformer_chromosome.at(0).transformVector(vector);
     return vector;
 };
 
-Eigen::VectorXd Transform::half_target_transform(Eigen::VectorXd& vector, EvoIndividual& individual) {
+Eigen::VectorXd Transform::half_target_transform(Eigen::VectorXd& vector, EvoIndividual const& individual) {
     individual.y_transformer_chromosome.at(0).transformVector(vector);
     return vector;
 };

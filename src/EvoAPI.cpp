@@ -195,7 +195,7 @@ void EvoAPI::show_me_result() {
     std::cout << "\n\n";
 }
 
-EvoDataSet EvoAPI::data_transformation_cacheless(Eigen::MatrixXd predictor, Eigen::VectorXd target, EvoIndividual& individual) {
+EvoDataSet EvoAPI::data_transformation_cacheless(Eigen::MatrixXd predictor, Eigen::VectorXd target, EvoIndividual const& individual) {
     Transform::full_predictor_transform(predictor, individual);
     Transform::full_target_transform(target, individual);
     return { predictor, target };

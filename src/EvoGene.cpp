@@ -25,15 +25,14 @@ MergeAllele::MergeAllele(int index) : EvoGene(index), allele{} {}
 
 MergeAllele::~MergeAllele() {}
 
-Eigen::MatrixXd& MergeAllele::transform(Eigen::MatrixXd& matrix) {
+void MergeAllele::transform(Eigen::MatrixXd& matrix) const {
     Eigen::MatrixXd original_matrix = matrix;
     for (auto const& twin : allele) {
         modifyMatrixAccordingToTwin(twin, matrix, original_matrix);
     }
-    return matrix;
 }
 
-void MergeAllele::modifyMatrixAccordingToTwin(MergeTwin const& twin, Eigen::MatrixXd& matrix, Eigen::MatrixXd const& original_matrix) {
+void MergeAllele::modifyMatrixAccordingToTwin(MergeTwin const& twin, Eigen::MatrixXd& matrix, Eigen::MatrixXd const& original_matrix) const {
     switch (twin.merge_operator) {
     case Merge_operator::Add:
         matrix.col(column_index).array() += original_matrix.col(twin.merge_column).array();
@@ -78,7 +77,7 @@ TransformXAllele::TransformXAllele(int index) : EvoGene(index), allele{} {}
 
 TransformXAllele::~TransformXAllele() {}
 
-Eigen::MatrixXd& TransformXAllele::transform(Eigen::MatrixXd& matrix) {
+void TransformXAllele::transform(Eigen::MatrixXd& matrix) const {
     switch (allele) {
     case Transform_operator::Sqr:
         matrix.col(column_index) = matrix.col(column_index).unaryExpr([&](const auto s) { return s * s; });
@@ -113,7 +112,6 @@ Eigen::MatrixXd& TransformXAllele::transform(Eigen::MatrixXd& matrix) {
         matrix.col(column_index) = matrix.col(column_index).unaryExpr([&](const auto s) { return (double)log2(s); });
         break;
     }
-    return matrix;
 }
 
 std::string TransformXAllele::to_string() const {
@@ -145,11 +143,9 @@ void TransformYAllele::resetCharacteristicNumber(float number) {
     characteristic_number = number;
 }
 
-Eigen::MatrixXd& TransformYAllele::transform(Eigen::MatrixXd& matrix) {
-    return matrix;
-}
+void TransformYAllele::transform(Eigen::MatrixXd& matrix) const {}
 
-Eigen::VectorXd& TransformYAllele::transformVector(Eigen::VectorXd& vector) {
+Eigen::VectorXd& TransformYAllele::transformVector(Eigen::VectorXd& vector) const {
     switch (allele) {
     case Transform_operator::Sqr:
         vector = vector.unaryExpr([&](const auto s) { return s*s; });
@@ -188,7 +184,7 @@ Eigen::VectorXd& TransformYAllele::transformVector(Eigen::VectorXd& vector) {
     return vector;
 }
 
-Eigen::VectorXd& TransformYAllele::transformBack(Eigen::VectorXd& vector) {
+Eigen::VectorXd& TransformYAllele::transformBack(Eigen::VectorXd& vector) const {
     switch (allele) {
     case Transform_operator::Sqr:
         vector = vector.unaryExpr([&](const auto s) { return (double)sqrt(s); });
@@ -247,15 +243,18 @@ RobustAllele::RobustAllele() : EvoGene(0), allele{} {};
 
 RobustAllele::~RobustAllele() {};
 
-Eigen::MatrixXd& RobustAllele::transform(Eigen::MatrixXd& matrix) {
-    Eigen::VectorXi indices = Eigen::Map<Eigen::VectorXi>(allele.data(), allele.size());
+void RobustAllele::transform(Eigen::MatrixXd& matrix) const {
+    int size = allele.size();
+    std::vector<int> data(allele);
+    Eigen::VectorXi indices = Eigen::Map<Eigen::VectorXi>(data.data(), size);
     Eigen::MatrixXd transformedMatrix = matrix(indices, Eigen::all);
     matrix.swap(transformedMatrix);
-    return matrix;
 }
 
-Eigen::VectorXd& RobustAllele::transformVector(Eigen::VectorXd& vector) {
-    Eigen::VectorXi indices = Eigen::Map<Eigen::VectorXi>(allele.data(), allele.size());
+Eigen::VectorXd& RobustAllele::transformVector(Eigen::VectorXd& vector) const {
+    int size = allele.size();
+    std::vector<int> data(allele);
+    Eigen::VectorXi indices = Eigen::Map<Eigen::VectorXi>(data.data(), size);
     Eigen::VectorXd transformeVector = vector(indices);
     vector.swap(transformeVector);
     return vector;
