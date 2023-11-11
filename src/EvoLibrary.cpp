@@ -12,9 +12,20 @@ std::vector<EvoIndividual> sort_by_fitness_desc(std::vector<EvoIndividual>& sour
 };
 
 std::vector<EvoIndividual> Selection::tournament_selection(std::vector<EvoIndividual> const& generation, XoshiroCpp::Xoshiro256Plus& random_engine) {
-    std::vector<EvoIndividual> sample = Random::randomChoices(generation, 4, random_engine);
-    sort_by_fitness_desc(sample);
-    return sample;
+    EvoIndividual first = Random::randomChoice(generation, random_engine);
+    EvoIndividual second = Random::randomChoice(generation, random_engine);
+    if (second.fitness < first.fitness) std::swap(first, second);
+    for (int i = 0; i < 2; i++) {
+        EvoIndividual entity = Random::randomChoice(generation, random_engine);
+        if (entity.fitness < first.fitness) {
+            std::swap(first, entity);
+            second = std::move(entity);
+        }
+        else if (entity.fitness < second.fitness) {
+            second = std::move(entity);
+        }
+    }
+    return std::vector{ first, second };
 };
 
 EvoIndividual Factory::getRandomEvoIndividual(Eigen::MatrixXd predictor, Eigen::VectorXd target, XoshiroCpp::Xoshiro256Plus& random_engine) {
