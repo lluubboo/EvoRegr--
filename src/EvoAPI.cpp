@@ -116,13 +116,15 @@ void EvoAPI::predict() {
     //random engines for parallel loops
     std::vector<XoshiroCpp::Xoshiro256Plus> random_engines = create_random_engines(12346, omp_get_max_threads());
 
+    std::vector<double> generation_fitness(0);
+    generation_fitness.reserve(generation_size_limit);
+
     // EvoIndividual containers
     std::vector<EvoIndividual> generation(0);
     std::vector<EvoIndividual> past_generation(0);
 
     generation.reserve(generation_size_limit);
     past_generation.reserve(generation_size_limit);
-
     past_generation = create_random_generation(random_engines[0], generation_size_limit);
 
 #pragma omp declare reduction(merge_individuals : std::vector<EvoIndividual> : omp_out.insert(omp_out.end(), omp_in.begin(), omp_in.end())) initializer(omp_priv = omp_orig)
@@ -131,10 +133,7 @@ void EvoAPI::predict() {
 
         if (gen_index % 100 == 0) std::cout << "Creating generation " << gen_index << "..." << std::endl;
 
-        std::vector<double> generation_fitness;
-        generation_fitness.reserve(generation_size_limit);
-
-#pragma omp parallel for shared(random_engines, past_generation) reduction (merge_individuals : generation)  reduction(merge_fitnesses : generation_fitness) schedule(dynamic)
+#pragma omp parallel for shared(random_engines, past_generation) reduction (merge_individuals : generation) reduction (merge_fitnesses : generation_fitness) schedule(dynamic)
         for (int entity_index = 0; entity_index < generation_size_limit; entity_index++) {
 
             //selection
@@ -159,6 +158,7 @@ void EvoAPI::predict() {
         }
         past_generation = std::move(generation); //new generation become old generation
         report_generation_summary(generation_fitness);
+        generation_fitness.clear();
     }
 }
 
