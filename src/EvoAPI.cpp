@@ -136,11 +136,13 @@ void EvoAPI::predict() {
 #pragma omp parallel for shared(random_engines, past_generation) reduction (merge_individuals : generation) reduction (merge_fitnesses : generation_fitness) schedule(dynamic)
         for (int entity_index = 0; entity_index < generation_size_limit; entity_index++) {
 
-            //selection
-            std::vector<EvoIndividual> parents = Selection::tournament_selection(past_generation, random_engines[omp_get_thread_num()]);
-
             //crossover & mutation 
-            EvoIndividual individual = Reproduction::reproduction(parents[0], parents[1], x.cols(), x.rows(), random_engines[omp_get_thread_num()]);
+            EvoIndividual individual = Reproduction::reproduction(
+                Selection::tournament_selection(past_generation, random_engines[omp_get_thread_num()]),
+                x.cols(),
+                x.rows(),
+                random_engines[omp_get_thread_num()]
+            );
 
             //transform data
             EvoDataSet evo_data = data_transformation_cacheless(x, y, individual);

@@ -17,13 +17,13 @@ namespace Factory {
 
 namespace Selection {
 
-    std::vector<EvoIndividual> tournament_selection(std::vector<EvoIndividual> const&, XoshiroCpp::Xoshiro256Plus&);
+    std::array<EvoIndividual, 2> tournament_selection(std::vector<EvoIndividual> const&, XoshiroCpp::Xoshiro256Plus&);
 
 }
 
 namespace Crossover {
 
-    EvoIndividual cross(EvoIndividual const&, EvoIndividual const&, int, XoshiroCpp::Xoshiro256Plus&);
+    EvoIndividual cross(std::array<EvoIndividual, 2> const& parents, int, XoshiroCpp::Xoshiro256Plus&);
 
 }
 
@@ -43,7 +43,7 @@ namespace Transform {
 }
 
 namespace Reproduction {
-    EvoIndividual reproduction(EvoIndividual const& parent1, EvoIndividual const& parent2, int chromosome_size, int predictor_row_count, XoshiroCpp::Xoshiro256Plus&);
+    EvoIndividual reproduction(std::array<EvoIndividual, 2> const& parents, int chromosome_size, int predictor_row_count, XoshiroCpp::Xoshiro256Plus&);
 }
 
 namespace FitnessEvaluator {

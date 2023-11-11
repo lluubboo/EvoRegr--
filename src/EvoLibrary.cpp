@@ -11,7 +11,7 @@ std::vector<EvoIndividual> sort_by_fitness_desc(std::vector<EvoIndividual>& sour
     return source;
 };
 
-std::vector<EvoIndividual> Selection::tournament_selection(std::vector<EvoIndividual> const& generation, XoshiroCpp::Xoshiro256Plus& random_engine) {
+std::array<EvoIndividual, 2> Selection::tournament_selection(std::vector<EvoIndividual> const& generation, XoshiroCpp::Xoshiro256Plus& random_engine) {
 
     EvoIndividual first = Random::randomChoice(generation, random_engine);
     EvoIndividual second = Random::randomChoice(generation, random_engine);
@@ -28,7 +28,7 @@ std::vector<EvoIndividual> Selection::tournament_selection(std::vector<EvoIndivi
             second = std::move(entity);
         }
     }
-    return std::vector{ first, second };
+    return std::array{ first, second };
 };
 
 EvoIndividual Factory::getRandomEvoIndividual(Eigen::MatrixXd predictor, Eigen::VectorXd target, XoshiroCpp::Xoshiro256Plus& random_engine) {
@@ -117,52 +117,50 @@ RobustAllele Factory::getRandomRobustAllele(int row_count, XoshiroCpp::Xoshiro25
     return robust_allele;
 };
 
-EvoIndividual Crossover::cross(EvoIndividual const& number_one, EvoIndividual const& number_two, int chromosome_size, XoshiroCpp::Xoshiro256Plus& random_engine) {
-
+EvoIndividual Crossover::cross(std::array<EvoIndividual, 2> const& parents, int chromosome_size, XoshiroCpp::Xoshiro256Plus& random_engine) {
     EvoIndividual youngling{};
-
     // indexes which points to place of chromosome cut & recombination
     int m_crossover_twist_index = RandomNumbers::rand_interval_int(0, chromosome_size, random_engine);
     int t_crossover_twist_index = RandomNumbers::rand_interval_int(0, chromosome_size, random_engine);
     int r_crossover_twist_index = RandomNumbers::rand_interval_int(0, 1, random_engine);
     int y_crossover_twist_index = RandomNumbers::rand_interval_int(0, 1, random_engine);
-
     // cross single gene chromosomes robuster & ytransformer
-    youngling.robuster_chromosome = (r_crossover_twist_index == 0) ? number_one.robuster_chromosome : number_two.robuster_chromosome;
-    youngling.y_transformer_chromosome = (y_crossover_twist_index == 0) ? number_one.y_transformer_chromosome : number_two.y_transformer_chromosome;
-
+    youngling.robuster_chromosome = (r_crossover_twist_index == 0) ? parents[0].robuster_chromosome : parents[1].robuster_chromosome;
+    youngling.y_transformer_chromosome = (y_crossover_twist_index == 0) ? parents[0].y_transformer_chromosome : parents[1].y_transformer_chromosome;
     // cross multi gene chromosomes merger & xtransformer
-    youngling.merger_chromosome = number_one.merger_chromosome;
-    youngling.x_transformer_chromosome = number_one.x_transformer_chromosome;
-    std::copy(number_two.merger_chromosome.begin() + m_crossover_twist_index, number_two.merger_chromosome.end(), youngling.merger_chromosome.begin() + m_crossover_twist_index);    
-    std::copy(number_two.x_transformer_chromosome.begin() + t_crossover_twist_index, number_two.x_transformer_chromosome.end(), youngling.x_transformer_chromosome.begin() + t_crossover_twist_index);
-
+    youngling.merger_chromosome = parents[0].merger_chromosome;
+    youngling.x_transformer_chromosome = parents[0].x_transformer_chromosome;
+    std::copy(parents[1].merger_chromosome.begin() + m_crossover_twist_index, parents[1].merger_chromosome.end(), youngling.merger_chromosome.begin() + m_crossover_twist_index);
+    std::copy(parents[1].x_transformer_chromosome.begin() + t_crossover_twist_index, parents[1].x_transformer_chromosome.end(), youngling.x_transformer_chromosome.begin() + t_crossover_twist_index);
     return youngling;
 }
 
 EvoIndividual Mutation::mutate(EvoIndividual& individual, int chromosome_size, int predictor_row_count, XoshiroCpp::Xoshiro256Plus& random_engine) {
     if (RandomNumbers::rand_interval_int(0, 10, random_engine) == 0) {
-        if (RandomNumbers::rand_interval_int(0, 3, random_engine) == 0) {
+
+        int mutation_index = RandomNumbers::rand_interval_int(0, 3, random_engine);
+        
+        if (mutation_index == 0) {
             int col = RandomNumbers::rand_interval_int(0, chromosome_size - 1, random_engine);
             individual.x_transformer_chromosome.at(col) = Factory::getRandomTransformXAllele(col, random_engine);
         }
-        if (RandomNumbers::rand_interval_int(0, 3, random_engine) == 0) {
+        if (mutation_index == 1) {
             int col = RandomNumbers::rand_interval_int(0, chromosome_size - 1, random_engine);
             individual.merger_chromosome.at(col) = Factory::getRandomMergeAllele(col, chromosome_size, random_engine);
         }
-        if (RandomNumbers::rand_interval_int(0, 3, random_engine) == 0) {
+        if (mutation_index == 2) {
             individual.robuster_chromosome.at(0) = Factory::getRandomRobustAllele(predictor_row_count, random_engine);
         }
-        if (RandomNumbers::rand_interval_int(0, 3, random_engine) == 0) {
+        if (mutation_index == 3) {
             individual.y_transformer_chromosome.at(0) = Factory::getRandomTransformYAllele(random_engine);
         }
     }
     return individual;
 }
 
-EvoIndividual Reproduction::reproduction(EvoIndividual const& parent1, EvoIndividual const& parent2, int chromosomes_size, int predictor_row_count, XoshiroCpp::Xoshiro256Plus& random_engine) {
+EvoIndividual Reproduction::reproduction(std::array<EvoIndividual, 2> const& parents, int chromosomes_size, int predictor_row_count, XoshiroCpp::Xoshiro256Plus& random_engine) {
     // crossover
-    EvoIndividual individual = Crossover::cross(parent1, parent2, chromosomes_size, random_engine);
+    EvoIndividual individual = Crossover::cross(parents, chromosomes_size, random_engine);
     // mutation
     Mutation::mutate(individual, chromosomes_size, predictor_row_count, random_engine);
     return individual;
