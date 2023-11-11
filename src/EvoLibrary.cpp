@@ -121,8 +121,6 @@ EvoIndividual Crossover::cross(EvoIndividual const& number_one, EvoIndividual co
 
     EvoIndividual youngling{};
 
-
-
     // indexes which points to place of chromosome cut & recombination
     int m_crossover_twist_index = RandomNumbers::rand_interval_int(0, chromosome_size, random_engine);
     int t_crossover_twist_index = RandomNumbers::rand_interval_int(0, chromosome_size, random_engine);
