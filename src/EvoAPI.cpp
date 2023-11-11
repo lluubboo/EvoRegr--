@@ -137,7 +137,7 @@ void EvoAPI::predict() {
         for (int entity_index = 0; entity_index < generation_size_limit; entity_index++) {
 
             //crossover & mutation 
-            EvoIndividual individual = Reproduction::reproduction(
+            EvoIndividual newborn = Reproduction::reproduction(
                 Selection::tournament_selection(past_generation, random_engines[omp_get_thread_num()]),
                 x.cols(),
                 x.rows(),
@@ -145,18 +145,18 @@ void EvoAPI::predict() {
             );
 
             //transform data
-            EvoDataSet evo_data = data_transformation_cacheless(x, y, individual);
+            EvoDataSet evo_data = data_transformation_cacheless(x, y, newborn);
 
             // calculate fitness
-            individual.evaluate(FitnessEvaluator::get_fitness(evo_data.predictor, evo_data.target));
+            newborn.evaluate(FitnessEvaluator::get_fitness(evo_data.predictor, evo_data.target));
 
             // report fitness
-            if (individual.is_healthy) generation_fitness.push_back(individual.fitness);
+            if (newborn.is_healthy) generation_fitness.push_back(newborn.fitness);
 
             //mark titan
-            titan_evaluation(individual, gen_index);
+            titan_evaluation(newborn, gen_index);
 
-            generation.push_back(individual);
+            generation.push_back(newborn);
         }
         past_generation = std::move(generation); //new generation become old generation
         report_generation_summary(generation_fitness);
