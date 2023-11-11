@@ -12,9 +12,12 @@ std::vector<EvoIndividual> sort_by_fitness_desc(std::vector<EvoIndividual>& sour
 };
 
 std::vector<EvoIndividual> Selection::tournament_selection(std::vector<EvoIndividual> const& generation, XoshiroCpp::Xoshiro256Plus& random_engine) {
+
     EvoIndividual first = Random::randomChoice(generation, random_engine);
     EvoIndividual second = Random::randomChoice(generation, random_engine);
+
     if (second.fitness < first.fitness) std::swap(first, second);
+    
     for (int i = 0; i < 2; i++) {
         EvoIndividual entity = Random::randomChoice(generation, random_engine);
         if (entity.fitness < first.fitness) {
@@ -118,6 +121,8 @@ EvoIndividual Crossover::cross(EvoIndividual const& number_one, EvoIndividual co
 
     EvoIndividual youngling{};
 
+
+
     // indexes which points to place of chromosome cut & recombination
     int m_crossover_twist_index = RandomNumbers::rand_interval_int(0, chromosome_size, random_engine);
     int t_crossover_twist_index = RandomNumbers::rand_interval_int(0, chromosome_size, random_engine);
@@ -125,18 +130,14 @@ EvoIndividual Crossover::cross(EvoIndividual const& number_one, EvoIndividual co
     int y_crossover_twist_index = RandomNumbers::rand_interval_int(0, 1, random_engine);
 
     // cross single gene chromosomes robuster & ytransformer
-    (r_crossover_twist_index == 0) ? youngling.robuster_chromosome = number_one.robuster_chromosome
-        : youngling.robuster_chromosome = number_two.robuster_chromosome;
-    (y_crossover_twist_index == 0) ? youngling.y_transformer_chromosome = number_one.y_transformer_chromosome
-        : youngling.y_transformer_chromosome = number_two.y_transformer_chromosome;
+    youngling.robuster_chromosome = (r_crossover_twist_index == 0) ? number_one.robuster_chromosome : number_two.robuster_chromosome;
+    youngling.y_transformer_chromosome = (y_crossover_twist_index == 0) ? number_one.y_transformer_chromosome : number_two.y_transformer_chromosome;
 
     // cross multi gene chromosomes merger & xtransformer
-    for (int i = 0; i < chromosome_size; i++) {
-        (i < m_crossover_twist_index) ? youngling.merger_chromosome.push_back(number_one.merger_chromosome.at(i))
-            : youngling.merger_chromosome.push_back(number_two.merger_chromosome.at(i));
-        (i < t_crossover_twist_index) ? youngling.x_transformer_chromosome.push_back(number_one.x_transformer_chromosome.at(i))
-            : youngling.x_transformer_chromosome.push_back(number_two.x_transformer_chromosome.at(i));
-    }
+    youngling.merger_chromosome = number_one.merger_chromosome;
+    youngling.x_transformer_chromosome = number_one.x_transformer_chromosome;
+    std::copy(number_two.merger_chromosome.begin() + m_crossover_twist_index, number_two.merger_chromosome.end(), youngling.merger_chromosome.begin() + m_crossover_twist_index);    
+    std::copy(number_two.x_transformer_chromosome.begin() + t_crossover_twist_index, number_two.x_transformer_chromosome.end(), youngling.x_transformer_chromosome.begin() + t_crossover_twist_index);
 
     return youngling;
 }
