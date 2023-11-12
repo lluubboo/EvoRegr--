@@ -15,6 +15,7 @@
 
 EvoAPI::EvoAPI(const std::string& filename) {
     this->filename = filename;
+    std::ios_base::sync_with_stdio(false);
 }
 
 void EvoAPI::create_regression_input(std::tuple<int, int, std::vector<double>> input) {
@@ -131,7 +132,7 @@ void EvoAPI::predict() {
 #pragma omp declare reduction(merge_fitnesses : std::vector<double> : omp_out.insert(omp_out.end(), omp_in.begin(), omp_in.end())) initializer(omp_priv = omp_orig)
     for (int gen_index = 1; gen_index < generation_count_limit; gen_index++) {
 
-        if (gen_index % 100 == 0) std::cout << "Creating generation " << gen_index << "..." << std::endl;
+        if (gen_index % 10 == 0) std::cout << "Creating generation " << gen_index << "..." << std::endl;
 
 #pragma omp parallel for shared(random_engines, past_generation) reduction (merge_individuals : generation) reduction (merge_fitnesses : generation_fitness) schedule(dynamic)
         for (int entity_index = 0; entity_index < generation_size_limit; entity_index++) {

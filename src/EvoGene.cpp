@@ -145,7 +145,7 @@ void TransformYAllele::resetCharacteristicNumber(float number) {
 
 void TransformYAllele::transform(Eigen::MatrixXd& matrix) const {}
 
-Eigen::VectorXd& TransformYAllele::transformVector(Eigen::VectorXd& vector) const {
+void TransformYAllele::transformVector(Eigen::VectorXd& vector) const {
     switch (allele) {
     case Transform_operator::Sqr:
         vector = vector.unaryExpr([&](const auto s) { return s*s; });
@@ -180,11 +180,9 @@ Eigen::VectorXd& TransformYAllele::transformVector(Eigen::VectorXd& vector) cons
         vector = Eigen::VectorXd::Zero(vector.rows());
         break;
     }
-
-    return vector;
 }
 
-Eigen::VectorXd& TransformYAllele::transformBack(Eigen::VectorXd& vector) const {
+void TransformYAllele::transformBack(Eigen::VectorXd& vector) const {
     switch (allele) {
     case Transform_operator::Sqr:
         vector = vector.unaryExpr([&](const auto s) { return (double)sqrt(s); });
@@ -219,7 +217,6 @@ Eigen::VectorXd& TransformYAllele::transformBack(Eigen::VectorXd& vector) const 
         vector = Eigen::VectorXd::Zero(vector.rows());
         break;
     }
-    return vector;
 }
 
 std::string TransformYAllele::to_string() const {
@@ -251,13 +248,12 @@ void RobustAllele::transform(Eigen::MatrixXd& matrix) const {
     matrix.swap(transformedMatrix);
 }
 
-Eigen::VectorXd& RobustAllele::transformVector(Eigen::VectorXd& vector) const {
+void RobustAllele::transformVector(Eigen::VectorXd& vector) const {
     int size = allele.size();
     std::vector<int> data(allele);
     Eigen::VectorXi indices = Eigen::Map<Eigen::VectorXi>(data.data(), size);
     Eigen::VectorXd transformeVector = vector(indices);
     vector.swap(transformeVector);
-    return vector;
 }
 
 std::string RobustAllele::to_string() const {
