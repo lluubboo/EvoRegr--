@@ -5,8 +5,8 @@ using namespace std;
 
 int main(int, char**) {
 
-    EvoAPI api = EvoAPI("C:/Users/lubomir.balaz/Desktop/Projekty 2023/EvoRegr++/data/TestDataSpan.csv");
-    api.setBoundaryConditions(100, 100, 1);
+    EvoAPI api = EvoAPI(100, 100, 0);
+    api.load_file();
 
     auto start = std::chrono::high_resolution_clock::now();
     api.predict();

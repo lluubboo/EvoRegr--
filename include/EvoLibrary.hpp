@@ -8,11 +8,13 @@
 std::vector<EvoIndividual> sort_by_fitness_desc(std::vector<EvoIndividual>&);
 
 namespace Factory {
-    EvoIndividual getRandomEvoIndividual(Eigen::MatrixXd predictor, Eigen::VectorXd predicate, XoshiroCpp::Xoshiro256Plus& random_engine);
+
+    EvoIndividual getRandomEvoIndividual(int row_count, int predictor_column_count, XoshiroCpp::Xoshiro256Plus& random_engine);
     MergeAllele getRandomMergeAllele(int column_index, int predictor_column_count, XoshiroCpp::Xoshiro256Plus& random_engine);
     TransformXAllele getRandomTransformXAllele(int column_index, XoshiroCpp::Xoshiro256Plus& random_engine);
     TransformYAllele getRandomTransformYAllele(XoshiroCpp::Xoshiro256Plus& random_engine);
     RobustAllele getRandomRobustAllele(int row_count, XoshiroCpp::Xoshiro256Plus& random_engine);
+
 }
 
 namespace Selection {
@@ -35,6 +37,11 @@ namespace Mutation {
 
 namespace Transform {
 
+    struct EvoDataSet {
+        Eigen::MatrixXd predictor;
+        Eigen::MatrixXd target;
+    };
+
     Eigen::MatrixXd full_predictor_transform(Eigen::MatrixXd&, EvoIndividual const&);
     Eigen::MatrixXd half_predictor_transform(Eigen::MatrixXd&, EvoIndividual const&);
     Eigen::MatrixXd robust_predictor_transform(Eigen::MatrixXd&, EvoIndividual const&);
@@ -48,8 +55,7 @@ namespace Reproduction {
 
 namespace FitnessEvaluator {
 
-    double get_fitness(Eigen::MatrixXd const& predictor, Eigen::VectorXd const& target);
-    void sort_vector_by_fitness();
+    double get_fitness(Transform::EvoDataSet const&);
 
 }
 

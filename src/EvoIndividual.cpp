@@ -4,6 +4,8 @@
 #include "XoshiroCpp.hpp"
 #include "EvoIndividual.hpp"
 
+EvoIndividual::EvoIndividual() : fitness(std::numeric_limits<double>::max()), is_healthy(false) {}
+
 void EvoIndividual::evaluate(double value) {
     fitness = value;
     is_healthy = (value == std::numeric_limits<double>::max()) ? false : true;

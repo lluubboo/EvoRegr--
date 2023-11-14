@@ -31,32 +31,16 @@ std::array<EvoIndividual, 2> Selection::tournament_selection(std::vector<EvoIndi
     return std::array{ first, second };
 };
 
-EvoIndividual Factory::getRandomEvoIndividual(Eigen::MatrixXd predictor, Eigen::VectorXd target, XoshiroCpp::Xoshiro256Plus& random_engine) {
-
+EvoIndividual Factory::getRandomEvoIndividual(int row_count, int predictor_column_count, XoshiroCpp::Xoshiro256Plus& random_engine) {
     EvoIndividual individual{};
-
-    int predictor_count, predictor_entity_count;
-
-    predictor_count = predictor.cols();
-    predictor_entity_count = predictor.rows();
-
-    // create alleles
-    for (int i = 0; i < predictor_count; i++)
+    // create genofond
+    for (int i = 0; i < predictor_column_count; i++)
     {
-        individual.merger_chromosome.push_back(Factory::getRandomMergeAllele(i, predictor_count, random_engine));
+        individual.merger_chromosome.push_back(Factory::getRandomMergeAllele(i, predictor_column_count, random_engine));
         individual.x_transformer_chromosome.push_back(Factory::getRandomTransformXAllele(i, random_engine));
     }
-
-    individual.robuster_chromosome.push_back(Factory::getRandomRobustAllele(predictor_entity_count, random_engine));
+    individual.robuster_chromosome.push_back(Factory::getRandomRobustAllele(row_count, random_engine));
     individual.y_transformer_chromosome.push_back(Factory::getRandomTransformYAllele(random_engine));
-
-    // transform data
-    Transform::full_predictor_transform(predictor, individual);
-    Transform::full_target_transform(target, individual);
-
-    // get fitness
-    individual.fitness = FitnessEvaluator::get_fitness(predictor, target);
-
     return individual;
 }
 
@@ -216,8 +200,8 @@ Eigen::VectorXd Transform::half_target_transform(Eigen::VectorXd& vector, EvoInd
     return vector;
 };
 
-double FitnessEvaluator::get_fitness(Eigen::MatrixXd const& predictor, Eigen::VectorXd const& target) {
-    RegressionSimpleResult result = solve_system_by_ldlt_simple(predictor, target);
+double FitnessEvaluator::get_fitness(Transform::EvoDataSet const& dataset) {
+    RegressionSimpleResult result = solve_system_by_ldlt_simple(dataset.predictor, dataset.target);
     return result.sum_squares_errors;
 };
 

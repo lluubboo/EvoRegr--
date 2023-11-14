@@ -7,6 +7,7 @@
 
 class EvoIndividual {
 public:
+    EvoIndividual();
     std::string to_string() const;
     std::string to_string_code() const;
     void evaluate(double);
