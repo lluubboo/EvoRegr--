@@ -82,7 +82,7 @@ void EvoAPI::load_file() {
  * The function `create_regression_input` takes in a tuple containing the number of rows, number of
  * columns, and a vector of data, and creates a predictor matrix and a target vector for regression
  * analysis.
- * 
+ *
  * @param input The input parameter is a tuple containing three elements:
  */
 void EvoAPI::create_regression_input(std::tuple<int, int, std::vector<double>> input) {
@@ -107,8 +107,8 @@ void EvoAPI::create_regression_input(std::tuple<int, int, std::vector<double>> i
     x = Eigen::MatrixXd::Ones(m_output, n_output);
     y.resize(m_output, 1);
 
-    for (int row = 0; row < m_output; ++row){
-        for (int col = 0; col < n_input; ++col){
+    for (int row = 0; row < m_output; ++row) {
+        for (int col = 0; col < n_input; ++col) {
             // last column is always Y or in other words regressant, dependant variable
             if (col == target_col_index) {
                 y(row, 0) = data[col + n_input * row];
@@ -121,6 +121,10 @@ void EvoAPI::create_regression_input(std::tuple<int, int, std::vector<double>> i
     }
 }
 
+/**
+ * The `predict` function performs a genetic algorithm to generate and evaluate a population of
+ * individuals for a specified number of generations.
+ */
 void EvoAPI::predict() {
 
     std::cout << "Prediction started..." << "\n\n";
@@ -133,10 +137,10 @@ void EvoAPI::predict() {
     std::vector<EvoIndividual> past_generation(0);
 
 #pragma omp declare reduction(merge_individuals : std::vector<EvoIndividual> : omp_out.insert(omp_out.end(), omp_in.begin(), omp_in.end())) initializer(omp_priv = omp_orig)
-    
+
     for (int gen_index = 0; gen_index < generation_count_limit; gen_index++) {
 
-        #pragma omp parallel for reduction (merge_individuals : generation) schedule(dynamic)
+#pragma omp parallel for reduction (merge_individuals : generation) schedule(dynamic)
         for (int entity_index = 0; entity_index < generation_size_limit; entity_index++) {
 
             generation.reserve(generation_size_limit);
@@ -159,14 +163,14 @@ void EvoAPI::predict() {
 
             newborn.evaluate(
                 FitnessEvaluator::get_fitness(
-                    data_transformation_cacheless(
+                    data_transformation_robust(
                         x,
                         y,
                         newborn
                     )
                 )
             );
-            
+
             generation.push_back(std::move(newborn));
         }
 
@@ -177,25 +181,15 @@ void EvoAPI::predict() {
     }
 }
 
-void EvoAPI::show_me_result() {
-
-    Eigen::MatrixXd predictor(x);
-    Eigen::VectorXd target(y);
-    Eigen::MatrixXd predictor_full(x);
-    Eigen::VectorXd target_full(y);
-
-    Transform::full_predictor_transform(predictor, titan);
-    Transform::full_target_transform(target, titan);
-    Transform::half_predictor_transform(predictor_full, titan);
-    Transform::half_target_transform(target_full, titan);
-
-    RegressionDetailedResult result = solve_system_by_ldlt_detailed(predictor, target);
-
+void EvoAPI::show_result() {
+    //get result
+    Transform::EvoDataSet regression_dataset = data_transformation_robust(x, y, titan);
+    RegressionDetailedResult result = solve_system_by_ldlt_detailed(regression_dataset.predictor, regression_dataset.target);
     std::cout << "\n\n";
     std::cout << "********************************************REGRESSION RESULT SUMMARY******************************************\n\n";
-    std::cout << get_regression_summary_matrix(result, predictor_full, target_full) << "\n\n";
+    std::cout << get_regression_summary_matrix(result, x, y) << "\n\n";
     std::cout << "************************************************REGRESSION HISTORY*********************************************\n\n";
-    std::cout << get_regression_history_summary(fitness_history, titan_history) << "\n\n";
+    std::cout << get_titan_summary(titan_history) << "\n\n";
     std::cout << "***************************************************TITAN GENOME************************************************\n\n";
     std::cout << titan.to_string();
     std::cout << "***********************************************REGRESSION SUMMARY**********************************************\n\n";
@@ -208,33 +202,70 @@ void EvoAPI::show_me_result() {
     std::cout << "\n\n";
 }
 
+/**
+ * The function "generation_postprocessing" takes a vector of EvoIndividual objects and an integer
+ * representing the generation index, and performs post-processing tasks on the generation data.
+ *
+ * @param generation A vector of EvoIndividual objects representing a generation of individuals.
+ * @param generation_index The generation index is an integer value that represents the index or number
+ * of the current generation being processed. It is used to keep track of the progress of the
+ * evolutionary algorithm.
+ */
 void EvoAPI::generation_postprocessing(std::vector<EvoIndividual> const& generation, int generation_index) {
-
-    // fitness container for statistics
+    // ordered set of fitnesses
     std::set<double> generation_fitness;
 
     for (auto& individual : generation) {
-
-        //find & mark titan
         titan_evaluation(individual, generation_index);
-
-        //save fitness for statistics
         generation_fitness.insert(individual.fitness);
     }
 
+    // create fitness metrics
+    process_generation_fitness(generation_fitness);
 }
 
+/**
+ * The function sets a new titan and adds its fitness and generation index to the titan history.
+ *
+ * @param titan The "titan" parameter is an object of type EvoIndividual, which represents a specific
+ * individual in the evolutionary algorithm. It contains information about the individual's fitness and
+ * other characteristics.
+ * @param generation_index The generation index represents the index or number of the current
+ * generation in the evolutionary algorithm. It is used to keep track of the progress and history of
+ * the algorithm.
+ */
 void EvoAPI::setTitan(EvoIndividual titan, int generation_index) {
     this->titan = titan;
+    this->titan_history.push_back(titan.fitness);
     this->titan_history.push_back(generation_index);
-    this->fitness_history.push_back(titan.fitness);
     std::cout << "Great! New titan with fitness " << titan.fitness << " was found ..." << "\n";
 }
 
+/**
+ * The function `titan_evaluation` compares the fitness of a participant with the fitness of the
+ * current titan and updates the titan if the participant has a lower fitness.
+ *
+ * @param participant The participant parameter is an object of the EvoIndividual class, which
+ * represents an individual in the evolutionary algorithm. It contains information about the
+ * individual's fitness and other attributes.
+ * @param generation_index The generation index is an integer value that represents the current
+ * generation of the evolutionary algorithm. It is used to keep track of the progress of the algorithm
+ * and can be used for various purposes, such as logging or analysis.
+ */
 void EvoAPI::titan_evaluation(EvoIndividual participant, int generation_index) {
     if (participant.fitness < titan.fitness) setTitan(participant, generation_index);
 }
 
+/**
+ * The function creates a vector of random engines using the Xoshiro256Plus algorithm, with each engine
+ * having a unique seed based on the master random engine.
+ *
+ * @param seed The seed is a 64-bit unsigned integer used to initialize the master random engine. It
+ * determines the starting point of the random number sequence.
+ * @param count The parameter "count" represents the number of random engines to create.
+ *
+ * @return a vector of XoshiroCpp::Xoshiro256Plus random engines.
+ */
 std::vector<XoshiroCpp::Xoshiro256Plus> EvoAPI::create_random_engines(std::uint64_t seed, int count) {
 
     XoshiroCpp::Xoshiro256Plus master_random_engine(seed);
@@ -249,39 +280,102 @@ std::vector<XoshiroCpp::Xoshiro256Plus> EvoAPI::create_random_engines(std::uint6
     return random_engines;
 }
 
-Transform::EvoDataSet EvoAPI::data_transformation_cacheless(Eigen::MatrixXd predictor, Eigen::VectorXd target, EvoIndividual const& individual) {
+/**
+ * The function applies transformations to the predictor and target data based on the provided individual's characteristics.
+ * It first transforms the predictor data, then the target data using the Transform::full_predictor_transform and Transform::full_target_transform functions respectively.
+ *
+ * @param predictor The predictor is an Eigen::MatrixXd object representing the predictor data to be transformed.
+ * @param target The target is an Eigen::VectorXd object representing the target data to be transformed.
+ * @param individual The individual is a constant reference to an EvoIndividual object, whose characteristics are used to transform the data.
+ *
+ * @return a Transform::EvoDataSet object containing the transformed predictor and target data.
+ */
+Transform::EvoDataSet EvoAPI::data_transformation_robust(Eigen::MatrixXd predictor, Eigen::VectorXd target, EvoIndividual const& individual) {
     Transform::full_predictor_transform(predictor, individual);
     Transform::full_target_transform(target, individual);
     return { predictor, target };
 };
 
+/**
+ * The function applies non-robust transformations to the predictor and target data based on the provided individual's characteristics.
+ * It first transforms the predictor data, then the target data using the Transform::half_predictor_transform and Transform::half_target_transform functions respectively.
+ *
+ * @param predictor The predictor is an Eigen::MatrixXd object representing the predictor data to be transformed.
+ * @param target The target is an Eigen::VectorXd object representing the target data to be transformed.
+ * @param individual The individual is a constant reference to an EvoIndividual object, whose characteristics are used to transform the data.
+ *
+ * @return a Transform::EvoDataSet object containing the transformed predictor and target data.
+ */
+Transform::EvoDataSet EvoAPI::data_transformation_nonrobust(Eigen::MatrixXd predictor, Eigen::VectorXd target, EvoIndividual const& individual) {
+    Transform::half_predictor_transform(predictor, individual);
+    Transform::half_target_transform(target, individual);
+    return { predictor, target };
+};
+
+/**
+ * The function generates a summary matrix for a regression result. The matrix includes the original target values,
+ * the predicted values, the difference between the original and predicted values, and the percentage difference.
+ *
+ * @param result The result is a constant reference to a RegressionDetailedResult object, which contains the regression results.
+ * @param original_x The original_x is an Eigen::MatrixXd object representing the original predictor data.
+ * @param original_y The original_y is an Eigen::VectorXd object representing the original target data.
+ *
+ * @return an Eigen::MatrixXd object representing the summary matrix. Each row corresponds to a data point, and the columns are:
+ *         - Column 0: Original target values
+ *         - Column 1: Predicted target values
+ *         - Column 2: Difference between original and predicted values
+ *         - Column 3: Percentage difference between original and predicted values
+ */
 Eigen::MatrixXd EvoAPI::get_regression_summary_matrix(RegressionDetailedResult const& result, Eigen::MatrixXd original_x, Eigen::VectorXd original_y) {
-    Eigen::MatrixXd summary_regression(original_x.rows(), 4);
+    Eigen::MatrixXd regression_result_matrix(original_x.rows(), 4);
+
+    // get target for coefficients not disturbed by outliers
     Eigen::VectorXd prediction = original_x * result.theta;
 
+    // transform target back for showing
     titan.y_transformer_chromosome.at(0).transformBack(original_y);
     titan.y_transformer_chromosome.at(0).transformBack(prediction);
 
-    summary_regression.col(0) = original_y;
-    summary_regression.col(1) = prediction;
-    summary_regression.col(2) = summary_regression.col(0) - summary_regression.col(1);
-    summary_regression.col(3) = 100. - ((summary_regression.col(1).array() / summary_regression.col(0).array()) * 100);
-    return summary_regression;
+    //assembly result matrix
+    regression_result_matrix.col(0) = original_y;
+    regression_result_matrix.col(1) = prediction;
+    regression_result_matrix.col(2) = regression_result_matrix.col(0) - regression_result_matrix.col(1);
+    regression_result_matrix.col(3) = 100. - ((regression_result_matrix.col(1).array() / regression_result_matrix.col(0).array()) * 100);
+
+    return regression_result_matrix;
 }
 
-Eigen::MatrixXd EvoAPI::get_regression_history_summary(std::vector<double> fitness_history, std::vector<double> titan_history) {
-    Eigen::MatrixXd regression_history_summary(fitness_history.size(), 2);
-    regression_history_summary.col(0) = Eigen::Map<Eigen::VectorXd>(fitness_history.data(), fitness_history.size());
-    regression_history_summary.col(1) = Eigen::Map<Eigen::VectorXd>(titan_history.data(), fitness_history.size());
-    return regression_history_summary;
+/**
+ * The function "get_titan_summary" takes a vector of doubles representing titan history and returns a
+ * matrix with the data organized in rows and columns.
+ *
+ * @param titan_history The `titan_history` parameter is a vector of doubles that represents the
+ * history of a titan. Each element in the vector represents a data point, and the vector is structured
+ * such that each data point consists of two values.
+ *
+ * @return The function `get_titan_summary` returns an Eigen MatrixXd object.
+ */
+Eigen::MatrixXd EvoAPI::get_titan_summary(std::vector<double> titan_history) {
+    return Eigen::Map<Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> >(titan_history.data(), titan_history.size() / 2, 2);
 }
 
-void EvoAPI::report_generation_summary(std::set<double> const& generation_fitness) {
-    std::vector<double> generation_fitness_vector(generation_fitness.begin(), generation_fitness.end());
-    generation_fitness_median_history.push_back(DescriptiveStatistics::median(generation_fitness_vector));
-    generation_fitness_standard_deviation_history.push_back(DescriptiveStatistics::standard_deviation(generation_fitness_vector));
-
-    if (generation_fitness_vector.size() > 10) generation_fitness_vector.erase(generation_fitness_vector.begin() + 10, generation_fitness_vector.end());
-    generation_fitness_mean10_history.push_back(DescriptiveStatistics::mean(generation_fitness_vector));
+/**
+ * The function takes a set of fitness values for a generation, converts it to a vector, and calculates
+ * various metrics such as the mean, median, and standard deviation.
+ *
+ * @param generation_fitness The parameter `generation_fitness` is a set of double values representing
+ * the fitness values of a generation.
+ */
+void EvoAPI::process_generation_fitness(std::set<double> const& generation_fitness) {
+    // get vector from set
+    std::vector<double> generation_fitness_vector;
+    generation_fitness_vector.reserve(generation_fitness.size());
+    std::copy(generation_fitness.begin(), generation_fitness.end(), std::back_inserter(generation_fitness_vector));
+    // calculate metrics
+    generation_fitness_metrics.push_back(*generation_fitness.begin());
+    generation_fitness_metrics.push_back(DescriptiveStatistics::geometric_mean(generation_fitness_vector));
+    generation_fitness_metrics.push_back(DescriptiveStatistics::mean(generation_fitness_vector));
+    generation_fitness_metrics.push_back(DescriptiveStatistics::median(generation_fitness_vector));
+    generation_fitness_metrics.push_back(DescriptiveStatistics::standard_deviation(generation_fitness_vector));
 }
 

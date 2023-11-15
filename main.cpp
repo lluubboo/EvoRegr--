@@ -12,7 +12,7 @@ int main(int, char**) {
     api.predict();
     auto stop = std::chrono::high_resolution_clock::now();
 
-    api.show_me_result();
+    api.show_result();
 
     std::chrono::duration<double> elapsed = stop - start;
     std::cout << "Elapsed time: " << elapsed.count() << " seconds" << std::endl;

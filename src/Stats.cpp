@@ -62,6 +62,19 @@ double DescriptiveStatistics::mean(std::vector<double> const& vector) {
     return std::reduce(vector.begin(), vector.end()) / vector.size();
 }
 
+
+/**
+ * The function calculates the geometric mean of a vector of doubles.
+ * 
+ * @param vector A vector of double values for which we want to calculate the geometric mean.
+ * 
+ * @return the geometric mean of the elements in the input vector.
+ */
+double DescriptiveStatistics::geometric_mean(std::vector<double> const& vector) {
+    double product = std::accumulate(vector.begin(), vector.end(), 1.0, std::multiplies<double>());
+    return std::pow(product, 1.0 / vector.size());
+}
+
 /**
  * The function calculates the standard deviation of a vector of numbers.
  * 
