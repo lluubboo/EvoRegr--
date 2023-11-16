@@ -20,4 +20,5 @@ namespace Plotter {
     int calculate_rows(int size, int column_count);
     void validate_inputs_throw_exception(double* data, std::vector<std::string> column_names);
     void print_endline(int table_width);
+    void print_string_cell(std::string content, std::string name, unsigned int table_width);
 }

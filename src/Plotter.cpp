@@ -26,6 +26,15 @@ void Plotter::print_table(double* data, unsigned int size, unsigned int table_wi
     print_endline(table_width);
 }
 
+void Plotter::print_string_cell(std::string content, std::string header, unsigned int table_width) {
+    print_table_header(header, table_width);
+    int left_padding = (table_width - content.length() - 2) / 2;
+    int right_padding = table_width - content.length() - 2 - left_padding;
+    std::cout << "+" << std::string(table_width - 2, '-') << "+" << std::endl;
+    std::cout << "|" << std::string(left_padding, ' ') << content << std::string(right_padding, ' ') << "|" << std::endl;
+    std::cout << "+" << std::string(table_width - 2, '-') << "+" << std::endl;
+}
+
 /**
  * The function `print_table_header` prints a table header with a specified width and centered text.
  * 
@@ -35,7 +44,7 @@ void Plotter::print_table(double* data, unsigned int size, unsigned int table_wi
  * borders.
  */
 void Plotter::print_table_header(std::string header, int table_width) {
-    
+
     int left_padding = (table_width - header.length() - 2) / 2;
     int right_padding = table_width - header.length() - 2 - left_padding;
 

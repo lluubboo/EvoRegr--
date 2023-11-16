@@ -17,6 +17,7 @@ std::string EvoIndividual::to_string() const {
     string_genome = "*******************************************PREDICTOR MERGE CHROMOSOME******************************************\n\n";
     for (auto const& allele : merger_chromosome) {
         string_genome += allele.to_string();
+        string_genome += "\n";
     }
     // transform X chromosome
     string_genome += "*****************************************PREDICTOR TRANSFORM CHROMOSOME****************************************\n\n";

@@ -14,6 +14,13 @@ const std::map<Merge_operator, std::string> merge_operator_names{
     {Merge_operator::Div, "Div"}
 };
 
+const std::map<Merge_operator, std::string> merge_operator_symbols{
+    {Merge_operator::Add, "+"},
+    {Merge_operator::Sub, "-"} ,
+    {Merge_operator::Mul, "*"},
+    {Merge_operator::Div, "/"}
+};
+
 const std::map<Transform_operator, std::string> transform_operator_names{
     {Transform_operator::Sqr, "Sqr"} ,
     {Transform_operator::Cub, "Cub"} ,

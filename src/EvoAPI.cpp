@@ -217,7 +217,13 @@ void EvoAPI::show_result() {
         { "Coefficients" },
         "Regression coefficients",
         Plotter::DataArrangement::ColumnMajor
-        );
+    );
+
+/*     Plotter::print_string_cell(
+        titan.to_string(),
+        "Regression coefficients",
+        149
+    ); */
 
     std::cout << "***************************************************TITAN GENOME************************************************\n\n";
     std::cout << titan.to_string();

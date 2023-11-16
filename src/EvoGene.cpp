@@ -51,12 +51,15 @@ void MergeAllele::modifyMatrixAccordingToTwin(MergeTwin const& twin, Eigen::Matr
 
 std::string MergeAllele::to_string() const {
     std::string sallele;
-    sallele = "column: " + std::to_string(column_index) + " char_number: " + std::to_string(characteristic_number) + "\n";
-    for (auto const& twin : allele) {
-        sallele += "merge operator: " + merge_operator_names.at(twin.merge_operator) + " column: " + std::to_string(twin.merge_column) + "\n";
+    if (allele.empty()) {
+        return "(col" + std::to_string(column_index) + ")";
+    } else {
+        sallele = std::string(allele.size(), '(') + "col" + std::to_string(column_index);
+        for (auto const& twin : allele) {
+            sallele += " " + merge_operator_symbols.at(twin.merge_operator) + " col" + std::to_string(twin.merge_column) + ")";
+        }
+        return sallele;
     }
-    sallele += "\n";
-    return sallele;
 }
 
 std::string MergeAllele::to_string_code() const {
