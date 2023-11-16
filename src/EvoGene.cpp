@@ -56,7 +56,7 @@ std::string MergeAllele::to_string() const {
     } else {
         sallele = std::string(allele.size(), '(') + "col" + std::to_string(column_index);
         for (auto const& twin : allele) {
-            sallele += " " + merge_operator_symbols.at(twin.merge_operator) + " col" + std::to_string(twin.merge_column) + ")";
+            sallele += merge_operator_symbols.at(twin.merge_operator) + "col" + std::to_string(twin.merge_column) + ")";
         }
         return sallele;
     }
@@ -119,8 +119,7 @@ void TransformXAllele::transform(Eigen::MatrixXd& matrix) const {
 
 std::string TransformXAllele::to_string() const {
     std::string sallele;
-    sallele = "column: " + std::to_string(column_index) + " char_number: " + std::to_string(characteristic_number);
-    sallele += " transform operator: " + transform_operator_names.at(allele) + "\n\n";
+    sallele = transform_operator_symbols.at(allele) + ((characteristic_number == 0) ? "" : std::to_string(characteristic_number));
     return sallele;
 }
 

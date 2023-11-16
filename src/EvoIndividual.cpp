@@ -12,18 +12,16 @@ void EvoIndividual::evaluate(double value) {
 }
 
 std::string EvoIndividual::to_string() const {
+
     std::string string_genome;
-    // merger chromosome
-    string_genome = "*******************************************PREDICTOR MERGE CHROMOSOME******************************************\n\n";
-    for (auto const& allele : merger_chromosome) {
-        string_genome += allele.to_string();
-        string_genome += "\n";
+
+    for (int i = 0; i < merger_chromosome.size(); i++) {
+        string_genome += merger_chromosome[i].to_string() + x_transformer_chromosome[i].to_string();
+        string_genome += (i == merger_chromosome.size() - 1) ? "" : " + ";
     }
-    // transform X chromosome
-    string_genome += "*****************************************PREDICTOR TRANSFORM CHROMOSOME****************************************\n\n";
-    for (auto const& allele : x_transformer_chromosome) {
-        string_genome += allele.to_string();
-    }
+
+    string_genome += "\n\n";
+
     // transform Y chromosome
     string_genome += "******************************************TARGET TRANSFORM CHROMOSOME******************************************\n\n";
     string_genome += y_transformer_chromosome.at(0).to_string();

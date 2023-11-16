@@ -35,6 +35,20 @@ const std::map<Transform_operator, std::string> transform_operator_names{
     {Transform_operator::Nul, "Nul"}
 };
 
+const std::map<Transform_operator, std::string> transform_operator_symbols{
+    {Transform_operator::Sqr, " ^2"} ,
+    {Transform_operator::Cub, " ^3"} ,
+    {Transform_operator::Pow, " ^"} ,
+    {Transform_operator::Wek, " ^-1/"} ,
+    {Transform_operator::Sqt, "^-1/2"},
+    {Transform_operator::Csqt, "^-1/3"},
+    {Transform_operator::Let, " * 1"},
+    {Transform_operator::Log, " Log(e)"},
+    {Transform_operator::Log10, " Log(10)"},
+    {Transform_operator::Log2, " Log(2)"},
+    {Transform_operator::Nul, " * 0"}
+};
+
 inline constexpr int merge_operator_maxindex = 3;
 inline constexpr int transform_operator_maxindex = 10;
 inline constexpr int transform_y_operator_maxindex = 9;
