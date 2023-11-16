@@ -5,7 +5,7 @@ using namespace std;
 
 int main(int, char**) {
 
-    EvoAPI api = EvoAPI(100, 100, 0);
+    EvoAPI api = EvoAPI(100, 100, 1);
     api.load_file();
 
     auto start = std::chrono::high_resolution_clock::now();

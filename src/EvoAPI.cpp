@@ -12,6 +12,7 @@
 #include "EvoLibrary.hpp"
 #include "XoshiroCpp.hpp"
 #include "Stats.hpp"
+#include "Plotter.hpp"
 #include "omp.h"
 
 EvoAPI::EvoAPI(unsigned int generation_size_limit, unsigned int generation_count_limit, unsigned int interaction_cols) {
@@ -182,14 +183,42 @@ void EvoAPI::predict() {
 }
 
 void EvoAPI::show_result() {
+
     //get result
-    Transform::EvoDataSet regression_dataset = data_transformation_robust(x, y, titan);
-    RegressionDetailedResult result = solve_system_by_ldlt_detailed(regression_dataset.predictor, regression_dataset.target);
-    std::cout << "\n\n";
-    std::cout << "********************************************REGRESSION RESULT SUMMARY******************************************\n\n";
-    std::cout << get_regression_summary_matrix(result, x, y) << "\n\n";
-    std::cout << "************************************************REGRESSION HISTORY*********************************************\n\n";
-    std::cout << get_titan_summary(titan_history) << "\n\n";
+    Transform::EvoDataSet robust_dataset = data_transformation_robust(x, y, titan);
+    Transform::EvoDataSet nonrobust_dataset = data_transformation_nonrobust(x, y, titan);
+
+    RegressionDetailedResult result = solve_system_by_ldlt_detailed(robust_dataset.predictor, robust_dataset.target);
+
+    Eigen::MatrixXd regression_result_matrix = get_regression_summary_matrix(result, robust_dataset.predictor, robust_dataset.target);
+
+    Plotter::print_table(
+        regression_result_matrix.data(),
+        regression_result_matrix.size(),
+        149,
+        { "Target", "Prediction", "Difference", "Percentage difference" },
+        "Regression result summary",
+        Plotter::DataArrangement::ColumnMajor
+        );
+
+    Plotter::print_table(
+        titan_history.data(),
+        titan_history.size(),
+        149,
+        { "New fitness", "Discovery generation" },
+        "Titan history",
+        Plotter::DataArrangement::RowMajor
+        );
+
+    Plotter::print_table(
+        result.theta.data(),
+        result.theta.size(),
+        149,
+        { "Coefficients" },
+        "Regression coefficients",
+        Plotter::DataArrangement::ColumnMajor
+        );
+
     std::cout << "***************************************************TITAN GENOME************************************************\n\n";
     std::cout << titan.to_string();
     std::cout << "***********************************************REGRESSION SUMMARY**********************************************\n\n";
@@ -238,7 +267,6 @@ void EvoAPI::setTitan(EvoIndividual titan, int generation_index) {
     this->titan = titan;
     this->titan_history.push_back(titan.fitness);
     this->titan_history.push_back(generation_index);
-    std::cout << "Great! New titan with fitness " << titan.fitness << " was found ..." << "\n";
 }
 
 /**
