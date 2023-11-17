@@ -192,32 +192,43 @@ void EvoAPI::show_result() {
 
     Eigen::MatrixXd regression_result_matrix = get_regression_summary_matrix(result, robust_dataset.predictor, robust_dataset.target);
 
-    Plotter::print_table(
+    Plotter<double> plt = Plotter(
         regression_result_matrix.data(),
-        regression_result_matrix.size(),
-        149,
-        { "Target", "Prediction", "Difference", "Percentage difference" },
         "Regression result summary",
-        Plotter::DataArrangement::ColumnMajor
-        );
-
-    Plotter::print_table(
-        titan_history.data(),
-        titan_history.size(),
+        {"Target", "Prediction", "Difference", "Percentage difference"},
         149,
-        { "New fitness", "Discovery generation" },
-        "Titan history",
-        Plotter::DataArrangement::RowMajor
-        );
-
-    Plotter::print_table(
-        result.theta.data(),
-        result.theta.size(),
-        149,
-        { "Coefficients" },
-        "Regression coefficients",
-        Plotter::DataArrangement::ColumnMajor
+        regression_result_matrix.size(),
+        DataArrangement::ColumnMajor
     );
+
+    plt.print_table();
+
+    // Plotter::print_table(
+    //     regression_result_matrix.data(),
+    //     regression_result_matrix.size(),
+    //     149,
+    //     { "Target", "Prediction", "Difference", "Percentage difference" },
+    //     "Regression result summary",
+    //     Plotter::DataArrangement::ColumnMajor
+    //     );
+
+    // Plotter::print_table(
+    //     titan_history.data(),
+    //     titan_history.size(),
+    //     149,
+    //     { "New fitness", "Discovery generation" },
+    //     "Titan history",
+    //     Plotter::DataArrangement::RowMajor
+    //     );
+
+    // Plotter::print_table(
+    //     result.theta.data(),
+    //     result.theta.size(),
+    //     149,
+    //     { "Coefficients" },
+    //     "Regression coefficients",
+    //     Plotter::DataArrangement::ColumnMajor
+    // );
 
     std::cout << titan.to_math_formula();
     std::cout << "***********************************************REGRESSION SUMMARY**********************************************\n\n";

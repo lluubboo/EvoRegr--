@@ -1,24 +1,38 @@
 #include <iostream>
 #include <iomanip>
 #include <vector>
+#include <sstream>
 
-namespace Plotter {
+enum class DataArrangement {
+    ColumnMajor,
+    RowMajor
+};
 
-    enum DataArrangement {
-        ColumnMajor,
-        RowMajor
-    };
+template <typename T>
+class Plotter {
 
-    void print_table(double* data, unsigned int size, unsigned int table_width, std::vector<std::string> column_names, std::string header, DataArrangement data_arrangement);
-    void print_table_header(std::string header, int table_width);
-    void print_columns_header(int table_width, int column_width, std::vector<std::string> column_names);
-    void print_content_based_on_arrangement(double* data, int size, int cols, int table_width, DataArrangement data_arrangement);
-    void print_content_colwise(double* data, int cols, int rows, int column_width);
-    void print_content_rowwise(double* data, int cols, int rows, int column_width);
-    void print_row(double* data, int start_index, int count, int stride, int column_width);
+    std::stringstream _table;
+    T* _data;
+    DataArrangement _data_arrangement;
+    std::vector<std::string> _column_names;
+    std::string _name;
+    unsigned int _table_width;
+    unsigned int _column_width;
+    unsigned int _size;
+    unsigned int _cols;
+    unsigned int _rows;
+
+    void print_content();
+    void print_row(int start_index, unsigned int count, int stride);
+    void print_columns_header();
+    void print_table_header();
+    void validate_inputs_throw_exception();
     int calculate_column_width(int table_width, int cols);
     int calculate_rows(int size, int column_count);
-    void validate_inputs_throw_exception(double* data, std::vector<std::string> column_names);
-    void print_endline(int table_width);
-    void print_string_cell(std::string content, std::string name, unsigned int table_width);
-}
+    void print_endline();
+
+public:
+        
+    Plotter(T* data, std::string name, std::vector<std::string> column_names, unsigned int table_width, unsigned int size, DataArrangement data_arrangement);
+    void print_table();
+};
