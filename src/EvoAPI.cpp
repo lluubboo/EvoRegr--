@@ -187,9 +187,7 @@ void EvoAPI::show_result() {
     //get result
     Transform::EvoDataSet robust_dataset = data_transformation_robust(x, y, titan);
     Transform::EvoDataSet nonrobust_dataset = data_transformation_nonrobust(x, y, titan);
-
     RegressionDetailedResult result = solve_system_by_ldlt_detailed(robust_dataset.predictor, robust_dataset.target);
-
     Eigen::MatrixXd regression_result_matrix = get_regression_summary_matrix(result, robust_dataset.predictor, robust_dataset.target);
 
     Plotter<double> plt = Plotter(
@@ -200,17 +198,19 @@ void EvoAPI::show_result() {
         regression_result_matrix.size(),
         DataArrangement::ColumnMajor
     );
-
     plt.print_table();
 
-    // Plotter::print_table(
-    //     regression_result_matrix.data(),
-    //     regression_result_matrix.size(),
-    //     149,
-    //     { "Target", "Prediction", "Difference", "Percentage difference" },
-    //     "Regression result summary",
-    //     Plotter::DataArrangement::ColumnMajor
-    //     );
+    Plotter<double> plt1 = Plotter(
+        titan_history.data(),
+        "Titan history",
+        { "New fitness", "Discovery generation" },
+        149,
+        titan_history.size(),
+        DataArrangement::RowMajor
+    );
+    plt1.print_table();
+
+
 
     // Plotter::print_table(
     //     titan_history.data(),

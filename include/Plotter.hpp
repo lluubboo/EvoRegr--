@@ -23,7 +23,7 @@ class Plotter {
     unsigned int _rows;
 
     void print_content();
-    void print_row(int start_index, unsigned int count, int stride);
+    void print_row(unsigned int start_index, unsigned int count, int stride);
     void print_columns_header();
     void print_table_header();
     void validate_inputs_throw_exception();
