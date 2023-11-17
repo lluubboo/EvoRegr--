@@ -188,7 +188,9 @@ void EvoAPI::show_result() {
     show_titan_history();
     show_regression_coefficients();
     show_genotype();
+
     std::cout << titan.to_math_formula();
+    std::cout << "\n";
 }
 
 /**
