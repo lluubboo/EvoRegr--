@@ -187,6 +187,7 @@ void EvoAPI::show_result() {
     show_regression_summary();
     show_titan_history();
     show_regression_coefficients();
+    show_genotype();
     std::cout << titan.to_math_formula();
 }
 
@@ -373,13 +374,44 @@ void EvoAPI::show_regression_coefficients() {
 };
 
 void EvoAPI::show_genotype() {
-    Plotter<double> plt = Plotter(
-        titan_result.theta.data(),
-        "Regression coefficients",
-        { "Coefficients" },
+
+    Plotter<std::string> plt = Plotter(
+        titan.merge_chromosome_to_string_vector().data(),
+        "Merge chromosome",
+        { "Alleles" },
         149,
-        titan_result.theta.size(),
-        DataArrangement::ColumnMajor
+        titan.merge_chromosome_to_string_vector().size(),
+        DataArrangement::RowMajor
+    );
+    plt.print_table();
+
+    plt = Plotter(
+        titan.transform_predictor_chromosome_to_string_vector().data(),
+        "Transform predictor chromosome",
+        { "Alleles" },
+        149,
+        titan.transform_predictor_chromosome_to_string_vector().size(),
+        DataArrangement::RowMajor
+    );
+    plt.print_table();
+
+    plt = Plotter(
+        titan.transform_target_chromosome_to_string_vector().data(),
+        "Transform target chromosome",
+        { "Alleles" },
+        149,
+        titan.transform_target_chromosome_to_string_vector().size(),
+        DataArrangement::RowMajor
+    );
+    plt.print_table();
+
+    plt = Plotter(
+        titan.robust_chromosome_to_string_vector().data(),
+        "Robust chromosome",
+        { "Alleles" },
+        149,
+        titan.robust_chromosome_to_string_vector().size(),
+        DataArrangement::RowMajor
     );
     plt.print_table();
 };
