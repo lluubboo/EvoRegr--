@@ -145,7 +145,7 @@ void TransformYAllele::resetCharacteristicNumber(float number) {
     characteristic_number = number;
 }
 
-void TransformYAllele::transform(Eigen::MatrixXd& matrix) const {}
+void TransformYAllele::transform(Eigen::MatrixXd& /*matrix*/) const {}
 
 void TransformYAllele::transformVector(Eigen::VectorXd& vector) const {
     switch (allele) {
@@ -223,8 +223,7 @@ void TransformYAllele::transformBack(Eigen::VectorXd& vector) const {
 
 std::string TransformYAllele::to_string() const {
     std::string sallele;
-    sallele += "column: " + std::to_string(column_index) + " char_number: " + std::to_string(characteristic_number);
-    sallele += " transform operator: " + transform_operator_names.at(allele) + "\n\n";
+    sallele = transform_operator_symbols.at(allele) + ((characteristic_number == 0) ? "" : std::to_string(characteristic_number));
     return sallele;
 }
 
@@ -258,10 +257,13 @@ void RobustAllele::transformVector(Eigen::VectorXd& vector) const {
     vector.swap(transformeVector);
 }
 
-std::string RobustAllele::to_string() const {
+std::string RobustAllele::to_string() const { 
     std::string sallele;
-    sallele = "column: " + std::to_string(column_index) + " char_number: " + std::to_string(characteristic_number);
-    sallele += " robust allele size: " + std::to_string(allele.size()) + "\n\n";
+    sallele = "(";
+    for (auto const& index : allele) {
+        sallele += std::to_string(index) + ((index == allele.back()) ? "" : ",");
+    }
+    sallele += ")";
     return sallele;
 }
 

@@ -11,45 +11,72 @@ void EvoIndividual::evaluate(double value) {
     is_healthy = (value == std::numeric_limits<double>::max()) ? false : true;
 }
 
-std::string EvoIndividual::to_string() const {
-
-    std::string string_genome;
-
-    for (int i = 0; i < merger_chromosome.size(); i++) {
-        string_genome += merger_chromosome[i].to_string() + x_transformer_chromosome[i].to_string();
-        string_genome += (i == merger_chromosome.size() - 1) ? "" : " + ";
+std::vector<std::string> EvoIndividual::merge_chromosome_to_string_vector() const {
+    std::vector<std::string> string_vector;
+    for (auto const& allele : merger_chromosome) {
+        string_vector.push_back(allele.to_string());
     }
-
-    string_genome += "\n\n";
-
-    // transform Y chromosome
-    string_genome += "******************************************TARGET TRANSFORM CHROMOSOME******************************************\n\n";
-    string_genome += y_transformer_chromosome.at(0).to_string();
-    // robuster chromosome
-    string_genome += "**********************************************ROBUSTER CHROMOSOME**********************************************\n\n";
-    string_genome += robuster_chromosome.at(0).to_string();
-    return string_genome;
+    return string_vector;
 }
 
+std::vector<std::string> EvoIndividual::robust_chromosome_to_string_vector() const {
+    std::vector<std::string> string_vector;
+    for (auto const& allele : robuster_chromosome) {
+        string_vector.push_back(allele.to_string());
+    }
+    return string_vector;
+};
+std::vector<std::string> EvoIndividual::transform_predictor_chromosome_to_string_vector() const {
+    std::vector<std::string> string_vector;
+    for (auto const& allele : x_transformer_chromosome) {
+        string_vector.push_back(allele.to_string());
+    }
+    return string_vector;
+};
+
+std::vector<std::string> EvoIndividual::transform_target_chromosome_to_string_vector() const {
+    std::vector<std::string> string_vector;
+    for (auto const& allele : y_transformer_chromosome) {
+        string_vector.push_back(allele.to_string());
+    }
+    return string_vector;
+};
+
+/**
+ * The function `to_math_formula` converts the individual's chromosomes into a mathematical formula.
+ */
+std::string EvoIndividual::to_math_formula() const {
+    std::string formula;
+    //append predictor transformation
+    for (unsigned int i = 0; i < merger_chromosome.size() && i < x_transformer_chromosome.size(); i++) {
+        formula.append(merger_chromosome.at(i).to_string());
+        formula.append(x_transformer_chromosome.at(i).to_string());
+        formula.append((i == merger_chromosome.size() - 1) ? "" : " + ");
+    }
+    //append target transformation
+    formula.append(" = (Y)" + y_transformer_chromosome.at(0).to_string() + "\n");
+    return formula;
+}
+
+/**
+ * The function `to_string_code()` returns a string representation of the genome of an EvoIndividual
+ * object for cache purposes. This code is key to the cache of fitness values.
+ * 
+ * @return a string representation of the code of an EvoIndividual object.
+ */
 std::string EvoIndividual::to_string_code() const {
-
     std::string string_genome;
-
     // merger chromosome
     for (auto const& allele : merger_chromosome) {
         string_genome += allele.to_string_code();
     }
-
     // transform X chromosome
     for (auto const& allele : x_transformer_chromosome) {
         string_genome += allele.to_string_code();
     }
-
     // transform Y chromosome
     string_genome += y_transformer_chromosome.at(0).to_string_code();
-
     // robuster chromosome
     string_genome += robuster_chromosome.at(0).to_string_code();
-
     return string_genome;
 }

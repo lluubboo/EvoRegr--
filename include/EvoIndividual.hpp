@@ -8,8 +8,12 @@
 class EvoIndividual {
 public:
     EvoIndividual();
-    std::string to_string() const;
+    std::vector<std::string> merge_chromosome_to_string_vector() const;
+    std::vector<std::string> robust_chromosome_to_string_vector() const;
+    std::vector<std::string> transform_predictor_chromosome_to_string_vector() const;
+    std::vector<std::string> transform_target_chromosome_to_string_vector() const;
     std::string to_string_code() const;
+    std::string to_math_formula() const;
     void evaluate(double);
 
     std::vector<MergeAllele> merger_chromosome;
