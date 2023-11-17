@@ -21,15 +21,18 @@ class Plotter {
     unsigned int _size;
     unsigned int _cols;
     unsigned int _rows;
+    unsigned int _precision;
 
     void print_content();
     void print_row(unsigned int start_index, unsigned int count, int stride);
     void print_columns_header();
     void print_table_header();
+    void print_endline();
     void validate_inputs_throw_exception();
+
     int calculate_column_width(int table_width, int cols);
     int calculate_rows(int size, int column_count);
-    void print_endline();
+    bool col_width_is_sufficient(auto value, unsigned int column_width);
 
 public:
         

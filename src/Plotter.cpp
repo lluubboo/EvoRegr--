@@ -4,9 +4,17 @@
 #include <iomanip>
 #include "Plotter.hpp"
 
-/* This is the constructor of the `Plotter` class template. It takes several parameters, including a
-pointer to the data, the name of the table, the column names, the table width, the size of the data,
-and the data arrangement. */
+/**
+ * @brief Constructs a Plotter object.
+ * 
+ * @tparam T The type of data stored in the Plotter.
+ * @param data Pointer to the data array.
+ * @param name The name of the Plotter.
+ * @param column_names Vector of column names.
+ * @param table_width The width of the table.
+ * @param size The size of the data array.
+ * @param data_arrangement The arrangement of the data in the table.
+ */
 template <typename T>
 Plotter<T>::Plotter(T* data, std::string name, std::vector<std::string> column_names, unsigned int table_width, unsigned int size, DataArrangement data_arrangement)
     : _data(data), _data_arrangement(data_arrangement), _column_names(column_names), _name(name), _table_width(table_width), _size(size) {
@@ -14,10 +22,17 @@ Plotter<T>::Plotter(T* data, std::string name, std::vector<std::string> column_n
     _cols = column_names.size();
     _rows = calculate_rows(size, _cols);
     _column_width = calculate_column_width(table_width, _cols);
+    _precision = 8;
 }
 
-/* The `print_table()` function is a member function of the `Plotter` class template. It is responsible
-for printing the entire table, including the table header, column names, and content. */
+/**
+ * @brief Prints the table with headers and content.
+ * 
+ * This function prints the table with headers and content. It first prints the table header,
+ * followed by the columns header, and then the content. Finally, it outputs the table as a string.
+ * 
+ * @tparam T The type of data in the table.
+ */
 template <typename T>
 void Plotter<T>::print_table() {
     print_table_header();
@@ -26,9 +41,14 @@ void Plotter<T>::print_table() {
     std::cout << _table.str() << '\n';
 }
 
-/* The `print_table_header()` function is a member function of the `Plotter` class template. It is
-responsible for printing the header of the table, which includes the name of the table surrounded by
-horizontal lines. */
+/**
+ * @brief Prints the table header.
+ * 
+ * This function calculates the left and right padding for the table header based on the table width and the length of the name.
+ * It then prints the table header with the name centered.
+ * 
+ * @tparam T The type of the Plotter.
+ */
 template <typename T>
 void Plotter<T>::print_table_header() {
 
@@ -40,8 +60,14 @@ void Plotter<T>::print_table_header() {
         << "+" << std::string(_table_width - 2, '-') << "+" << "\n";
 }
 
-/* The `print_columns_header()` function is a member function of the `Plotter` class template. It is
-responsible for printing the header row of the table, which contains the column names. */
+/**
+ * @brief Prints the header of the columns in the table.
+ * 
+ * This function prints the header of the columns in the table. It iterates over the column names,
+ * calculates the padding for each column, and prints the header with the appropriate padding.
+ * 
+ * @tparam T The type of data stored in the table.
+ */
 template <typename T>
 void Plotter<T>::print_columns_header() {
     _table << "|";
@@ -55,8 +81,13 @@ void Plotter<T>::print_columns_header() {
     print_endline();
 }
 
-/* The `print_content()` function is a member function of the `Plotter` class template. It is
-responsible for printing the content of the table. */
+/**
+ * @brief Prints the content of the Plotter object.
+ * 
+ * This function prints the content of the Plotter object based on the data arrangement.
+ * If the data arrangement is set to RowMajor, it prints each row of the data array.
+ * If the data arrangement is set to ColumnMajor, it prints each column of the data array.
+ */
 template <typename T>
 void Plotter<T>::print_content() {
     if (_data_arrangement == DataArrangement::RowMajor) {
@@ -72,21 +103,71 @@ void Plotter<T>::print_content() {
     print_endline();
 }
 
-/* The `print_row` function is a member function of the `Plotter` class template. It is responsible for
-printing a single row of data in the table. */
+/**
+ * @brief Prints a row of data in a table format.
+ * 
+ * This function prints a row of data in a table format, where each cell represents a value from the data array.
+ * If a value is longer than the specified column width, it is stored in a buffer and printed at the end of the row.
+ * 
+ * @tparam T The type of data stored in the array.
+ * @param start_index The starting index of the row in the data array.
+ * @param cell_count The number of cells to print in the row.
+ * @param stride The stride between consecutive cells in the data array.
+ */
 template <typename T>
 void Plotter<T>::print_row(unsigned int start_index, unsigned int cell_count, int stride) {
+
+    // buffer for values which are longer than the column width
+    // they will be stored and printed at the end of the row
+    std::stringstream too_long_values_buffer;
+
     _table << "|";
     for (unsigned int j = 0; j < cell_count; j++) {
+
         auto value = _data[start_index + j * stride];
-        _table << std::setw(_column_width) << std::setprecision(8) << std::fixed << value << "|";
+
+        if (!col_width_is_sufficient(value, _column_width)) {
+            too_long_values_buffer << "\n" << "cell: " << j << " value: " << value << "\n";
+
+            // initialize to default T value
+            value = T();
+        }
+
+        _table << std::setw(_column_width) << std::setprecision(_precision) << std::fixed << value << "|";
     }
+    // too long values are printed without formatting because of complexity
+    _table << too_long_values_buffer.str();
     _table << "\n";
 }
 
-/* The function `validate_inputs_throw_exception()` is a member function of the `Plotter` class
-template. It is used to validate the inputs passed to the `Plotter` constructor and throw an
-exception if any of the inputs are invalid. */
+/**
+ * @brief Checks if the column width is sufficient to display the given value.
+ * 
+ * This function converts the value to a string with a fixed precision of _precision decimal places
+ * and checks if the length of the resulting string is less than or equal to the specified column width.
+ * 
+ * @tparam T The type of the value.
+ * @param value The value to be checked.
+ * @param column_width The width of the column.
+ * @return True if the column width is sufficient, false otherwise.
+ */
+template <typename T>
+bool Plotter<T>::col_width_is_sufficient(auto value, unsigned int column_width) {
+    std::stringstream ss;
+    ss << std::setprecision(_precision) << std::fixed << value;
+    return ss.str().length() <= column_width;
+};
+
+/**
+ * @brief Validates the inputs of the Plotter class and throws an exception if they are invalid.
+ * 
+ * This function checks if the data pointer is null and if the column names vector is empty.
+ * If either of these conditions is true, it prints an error message to the standard error stream
+ * and throws an std::invalid_argument exception with an appropriate error message.
+ * 
+ * @tparam T The type of data stored in the Plotter.
+ * @throws std::invalid_argument If the data pointer is null or the column names vector is empty.
+ */
 template <typename T>
 void Plotter<T>::validate_inputs_throw_exception() {
     if (_data == nullptr) {
@@ -100,25 +181,38 @@ void Plotter<T>::validate_inputs_throw_exception() {
     }
 }
 
-/* The function `calculate_column_width` is a member function of the `Plotter` class template. It takes
-two parameters: `table_width` and `cols`. */
+/**
+ * @brief Calculates the column width for a table.
+ * 
+ * This function calculates the width of each column in a table based on the total table width and the number of columns.
+ * 
+ * @param table_width The total width of the table.
+ * @param cols The number of columns in the table.
+ * @return The calculated column width.
+ */
 template <typename T>
 int Plotter<T>::calculate_column_width(int table_width, int cols) {
     return (table_width - (cols + 1)) / cols;
 }
 
-
-/* The function `calculate_rows` is a member function of the `Plotter` class template. It takes two
-parameters: `size` and `column_count`. */
+/**
+ * @brief Calculates the number of rows needed to display a given number of elements in a specified number of columns.
+ * 
+ * @tparam T The type of the elements.
+ * @param size The total number of elements.
+ * @param column_count The number of columns.
+ * @return The number of rows needed to display the elements.
+ */
 template <typename T>
 int Plotter<T>::calculate_rows(int size, int column_count) {
     return size / column_count;
 }
 
 /**
- * @brief Prints a horizontal line to the table with '+' characters at the beginning and end.
+ * @brief Prints a horizontal line with '+' at the beginning and end.
  * 
- * @tparam T Type of data to be plotted.
+ * This method is used to print a horizontal line in the table with '+' at the beginning and end.
+ * The length of the line is determined by the `_table_width` member variable.
  */
 template <typename T>
 void Plotter<T>::print_endline() {
