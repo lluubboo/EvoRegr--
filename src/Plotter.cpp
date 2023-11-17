@@ -226,6 +226,7 @@ void Plotter<T>::print_endline() {
 template class Plotter<int>;
 template class Plotter<double>;
 template class Plotter<std::string>;
+template class Plotter<char>;
 
 
 

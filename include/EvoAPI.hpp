@@ -41,6 +41,7 @@ class EvoAPI {
     void show_titan_history();
     void show_regression_coefficients();
     void show_genotype();
+    void show_formula();
 
 public:
 

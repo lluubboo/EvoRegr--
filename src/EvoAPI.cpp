@@ -188,9 +188,7 @@ void EvoAPI::show_result() {
     show_titan_history();
     show_regression_coefficients();
     show_genotype();
-
-    std::cout << titan.to_math_formula();
-    std::cout << "\n";
+    show_formula();
 }
 
 /**
@@ -413,6 +411,19 @@ void EvoAPI::show_genotype() {
         { "Alleles" },
         149,
         titan.robust_chromosome_to_string_vector().size(),
+        DataArrangement::RowMajor
+    );
+    plt.print_table();
+};
+
+void EvoAPI::show_formula() {
+    std::vector<std::string> formula{ titan.to_math_formula() };
+    Plotter<std::string> plt = Plotter(
+        formula.data(),
+        "Evo-regression formula",
+        { "Formula" },
+        149,
+        formula.size(),
         DataArrangement::RowMajor
     );
     plt.print_table();
