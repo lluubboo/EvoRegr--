@@ -47,6 +47,9 @@ namespace Transform {
     Eigen::MatrixXd robust_predictor_transform(Eigen::MatrixXd&, EvoIndividual const&);
     Eigen::VectorXd full_target_transform(Eigen::VectorXd&, EvoIndividual const&);
     Eigen::VectorXd half_target_transform(Eigen::VectorXd&, EvoIndividual const&);
+    EvoDataSet data_transformation_robust(Eigen::MatrixXd, Eigen::VectorXd, EvoIndividual const&);
+    EvoDataSet data_transformation_nonrobust(Eigen::MatrixXd, Eigen::VectorXd, EvoIndividual const&);
+
 }
 
 namespace Reproduction {

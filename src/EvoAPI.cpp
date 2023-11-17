@@ -164,7 +164,7 @@ void EvoAPI::predict() {
 
             newborn.evaluate(
                 FitnessEvaluator::get_fitness(
-                    data_transformation_robust(
+                    Transform::data_transformation_robust(
                         x,
                         y,
                         newborn
@@ -183,62 +183,11 @@ void EvoAPI::predict() {
 }
 
 void EvoAPI::show_result() {
-
-    //get result
-    Transform::EvoDataSet robust_dataset = data_transformation_robust(x, y, titan);
-    Transform::EvoDataSet nonrobust_dataset = data_transformation_nonrobust(x, y, titan);
-    RegressionDetailedResult result = solve_system_by_ldlt_detailed(robust_dataset.predictor, robust_dataset.target);
-    Eigen::MatrixXd regression_result_matrix = get_regression_summary_matrix(result, robust_dataset.predictor, robust_dataset.target);
-
-    Plotter<double> plt = Plotter(
-        regression_result_matrix.data(),
-        "Regression result summary",
-        {"Target", "Prediction", "Difference", "Percentage difference"},
-        149,
-        regression_result_matrix.size(),
-        DataArrangement::ColumnMajor
-    );
-    plt.print_table();
-
-    Plotter<double> plt1 = Plotter(
-        titan_history.data(),
-        "Titan history",
-        { "New fitness", "Discovery generation" },
-        149,
-        titan_history.size(),
-        DataArrangement::RowMajor
-    );
-    plt1.print_table();
-
-
-
-    // Plotter::print_table(
-    //     titan_history.data(),
-    //     titan_history.size(),
-    //     149,
-    //     { "New fitness", "Discovery generation" },
-    //     "Titan history",
-    //     Plotter::DataArrangement::RowMajor
-    //     );
-
-    // Plotter::print_table(
-    //     result.theta.data(),
-    //     result.theta.size(),
-    //     149,
-    //     { "Coefficients" },
-    //     "Regression coefficients",
-    //     Plotter::DataArrangement::ColumnMajor
-    // );
-
+    titan_postprocessing();
+    show_regression_summary();
+    show_titan_history();
+    show_regression_coefficients();
     std::cout << titan.to_math_formula();
-    std::cout << "***********************************************REGRESSION SUMMARY**********************************************\n\n";
-    std::cout << "Regression coefficients: " << result.theta.transpose();
-    std::cout << "\n\n";
-    std::cout << "Residuals mean: " << result.residuals.mean() << " median: " << DescriptiveStatistics::median(result.residuals.data(), result.residuals.rows());
-    std::cout << " standard deviation: " << result.standard_deviation;
-    std::cout << "\n\n";
-    std::cout << "R-squared: " << result.rsquared << " R-squared Adj: " << result.rsquaredadj << " RMSE: " << result.rmse;
-    std::cout << "\n\n";
 }
 
 /**
@@ -319,36 +268,17 @@ std::vector<XoshiroCpp::Xoshiro256Plus> EvoAPI::create_random_engines(std::uint6
 }
 
 /**
- * The function applies transformations to the predictor and target data based on the provided individual's characteristics.
- * It first transforms the predictor data, then the target data using the Transform::full_predictor_transform and Transform::full_target_transform functions respectively.
- *
- * @param predictor The predictor is an Eigen::MatrixXd object representing the predictor data to be transformed.
- * @param target The target is an Eigen::VectorXd object representing the target data to be transformed.
- * @param individual The individual is a constant reference to an EvoIndividual object, whose characteristics are used to transform the data.
- *
- * @return a Transform::EvoDataSet object containing the transformed predictor and target data.
+ * The function `titan_postprocessing()` performs data transformation and regression analysis on the
+ * Titan dataset. Saves more detailed result.
  */
-Transform::EvoDataSet EvoAPI::data_transformation_robust(Eigen::MatrixXd predictor, Eigen::VectorXd target, EvoIndividual const& individual) {
-    Transform::full_predictor_transform(predictor, individual);
-    Transform::full_target_transform(target, individual);
-    return { predictor, target };
-};
-
-/**
- * The function applies non-robust transformations to the predictor and target data based on the provided individual's characteristics.
- * It first transforms the predictor data, then the target data using the Transform::half_predictor_transform and Transform::half_target_transform functions respectively.
- *
- * @param predictor The predictor is an Eigen::MatrixXd object representing the predictor data to be transformed.
- * @param target The target is an Eigen::VectorXd object representing the target data to be transformed.
- * @param individual The individual is a constant reference to an EvoIndividual object, whose characteristics are used to transform the data.
- *
- * @return a Transform::EvoDataSet object containing the transformed predictor and target data.
- */
-Transform::EvoDataSet EvoAPI::data_transformation_nonrobust(Eigen::MatrixXd predictor, Eigen::VectorXd target, EvoIndividual const& individual) {
-    Transform::half_predictor_transform(predictor, individual);
-    Transform::half_target_transform(target, individual);
-    return { predictor, target };
-};
+void EvoAPI::titan_postprocessing() {
+    // data without outliers
+    titan_robust_dataset = Transform::data_transformation_robust(x, y, titan);
+    // data witho outliers
+    titan_nonrobust_dataset = Transform::data_transformation_nonrobust(x, y, titan);
+    // regression result
+    titan_result = solve_system_by_ldlt_detailed(titan_robust_dataset.predictor, titan_robust_dataset.target);
+}
 
 /**
  * The function generates a summary matrix for a regression result. The matrix includes the original target values,
@@ -370,7 +300,7 @@ Eigen::MatrixXd EvoAPI::get_regression_summary_matrix(RegressionDetailedResult c
     // get target for coefficients not disturbed by outliers
     Eigen::VectorXd prediction = original_x * result.theta;
 
-    // transform target back for showing
+    // transform target back to original values for presentation p
     titan.y_transformer_chromosome.at(0).transformBack(original_y);
     titan.y_transformer_chromosome.at(0).transformBack(prediction);
 
@@ -381,20 +311,6 @@ Eigen::MatrixXd EvoAPI::get_regression_summary_matrix(RegressionDetailedResult c
     regression_result_matrix.col(3) = 100. - ((regression_result_matrix.col(1).array() / regression_result_matrix.col(0).array()) * 100);
 
     return regression_result_matrix;
-}
-
-/**
- * The function "get_titan_summary" takes a vector of doubles representing titan history and returns a
- * matrix with the data organized in rows and columns.
- *
- * @param titan_history The `titan_history` parameter is a vector of doubles that represents the
- * history of a titan. Each element in the vector represents a data point, and the vector is structured
- * such that each data point consists of two values.
- *
- * @return The function `get_titan_summary` returns an Eigen MatrixXd object.
- */
-Eigen::MatrixXd EvoAPI::get_titan_summary(std::vector<double> titan_history) {
-    return Eigen::Map<Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> >(titan_history.data(), titan_history.size() / 2, 2);
 }
 
 /**
@@ -416,4 +332,55 @@ void EvoAPI::process_generation_fitness(std::set<double> const& generation_fitne
     generation_fitness_metrics.push_back(DescriptiveStatistics::median(generation_fitness_vector));
     generation_fitness_metrics.push_back(DescriptiveStatistics::standard_deviation(generation_fitness_vector));
 }
+
+void EvoAPI::show_regression_summary() {
+    // get matrix with regression summary
+    Eigen::MatrixXd regression_result_matrix = get_regression_summary_matrix(titan_result, titan_robust_dataset.predictor, titan_robust_dataset.target);
+    //plot it
+    Plotter<double> plt = Plotter(
+        regression_result_matrix.data(),
+        "Regression result summary",
+        { "Target", "Prediction", "Difference", "Percentage difference" },
+        149,
+        regression_result_matrix.size(),
+        DataArrangement::ColumnMajor
+    );
+    plt.print_table();
+};
+
+void EvoAPI::show_titan_history() {
+    Plotter<double> plt = Plotter(
+        titan_history.data(),
+        "Best individual history",
+        { "Fitness", "Generation" },
+        149,
+        titan_history.size(),
+        DataArrangement::RowMajor
+    );
+    plt.print_table();
+};
+
+void EvoAPI::show_regression_coefficients() {
+    Plotter<double> plt = Plotter(
+        titan_result.theta.data(),
+        "Regression coefficients",
+        { "Coefficients" },
+        149,
+        titan_result.theta.size(),
+        DataArrangement::ColumnMajor
+    );
+    plt.print_table();
+};
+
+void EvoAPI::show_genotype() {
+    Plotter<double> plt = Plotter(
+        titan_result.theta.data(),
+        "Regression coefficients",
+        { "Coefficients" },
+        149,
+        titan_result.theta.size(),
+        DataArrangement::ColumnMajor
+    );
+    plt.print_table();
+};
 

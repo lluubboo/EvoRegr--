@@ -200,6 +200,38 @@ Eigen::VectorXd Transform::half_target_transform(Eigen::VectorXd& vector, EvoInd
     return vector;
 };
 
+/**
+ * The function applies transformations to the predictor and target data based on the provided individual's characteristics.
+ * It first transforms the predictor data, then the target data using the Transform::full_predictor_transform and Transform::full_target_transform functions respectively.
+ *
+ * @param predictor The predictor is an Eigen::MatrixXd object representing the predictor data to be transformed.
+ * @param target The target is an Eigen::VectorXd object representing the target data to be transformed.
+ * @param individual The individual is a constant reference to an EvoIndividual object, whose characteristics are used to transform the data.
+ *
+ * @return a Transform::EvoDataSet object containing the transformed predictor and target data.
+ */
+Transform::EvoDataSet Transform::data_transformation_robust(Eigen::MatrixXd predictor, Eigen::VectorXd target, EvoIndividual const& individual) {
+    Transform::full_predictor_transform(predictor, individual);
+    Transform::full_target_transform(target, individual);
+    return { predictor, target };
+};
+
+/**
+ * The function applies non-robust transformations to the predictor and target data based on the provided individual's characteristics.
+ * It first transforms the predictor data, then the target data using the Transform::half_predictor_transform and Transform::half_target_transform functions respectively.
+ *
+ * @param predictor The predictor is an Eigen::MatrixXd object representing the predictor data to be transformed.
+ * @param target The target is an Eigen::VectorXd object representing the target data to be transformed.
+ * @param individual The individual is a constant reference to an EvoIndividual object, whose characteristics are used to transform the data.
+ *
+ * @return a Transform::EvoDataSet object containing the transformed predictor and target data.
+ */
+Transform::EvoDataSet Transform::data_transformation_nonrobust(Eigen::MatrixXd predictor, Eigen::VectorXd target, EvoIndividual const& individual) {
+    Transform::half_predictor_transform(predictor, individual);
+    Transform::half_target_transform(target, individual);
+    return { predictor, target };
+};
+
 double FitnessEvaluator::get_fitness(Transform::EvoDataSet const& dataset) {
     RegressionSimpleResult result = solve_system_by_ldlt_simple(dataset.predictor, dataset.target);
     return result.sum_squares_errors;
