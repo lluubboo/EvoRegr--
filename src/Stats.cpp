@@ -14,18 +14,8 @@
  * @return the median value of the given array.
  */
 double DescriptiveStatistics::median(double* array, int size) {
-
     std::vector<double> vec(array, array + size);
-    std::sort(vec.begin(), vec.end());
-
-    if (vec.size() % 2 == 0) {
-        //if size is even, return arithmetic mean of the midlle vector members
-        return (vec.at(size / 2) + vec.at((size / 2) + 1)) / 2.;
-    }
-    else {
-        //if size is odd, return midlle member (beware of floor at size/2 divide operation)
-        return vec.at((size / 2) + 1);
-    }
+    return DescriptiveStatistics::median(vec);
 }
 
 
@@ -40,7 +30,16 @@ double DescriptiveStatistics::median(double* array, int size) {
 double DescriptiveStatistics::median(std::vector<double> vector) {
     std::sort(vector.begin(), vector.end());
     int vector_size = vector.size();
-    if (vector_size % 2 == 0) {
+    if (vector.empty()) {
+        return std::numeric_limits<double>::max();
+    }
+    else if (vector_size == 1) {
+        return vector.at(0);
+    }
+    else if (vector_size == 2) {
+        return (vector.at(0) + vector.at(1)) / 2.;
+    }
+    else if (vector_size % 2 == 0) {
         //if size is even, return arithmetic mean of the midlle vector members
         return (vector.at(vector_size / 2) + vector.at((vector_size / 2) + 1)) / 2.;
     }

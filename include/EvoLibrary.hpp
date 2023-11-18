@@ -56,9 +56,11 @@ namespace Reproduction {
     EvoIndividual reproduction(std::array<EvoIndividual, 2> const& parents, int chromosome_size, int predictor_row_count, XoshiroCpp::Xoshiro256Plus&);
 }
 
-namespace FitnessEvaluator {
+namespace EvoMath {
 
     double get_fitness(Transform::EvoDataSet const&);
 
+    template <typename T>
+    std::vector<T> extract_column(std::vector<T> data, unsigned int column_count, unsigned int column_index);
 }
 

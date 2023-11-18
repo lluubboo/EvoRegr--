@@ -8,7 +8,6 @@
 #include "EvoAPI.hpp"
 #include "IOTools.hpp"
 #include "EvoIndividual.hpp"
-#include "RegressionSolver.hpp"
 #include "EvoLibrary.hpp"
 #include "XoshiroCpp.hpp"
 #include "Stats.hpp"
@@ -20,8 +19,7 @@ EvoAPI::EvoAPI(unsigned int generation_size_limit, unsigned int generation_count
     this->generation_count_limit = generation_count_limit;
     this->interaction_cols = interaction_cols;
 
-    // desynchronize C++ and C I/O streams
-    //std::ios_base::sync_with_stdio(false);
+
 }
 
 /**
@@ -80,11 +78,14 @@ void EvoAPI::load_file() {
 }
 
 /**
- * The function `create_regression_input` takes in a tuple containing the number of rows, number of
- * columns, and a vector of data, and creates a predictor matrix and a target vector for regression
- * analysis.
+ * @brief Creates the regression input matrix for EvoAPI.
  *
- * @param input The input parameter is a tuple containing three elements:
+ * This function takes a tuple containing the number of rows, number of columns, and a vector of data values.
+ * It initializes the predictor matrix and target vector based on the input data.
+ * The predictor matrix is initialized with ones, including a column of ones for x0 and additional interaction columns.
+ * The target vector is filled with the values from the target column of the input data.
+ *
+ * @param input A tuple containing the number of rows, number of columns, and a vector of data values.
  */
 void EvoAPI::create_regression_input(std::tuple<int, int, std::vector<double>> input) {
 
@@ -123,8 +124,11 @@ void EvoAPI::create_regression_input(std::tuple<int, int, std::vector<double>> i
 }
 
 /**
- * The `predict` function performs a genetic algorithm to generate and evaluate a population of
- * individuals for a specified number of generations.
+ * Performs the prediction process using a fixed generation size genetic algorithm.
+ * This function generates a new generation of EvoIndividuals for a specified number of generations.
+ * Each EvoIndividual is evaluated, transformed, and used to solve a regression problem.
+ * The process includes crossover, mutation, selection, and fitness evaluation.
+ * The resulting generation is saved and processed after each generation loop.
  */
 void EvoAPI::predict() {
 
@@ -133,13 +137,17 @@ void EvoAPI::predict() {
     // random engines for parallel loops
     std::vector<XoshiroCpp::Xoshiro256Plus> random_engines = create_random_engines(12346, omp_get_max_threads());
 
-    // EvoIndividual containers
+    // individual containers for fixed generation size genetic algorithm
     std::vector<EvoIndividual> generation(0);
     std::vector<EvoIndividual> past_generation(0);
 
 #pragma omp declare reduction(merge_individuals : std::vector<EvoIndividual> : omp_out.insert(omp_out.end(), omp_in.begin(), omp_in.end())) initializer(omp_priv = omp_orig)
 
     for (int gen_index = 0; gen_index < generation_count_limit; gen_index++) {
+
+
+        std::cout << "Generation " << gen_index << " started..." << "\n";
+
 
 #pragma omp parallel for reduction (merge_individuals : generation) schedule(dynamic)
         for (int entity_index = 0; entity_index < generation_size_limit; entity_index++) {
@@ -149,7 +157,7 @@ void EvoAPI::predict() {
             EvoIndividual newborn;
 
             if (gen_index == 0) {
-                //generate random individual
+                //generate random individual if generation is 0
                 newborn = Factory::getRandomEvoIndividual(y.rows(), x.cols(), random_engines[omp_get_thread_num()]);
             }
             else {
@@ -162,8 +170,9 @@ void EvoAPI::predict() {
                 );
             }
 
+            // merge & transform & make robust predictors & target / solve regression problem
             newborn.evaluate(
-                FitnessEvaluator::get_fitness(
+                EvoMath::get_fitness(
                     Transform::data_transformation_robust(
                         x,
                         y,
@@ -174,21 +183,25 @@ void EvoAPI::predict() {
 
             generation.push_back(std::move(newborn));
         }
-
-        //new generation become old generation
+        // new generation become old generation after generation loop
         past_generation = std::move(generation);
-
+        // save/process some data after generation loop
         generation_postprocessing(past_generation, gen_index);
     }
 }
 
+/**
+ * Displays the result of the evolutionary regression analysis.
+ * This function performs post-processing, shows the regression summary,
+ * the Titan history, regression coefficients, genotype, and formula.
+ */
 void EvoAPI::show_result() {
     titan_postprocessing();
-    show_regression_summary();
-    show_titan_history();
-    show_regression_coefficients();
-    show_genotype();
-    show_formula();
+    print_regression_summary();
+    print_titan_history();
+    print_regression_coefficients();
+    print_genotype();
+    print_formula();
 }
 
 /**
@@ -269,8 +282,9 @@ std::vector<XoshiroCpp::Xoshiro256Plus> EvoAPI::create_random_engines(std::uint6
 }
 
 /**
- * The function `titan_postprocessing()` performs data transformation and regression analysis on the
- * Titan dataset. Saves more detailed result.
+ * Performs post-processing on the Titan dataset.
+ * This function applies data transformation techniques to remove outliers,
+ * and then solves the regression system using the LDLT decomposition method.
  */
 void EvoAPI::titan_postprocessing() {
     // data without outliers
@@ -334,7 +348,7 @@ void EvoAPI::process_generation_fitness(std::set<double> const& generation_fitne
     generation_fitness_metrics.push_back(DescriptiveStatistics::standard_deviation(generation_fitness_vector));
 }
 
-void EvoAPI::show_regression_summary() {
+void EvoAPI::print_regression_summary() {
     // get matrix with regression summary
     Eigen::MatrixXd regression_result_matrix = get_regression_summary_matrix(titan_result, titan_robust_dataset.predictor, titan_robust_dataset.target);
     //plot it
@@ -349,7 +363,7 @@ void EvoAPI::show_regression_summary() {
     plt.print_table();
 };
 
-void EvoAPI::show_titan_history() {
+void EvoAPI::print_titan_history() {
     Plotter<double> plt = Plotter(
         titan_history.data(),
         "Best individual history",
@@ -361,7 +375,7 @@ void EvoAPI::show_titan_history() {
     plt.print_table();
 };
 
-void EvoAPI::show_regression_coefficients() {
+void EvoAPI::print_regression_coefficients() {
     Plotter<double> plt = Plotter(
         titan_result.theta.data(),
         "Regression coefficients",
@@ -373,7 +387,7 @@ void EvoAPI::show_regression_coefficients() {
     plt.print_table();
 };
 
-void EvoAPI::show_genotype() {
+void EvoAPI::print_genotype() {
 
     Plotter<std::string> plt = Plotter(
         titan.merge_chromosome_to_string_vector().data(),
@@ -416,7 +430,7 @@ void EvoAPI::show_genotype() {
     plt.print_table();
 };
 
-void EvoAPI::show_formula() {
+void EvoAPI::print_formula() {
     std::vector<std::string> formula{ titan.to_math_formula() };
     Plotter<std::string> plt = Plotter(
         formula.data(),
@@ -428,4 +442,26 @@ void EvoAPI::show_formula() {
     );
     plt.print_table();
 };
+
+void EvoAPI::show_plots() {
+
+    // // Extract the data
+    // std::vector<double> best_gen_fitness = EvoMath::extract_column(generation_fitness_metrics, 5, 0);
+    // std::vector<double> g_mean = EvoMath::extract_column(generation_fitness_metrics, 5, 1);
+    // std::vector<double> mean = EvoMath::extract_column(generation_fitness_metrics, 5, 2);
+    // std::vector<double> median = EvoMath::extract_column(generation_fitness_metrics, 5, 3);
+    // std::vector<double> standard_deviation = EvoMath::extract_column(generation_fitness_metrics, 5, 4);
+
+    // auto h = matplot::figure(true);
+    // h->name("Measured Data");
+    // h->number_title(false);
+    // h->color("green");
+    // h->size(1800, 900);
+    // h->draw();
+    // h->font("Arial");
+    // h->font_size(40);
+    // h->title("My experiment");
+    // matplot::plot(best_gen_fitness);
+    // matplot::show();
+}
 

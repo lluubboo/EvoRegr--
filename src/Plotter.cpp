@@ -127,7 +127,7 @@ void Plotter<T>::print_row(unsigned int start_index, unsigned int cell_count, in
         auto value = _data[start_index + j * stride];
 
         if (!col_width_is_sufficient(value, _column_width)) {
-            too_long_values_buffer << "\n" << "cell: " << j << " value: " << value << "\n";
+            too_long_values_buffer << "\n\n" << "cell: " << j << " value: " << value << "\n";
 
             // initialize to default T value
             value = T();
@@ -226,7 +226,7 @@ void Plotter<T>::print_endline() {
 template class Plotter<int>;
 template class Plotter<double>;
 template class Plotter<std::string>;
-template class Plotter<char>;
+
 
 
 

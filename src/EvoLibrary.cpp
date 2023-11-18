@@ -17,7 +17,7 @@ std::array<EvoIndividual, 2> Selection::tournament_selection(std::vector<EvoIndi
     EvoIndividual second = Random::randomChoice(generation, random_engine);
 
     if (second.fitness < first.fitness) std::swap(first, second);
-    
+
     for (int i = 0; i < 2; i++) {
         EvoIndividual entity = Random::randomChoice(generation, random_engine);
         if (entity.fitness < first.fitness) {
@@ -76,7 +76,8 @@ TransformXAllele Factory::getRandomTransformXAllele(int column_index, XoshiroCpp
     if (column_index != 0) {
         transformx_allele.allele = Transform_operator{ RandomNumbers::rand_interval_int(0, transform_operator_maxindex, random_engine) };
         if (transformx_allele.allele == Transform_operator::Pow || transformx_allele.allele == Transform_operator::Wek) transformx_allele.resetCharacteristicNumber(RandomNumbers::rand_interval_float(1, 3, random_engine));
-    } else {
+    }
+    else {
         transformx_allele.allele = Transform_operator::Let;
     }
     return transformx_allele;
@@ -123,7 +124,7 @@ EvoIndividual Mutation::mutate(EvoIndividual& individual, int chromosome_size, i
     if (RandomNumbers::rand_interval_int(0, 10, random_engine) == 0) {
 
         int mutation_index = RandomNumbers::rand_interval_int(0, 3, random_engine);
-        
+
         if (mutation_index == 0) {
             int col = RandomNumbers::rand_interval_int(0, chromosome_size - 1, random_engine);
             individual.x_transformer_chromosome.at(col) = Factory::getRandomTransformXAllele(col, random_engine);
@@ -232,8 +233,22 @@ Transform::EvoDataSet Transform::data_transformation_nonrobust(Eigen::MatrixXd p
     return { predictor, target };
 };
 
-double FitnessEvaluator::get_fitness(Transform::EvoDataSet const& dataset) {
+double EvoMath::get_fitness(Transform::EvoDataSet const& dataset) {
     RegressionSimpleResult result = solve_system_by_ldlt_simple(dataset.predictor, dataset.target);
     return result.sum_squares_errors;
 };
 
+template <typename T>
+std::vector<T> EvoMath::extract_column(std::vector<T> data, unsigned int column_count, unsigned int column_index) {
+    int row_count = data.size() / column_count;
+    std::vector<T> column(row_count);
+    std::generate(column.begin(), column.end(), [&, i = 0]() mutable {
+        return data[i++ * column_count + column_index];}
+    );
+    return column;
+};
+
+//explicit instantiation
+template std::vector<int> EvoMath::extract_column(std::vector<int> data, unsigned int column_count, unsigned int column_index);
+template std::vector<double> EvoMath::extract_column(std::vector<double> data, unsigned int column_count, unsigned int column_index);
+template std::vector<float> EvoMath::extract_column(std::vector<float> data, unsigned int column_count, unsigned int column_index);
