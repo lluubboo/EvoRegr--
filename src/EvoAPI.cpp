@@ -5,6 +5,9 @@
 #include <chrono>
 #include <numeric>
 #include <matplot/matplot.h>
+#include <spdlog/spdlog.h>
+#include <spdlog/sinks/basic_file_sink.h>
+#include <spdlog/sinks/stdout_color_sinks.h>
 #include "EvoAPI.hpp"
 #include "IOTools.hpp"
 #include "EvoIndividual.hpp"
@@ -19,7 +22,23 @@ EvoAPI::EvoAPI(unsigned int generation_size_limit, unsigned int generation_count
     this->generation_count_limit = generation_count_limit;
     this->interaction_cols = interaction_cols;
 
+    init_logger();
+    logger->info("EvoAPI initialized with generation size limit: {}, generation count limit: {}, interaction columns: {}",
+        generation_size_limit, generation_count_limit, interaction_cols);
+}
 
+void EvoAPI::init_logger() {
+    // console sink
+    auto console_sink = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
+    // file sink
+    auto file_sink = std::make_shared<spdlog::sinks::basic_file_sink_mt>("logs.txt", true);
+    // create a logger that writes to both the console and the file
+    logger = std::make_shared<spdlog::logger>("logger", spdlog::sinks_init_list{ console_sink, file_sink });
+    // register the logger so it can be accessed using spdlog::get()
+    spdlog::register_logger(logger);
+    // settings
+    spdlog::set_pattern("[%H:%M:%S] [%^%l%$] [thread %t] %v");
+    spdlog::set_level(spdlog::level::debug);
 }
 
 /**
@@ -45,36 +64,27 @@ void EvoAPI::load_file() {
                 break;
             }
             catch (const std::exception& e) {
-                std::cerr << "Error processing file " << filename << ": " << e.what() << "\n";
+                logger->error("Error processing file {}: {}", filename, e.what());
             }
             catch (...) {
-                std::cerr << "An unknown error occurred while processing file " << filename << "\n";
+                logger->error("An unknown error occurred while processing file {}", filename);
             }
         }
         else if (filename == "x") {
-
             // User wants to exit, so exit
-            std::cout << "Exiting..." << "\n";
+            logger->info("Exiting...");
             exit(0);
         }
         else if (filename == "") {
-            try {
-                create_regression_input(parse_csv("C://Users//lubomir.balaz//Desktop//Projekty 2023//EvoRegr++//data//TestDataSpan.csv"));
-                break;
-            }
-            catch (const std::exception& e) {
-                std::cerr << "Error processing file " << filename << ": " << e.what() << "\n";
-            }
-            catch (...) {
-                std::cerr << "An unknown error occurred while processing file " << filename << "\n";
-            }
+            create_regression_input(parse_csv("C://Users//lubomir.balaz//Desktop//Projekty 2023//EvoRegr++//data//TestDataSpan.csv"));
+            break;
         }
         else {
             // File failed to open, print an error message and try again
-            std::cerr << "Failed to open file " << filename << ", please try again.\n";
+            logger->error("Failed to open file {}, please try again.", filename);
         }
-        std::cout << "\n" << "File loaded... " << "\n";
     }
+    logger->info("File {} loaded", filename);
 }
 
 /**
@@ -121,6 +131,7 @@ void EvoAPI::create_regression_input(std::tuple<int, int, std::vector<double>> i
             }
         }
     }
+    logger->info("Predictor matrix initialized with {} rows and {} columns", m_output, n_output);
 }
 
 /**
@@ -132,7 +143,7 @@ void EvoAPI::create_regression_input(std::tuple<int, int, std::vector<double>> i
  */
 void EvoAPI::predict() {
 
-    std::cout << "Prediction started..." << "\n\n";
+    logger->info("Starting prediction process...");
 
     // random engines for parallel loops
     std::vector<XoshiroCpp::Xoshiro256Plus> random_engines = create_random_engines(12346, omp_get_max_threads());
@@ -141,13 +152,13 @@ void EvoAPI::predict() {
     std::vector<EvoIndividual> generation(0);
     std::vector<EvoIndividual> past_generation(0);
 
+    auto start = std::chrono::high_resolution_clock::now();
+
 #pragma omp declare reduction(merge_individuals : std::vector<EvoIndividual> : omp_out.insert(omp_out.end(), omp_in.begin(), omp_in.end())) initializer(omp_priv = omp_orig)
 
     for (int gen_index = 0; gen_index < generation_count_limit; gen_index++) {
 
-
-        std::cout << "Generation " << gen_index << " started..." << "\n";
-
+        if (gen_index % 10 == 0) logger->info("Generation {} of {}", gen_index, generation_count_limit);
 
 #pragma omp parallel for reduction (merge_individuals : generation) schedule(dynamic)
         for (int entity_index = 0; entity_index < generation_size_limit; entity_index++) {
@@ -188,6 +199,10 @@ void EvoAPI::predict() {
         // save/process some data after generation loop
         generation_postprocessing(past_generation, gen_index);
     }
+
+    auto stop = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double> elapsed = stop - start;
+    logger->info("Prediction process finished in /s: {}", elapsed.count());
 }
 
 /**
@@ -197,11 +212,8 @@ void EvoAPI::predict() {
  */
 void EvoAPI::show_result() {
     titan_postprocessing();
-    print_regression_summary();
-    print_titan_history();
-    print_regression_coefficients();
-    print_genotype();
-    print_formula();
+    logger->info(get_regression_summary_table());
+    logger->info("Regression results showing...");
 }
 
 /**
@@ -240,6 +252,8 @@ void EvoAPI::setTitan(EvoIndividual titan, int generation_index) {
     this->titan = titan;
     this->titan_history.push_back(titan.fitness);
     this->titan_history.push_back(generation_index);
+
+    logger->info("New titan set with fitness: {} and generation index: {}", titan.fitness, generation_index);
 }
 
 /**
@@ -278,6 +292,7 @@ std::vector<XoshiroCpp::Xoshiro256Plus> EvoAPI::create_random_engines(std::uint6
         random_engines.emplace_back(master_random_engine.serialize());
     }
 
+    logger->info("Created {} random engines", count);
     return random_engines;
 }
 
@@ -293,6 +308,8 @@ void EvoAPI::titan_postprocessing() {
     titan_nonrobust_dataset = Transform::data_transformation_nonrobust(x, y, titan);
     // regression result
     titan_result = solve_system_by_ldlt_detailed(titan_robust_dataset.predictor, titan_robust_dataset.target);
+
+    logger->info("Titan postprocessing finished");
 }
 
 /**
@@ -348,10 +365,18 @@ void EvoAPI::process_generation_fitness(std::set<double> const& generation_fitne
     generation_fitness_metrics.push_back(DescriptiveStatistics::standard_deviation(generation_fitness_vector));
 }
 
-void EvoAPI::print_regression_summary() {
-    // get matrix with regression summary
-    Eigen::MatrixXd regression_result_matrix = get_regression_summary_matrix(titan_result, titan_robust_dataset.predictor, titan_robust_dataset.target);
-    //plot it
+/**
+ * @brief Returns the regression result table as a string.
+ * 
+ * This function generates a regression result table using the provided data and returns it as a string.
+ * The table includes columns for the target, prediction, difference, and percentage difference.
+ * 
+ * @return The regression result table as a string.
+ */
+std::string EvoAPI::get_regression_result_table() {
+    Eigen::MatrixXd regression_result_matrix = get_regression_summary_matrix(
+        titan_result, titan_robust_dataset.predictor, titan_robust_dataset.target
+    );
     Plotter<double> plt = Plotter(
         regression_result_matrix.data(),
         "Regression result summary",
@@ -360,10 +385,15 @@ void EvoAPI::print_regression_summary() {
         regression_result_matrix.size(),
         DataArrangement::ColumnMajor
     );
-    plt.print_table();
+    return plt.get_table();
 };
 
-void EvoAPI::print_titan_history() {
+/**
+ * @brief Returns the titan history table as a string.
+ * 
+ * @return std::string The titan history table.
+ */
+std::string EvoAPI::get_titan_history_table() {
     Plotter<double> plt = Plotter(
         titan_history.data(),
         "Best individual history",
@@ -372,10 +402,18 @@ void EvoAPI::print_titan_history() {
         titan_history.size(),
         DataArrangement::RowMajor
     );
-    plt.print_table();
+    return plt.get_table();
 };
 
-void EvoAPI::print_regression_coefficients() {
+/**
+ * @brief Retrieves the regression coefficients table.
+ * 
+ * This function creates a Plotter object to visualize the regression coefficients
+ * and returns the table representation of the plot.
+ * 
+ * @return The regression coefficients table.
+ */
+std::string EvoAPI::get_regression_coefficients_table() {
     Plotter<double> plt = Plotter(
         titan_result.theta.data(),
         "Regression coefficients",
@@ -384,11 +422,20 @@ void EvoAPI::print_regression_coefficients() {
         titan_result.theta.size(),
         DataArrangement::ColumnMajor
     );
-    plt.print_table();
+    return plt.get_table();
 };
 
-void EvoAPI::print_genotype() {
-
+/**
+ * @brief Returns the genotype table as a string.
+ * 
+ * This function generates a genotype table using the Plotter class and returns it as a string.
+ * The genotype table includes information about merge chromosome, transform predictor chromosome,
+ * transform target chromosome, and robust chromosome.
+ * 
+ * @return The genotype table as a string.
+ */
+std::string EvoAPI::get_genotype_table() {
+    std::stringstream genotype_table;
     Plotter<std::string> plt = Plotter(
         titan.merge_chromosome_to_string_vector().data(),
         "Merge chromosome",
@@ -397,8 +444,7 @@ void EvoAPI::print_genotype() {
         titan.merge_chromosome_to_string_vector().size(),
         DataArrangement::RowMajor
     );
-    plt.print_table();
-
+    genotype_table << plt.get_table();
     plt = Plotter(
         titan.transform_predictor_chromosome_to_string_vector().data(),
         "Transform predictor chromosome",
@@ -407,8 +453,7 @@ void EvoAPI::print_genotype() {
         titan.transform_predictor_chromosome_to_string_vector().size(),
         DataArrangement::RowMajor
     );
-    plt.print_table();
-
+    genotype_table << plt.get_table();
     plt = Plotter(
         titan.transform_target_chromosome_to_string_vector().data(),
         "Transform target chromosome",
@@ -417,8 +462,7 @@ void EvoAPI::print_genotype() {
         titan.transform_target_chromosome_to_string_vector().size(),
         DataArrangement::RowMajor
     );
-    plt.print_table();
-
+    genotype_table << plt.get_table();
     plt = Plotter(
         titan.robust_chromosome_to_string_vector().data(),
         "Robust chromosome",
@@ -427,10 +471,18 @@ void EvoAPI::print_genotype() {
         titan.robust_chromosome_to_string_vector().size(),
         DataArrangement::RowMajor
     );
-    plt.print_table();
+    genotype_table << plt.get_table();
+    return genotype_table.str();
 };
 
-void EvoAPI::print_formula() {
+/**
+ * @brief Retrieves the formula table.
+ * 
+ * This function returns a string representation of the formula table.
+ * 
+ * @return The formula table as a string.
+ */
+std::string EvoAPI::get_formula_table() {
     std::vector<std::string> formula{ titan.to_math_formula() };
     Plotter<std::string> plt = Plotter(
         formula.data(),
@@ -440,28 +492,29 @@ void EvoAPI::print_formula() {
         formula.size(),
         DataArrangement::RowMajor
     );
-    plt.print_table();
+    return plt.get_table();
 };
 
-void EvoAPI::show_plots() {
+/**
+ * @brief Returns a summary table for regression analysis.
+ * 
+ * This function generates a summary table for regression analysis by combining
+ * various tables including regression result table, titan history table,
+ * regression coefficients table, genotype table, and formula table.
+ * 
+ * @return A string containing the regression summary table.
+ */
+std::string EvoAPI::get_regression_summary_table() {
+    std::stringstream table;
+    table << "\n";
+    table << get_regression_result_table();
+    table << get_titan_history_table();
+    table << get_regression_coefficients_table();
+    table << get_genotype_table();
+    table << get_formula_table();
+    return table.str();
+};
 
-    // // Extract the data
-    // std::vector<double> best_gen_fitness = EvoMath::extract_column(generation_fitness_metrics, 5, 0);
-    // std::vector<double> g_mean = EvoMath::extract_column(generation_fitness_metrics, 5, 1);
-    // std::vector<double> mean = EvoMath::extract_column(generation_fitness_metrics, 5, 2);
-    // std::vector<double> median = EvoMath::extract_column(generation_fitness_metrics, 5, 3);
-    // std::vector<double> standard_deviation = EvoMath::extract_column(generation_fitness_metrics, 5, 4);
 
-    // auto h = matplot::figure(true);
-    // h->name("Measured Data");
-    // h->number_title(false);
-    // h->color("green");
-    // h->size(1800, 900);
-    // h->draw();
-    // h->font("Arial");
-    // h->font_size(40);
-    // h->title("My experiment");
-    // matplot::plot(best_gen_fitness);
-    // matplot::show();
-}
+
 

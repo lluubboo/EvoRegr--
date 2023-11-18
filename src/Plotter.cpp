@@ -38,7 +38,26 @@ void Plotter<T>::print_table() {
     print_table_header();
     print_columns_header();
     print_content();
-    std::cout << _table.str() << '\n';
+    _table << "\n";
+    std::cout << _table.str();
+}
+
+/**
+ * @brief Get the table as a string.
+ * 
+ * This function generates a table by printing the table header, columns header, and content.
+ * It returns the generated table as a string.
+ * 
+ * @tparam T The type of data in the table.
+ * @return std::string The generated table as a string.
+ */
+template <typename T>
+std::string Plotter<T>::get_table() {
+    print_table_header();
+    print_columns_header();
+    print_content();
+    _table << "\n";
+    return _table.str();
 }
 
 /**
@@ -127,7 +146,7 @@ void Plotter<T>::print_row(unsigned int start_index, unsigned int cell_count, in
         auto value = _data[start_index + j * stride];
 
         if (!col_width_is_sufficient(value, _column_width)) {
-            too_long_values_buffer << "\n\n" << "cell: " << j << " value: " << value << "\n";
+            too_long_values_buffer << "\n\n" << "cell: " << j << " value: " << value;
 
             // initialize to default T value
             value = T();
