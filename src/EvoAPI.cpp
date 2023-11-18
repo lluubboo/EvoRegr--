@@ -17,6 +17,13 @@
 #include "Plotter.hpp"
 #include "omp.h"
 
+/**
+ * @brief Constructor for the EvoAPI class.
+ * 
+ * @param generation_size_limit The maximum size of each generation.
+ * @param generation_count_limit The maximum number of generations.
+ * @param interaction_cols The number of interaction columns.
+ */
 EvoAPI::EvoAPI(unsigned int generation_size_limit, unsigned int generation_count_limit, unsigned int interaction_cols) {
     this->generation_size_limit = generation_size_limit;
     this->generation_count_limit = generation_count_limit;
@@ -27,6 +34,11 @@ EvoAPI::EvoAPI(unsigned int generation_size_limit, unsigned int generation_count
         generation_size_limit, generation_count_limit, interaction_cols);
 }
 
+/**
+ * Initializes the logger for the EvoAPI class.
+ * This function creates a logger that writes log messages to both the console and a file.
+ * The log messages are formatted with a specific pattern and the log level is set to debug.
+ */
 void EvoAPI::init_logger() {
     // console sink
     auto console_sink = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
