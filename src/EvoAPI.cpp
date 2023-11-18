@@ -31,13 +31,13 @@ void EvoAPI::init_logger() {
     // console sink
     auto console_sink = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
     // file sink
-    auto file_sink = std::make_shared<spdlog::sinks::basic_file_sink_mt>("logs.txt", true);
+    auto file_sink = std::make_shared<spdlog::sinks::basic_file_sink_mt>("C:/Users/lubomir.balaz/Desktop/Projekty 2023/EvoRegr++/logs/EvoAPI_log.txt", true);
     // create a logger that writes to both the console and the file
-    logger = std::make_shared<spdlog::logger>("logger", spdlog::sinks_init_list{ console_sink, file_sink });
+    logger = std::make_shared<spdlog::logger>("EvoAPI", spdlog::sinks_init_list{ console_sink, file_sink });
     // register the logger so it can be accessed using spdlog::get()
     spdlog::register_logger(logger);
     // settings
-    spdlog::set_pattern("[%H:%M:%S] [%^%l%$] [thread %t] %v");
+    spdlog::set_pattern("[EvoAPI] [%H:%M:%S] [%^%l%$] [thread %t] %v");
     spdlog::set_level(spdlog::level::debug);
 }
 
