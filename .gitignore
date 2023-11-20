@@ -6,3 +6,6 @@
 
 # private data
 /data/
+
+# 
+**/evo_log.txt

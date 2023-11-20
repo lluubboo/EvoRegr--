@@ -43,7 +43,7 @@ void EvoAPI::init_logger() {
     // console sink
     auto console_sink = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
     // file sink
-    auto file_sink = std::make_shared<spdlog::sinks::basic_file_sink_mt>("C:/Users/lubomir.balaz/Desktop/Projekty 2023/EvoRegr++/logs/EvoAPI_log.txt", true);
+    auto file_sink = std::make_shared<spdlog::sinks::basic_file_sink_mt>("evo_log.txt", true);
     // create a logger that writes to both the console and the file
     logger = std::make_shared<spdlog::logger>("EvoAPI", spdlog::sinks_init_list{ console_sink, file_sink });
     // register the logger so it can be accessed using spdlog::get()
@@ -387,7 +387,7 @@ void EvoAPI::process_generation_fitness(std::set<double> const& generation_fitne
  */
 std::string EvoAPI::get_regression_result_table() {
     Eigen::MatrixXd regression_result_matrix = get_regression_summary_matrix(
-        titan_result, titan_robust_dataset.predictor, titan_robust_dataset.target
+        titan_result, titan_nonrobust_dataset.predictor, titan_nonrobust_dataset.target
     );
     Plotter<double> plt = Plotter(
         regression_result_matrix.data(),

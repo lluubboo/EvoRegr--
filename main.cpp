@@ -5,7 +5,7 @@ using namespace std;
 
 int main(int, char**) {
 
-    EvoAPI api = EvoAPI(100, 100, 1);
+    EvoAPI api = EvoAPI(5000, 250, 0);
     api.load_file();
     api.predict();
     api.show_result();
