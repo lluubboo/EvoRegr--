@@ -5,11 +5,12 @@ using namespace std;
 
 int main(int, char**) {
 
-    EvoAPI api = EvoAPI(5000, 250, 0);
-    api.load_file();
-    api.predict();
-    api.show_result();
 
-    system("pause");
+    
+    // EvoAPI api = EvoAPI(100, 100, 0);
+    // api.load_file();
+    // api.predict();
+    // api.show_result();
+
     return 0;
 }

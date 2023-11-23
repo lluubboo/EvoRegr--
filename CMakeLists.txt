@@ -20,7 +20,7 @@ add_executable(EVOREGR++ main.cpp)
 # list cmake_prefix_path append eigen custom install directory cmake files
 list(APPEND CMAKE_PREFIX_PATH "C:/Users/lubomir.balaz/SWLibraries/eigen-3.4.0-install/share/eigen3/cmake")
 list(APPEND CMAKE_PREFIX_PATH "C:/.local/lib/cmake/Matplot++")
-list(APPEND CMAKE_PREFIX_PATH "C:/Users/lubomir.balaz/SWLibraries/spdlog/build")
+list(APPEND CMAKE_PREFIX_PATH "C:/Users/lubomir.balaz/SWLibraries/fltk/build")
 
 # Eigen
 find_package(Eigen3 3.3 REQUIRED NO_MODULE)
@@ -28,18 +28,20 @@ find_package(Eigen3 3.3 REQUIRED NO_MODULE)
 # OpenMP
 find_package(OpenMP)
 
-# Matplot++
-find_package(Matplot++ REQUIRED)
-
 # spdlog
 find_package(spdlog REQUIRED)
+
+#
+find_package(FLTK REQUIRED NO_MODULE)
 
 add_subdirectory(external)
 add_subdirectory(include)
 add_subdirectory(src)
 
-target_link_libraries (${PROJECT_NAME} PRIVATE OpenMP::OpenMP_CXX Eigen3::Eigen Matplot++::matplot spdlog::spdlog includes_lib sources_lib externals_lib)
-target_include_directories(${PROJECT_NAME} PRIVATE "${PROJECT_BINARY_DIR}")
+
+target_link_libraries (${PROJECT_NAME} PRIVATE OpenMP::OpenMP_CXX Eigen3::Eigen spdlog::spdlog fltk includes_lib sources_lib externals_lib)
+
+target_include_directories(${PROJECT_NAME} PRIVATE ${PROJECT_BINARY_DIR} ${FLTK_INCLUDE_DIRS})
 
 # packs, but what thez are doing?find out.....
 set(CPACK_PROJECT_NAME ${PROJECT_NAME})

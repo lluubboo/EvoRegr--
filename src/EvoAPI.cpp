@@ -4,10 +4,10 @@
 #include <set>
 #include <chrono>
 #include <numeric>
-#include <matplot/matplot.h>
 #include <spdlog/spdlog.h>
 #include <spdlog/sinks/basic_file_sink.h>
 #include <spdlog/sinks/stdout_color_sinks.h>
+#include <fstream>
 #include "EvoAPI.hpp"
 #include "IOTools.hpp"
 #include "EvoIndividual.hpp"

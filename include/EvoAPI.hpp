@@ -12,7 +12,7 @@
 
 class EvoAPI {
 
-    // file logger
+    // logger
     std::shared_ptr<spdlog::logger> logger;
 
     // algorithm boundary conditions
