@@ -13,6 +13,7 @@
 #include <FL/Fl_Check_Button.H>
 #include <FL/Fl_Text_Display.H>
 #include <FL/Fl_Text_Buffer.H>
+#include <FL/Fl_File_Chooser.H>
 #include <cstdlib>
 #include <spdlog/spdlog.h>
 #include <spdlog/sinks/base_sink.h>
@@ -147,6 +148,13 @@ void EvoView::gen_interference_size_callback(Fl_Widget* w, void* v) {
     }
 }
 
+/**
+ * Callback function for exporting a file.
+ * Updates the export_log_file flag in the EvoView object and logs the new value.
+ * 
+ * @param w The Fl_Widget triggering the callback.
+ * @param v A pointer to the EvoView object.
+ */
 void EvoView::export_file_callback(Fl_Widget* w, void* v) {
     EvoView* T = (EvoView*)v;
     T->export_log_file = ((Fl_Check_Button*)w)->value();
@@ -168,7 +176,24 @@ void EvoView::decomposition_choice_callback(Fl_Widget* w, void* v) {
     T->logger->info("Decomposition method set to: " + T->decomposition_method);
 }
 
+void EvoView::load_file_button_callback(Fl_Widget* w, void* v) {
+    EvoView* T = (EvoView*)v;
+    T->get_filepath();
+}
+
 //*************************************************************************************************methods
+
+void EvoView::get_filepath() {
+    Fl_File_Chooser chooser(".", "*", Fl_File_Chooser::SINGLE, "Select a file");
+    chooser.show();
+    while (chooser.shown()) {
+        Fl::wait();
+    }
+    if (chooser.value() != nullptr) {
+        filepath = chooser.value();
+        logger->info("Filepath set to: " + filepath);
+    }
+}
 
 /**
  * @brief Initializes the logger.
@@ -244,7 +269,9 @@ Fl_Pack* EvoView::create_main_widget_pack(int x, int y, int w, int h) {
  * @return Fl_Button* A pointer to the newly created button.
  */
 Fl_Button* EvoView::create_load_button(int h) {
-    return new Fl_Button(0, 0, 0, h, "Load data");
+    Fl_Button* button = new Fl_Button(0, 0, 0, h, "Load data");
+    button -> callback(load_file_button_callback, (void*)this);
+    return button;
 }
 
 /**

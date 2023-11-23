@@ -34,9 +34,11 @@ class EvoView : public Fl_Window {
 
     //variables
 
+    std::string filepath;
     int generations_count;
     int generations_size;
     int interference_size;
+
 
     //widgets
 
@@ -60,6 +62,7 @@ class EvoView : public Fl_Window {
     static void gen_interference_size_callback(Fl_Widget* w, void* v);
     static void export_file_callback(Fl_Widget* w, void* v);
     static void decomposition_choice_callback(Fl_Widget* w, void* v);
+    static void load_file_button_callback(Fl_Widget* w, void* v);
 
     //methods
 
@@ -74,6 +77,7 @@ class EvoView : public Fl_Window {
     Fl_Input* create_inter_size_box(int h);
     Fl_Check_Button* create_export_file_box(int h);
 
+    void get_filepath();
     void set_appearance();
     void init_logger();
 

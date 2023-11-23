@@ -58,7 +58,7 @@ void EvoAPI::init_logger() {
  * The function `load_file` prompts the user to enter a filename, opens the file, and processes its
  * contents if it is successfully opened.
  */
-void EvoAPI::load_file() {
+void EvoAPI::load_file(const std::string& filename) {
     try {
         create_regression_input(parse_csv(filename));
     }

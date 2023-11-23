@@ -19,7 +19,6 @@ class EvoAPI {
     int generation_size_limit, generation_count_limit, interaction_cols;
 
     // inputs
-    std::string filename;
     Eigen::MatrixXd x, y;
 
     // titan 
@@ -55,7 +54,7 @@ class EvoAPI {
 public:
 
     EvoAPI(unsigned int generation_size_limit, unsigned int generation_count_limit, unsigned int interaction_cols);
-    void load_file();
+    void load_file(const std::string& filename);
     void predict();
     void show_result();
 };
