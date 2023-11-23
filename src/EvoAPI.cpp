@@ -34,23 +34,24 @@ EvoAPI::EvoAPI(unsigned int generation_size_limit, unsigned int generation_count
         generation_size_limit, generation_count_limit, interaction_cols);
 }
 
+
 /**
  * Initializes the logger for the EvoAPI class.
- * This function creates a logger that writes log messages to both the console and a file.
- * The log messages are formatted with a specific pattern and the log level is set to debug.
+ * If a logger with the name "EvoRegression++" already exists, it connects to it.
+ * Otherwise, it creates a new logger with the name "EvoRegression++" and sets its level to debug.
+ * The logger's pattern is set to "[EvoRegression++] [%H:%M:%S.%e] [%^%l%$] [thread %t] %v".
  */
 void EvoAPI::init_logger() {
-    // console sink
-    auto console_sink = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
-    // file sink
-    auto file_sink = std::make_shared<spdlog::sinks::basic_file_sink_mt>("evo_log.txt", true);
-    // create a logger that writes to both the console and the file
-    logger = std::make_shared<spdlog::logger>("EvoAPI", spdlog::sinks_init_list{ console_sink, file_sink });
-    // register the logger so it can be accessed using spdlog::get()
-    spdlog::register_logger(logger);
-    // settings
-    spdlog::set_pattern("[EvoAPI] [%H:%M:%S] [%^%l%$] [thread %t] %v");
-    spdlog::set_level(spdlog::level::debug);
+    logger = spdlog::get("EvoRegression++");
+    if (logger) {
+        logger->info("EvoAPI logger connected to existing logger");
+    }
+    else {
+        logger = spdlog::stdout_color_mt("EvoRegression++");
+        logger->set_level(spdlog::level::debug);
+        logger->set_pattern("[EvoRegression++] [%H:%M:%S.%e] [%^%l%$] [thread %t] %v");
+        logger->info("EvoAPI logger initialized");
+    }
 }
 
 /**
@@ -58,43 +59,14 @@ void EvoAPI::init_logger() {
  * contents if it is successfully opened.
  */
 void EvoAPI::load_file() {
-
-    // loop while file is not opened
-    while (true) {
-
-        std::ifstream file;
-
-        std::cout << "Enter filename (or 'x' to exit): " << "\n";
-
-        std::getline(std::cin, filename);
-
-        file.open(filename);
-
-        if (file.is_open()) {
-            try {
-                create_regression_input(parse_csv(filename));
-                break;
-            }
-            catch (const std::exception& e) {
-                logger->error("Error processing file {}: {}", filename, e.what());
-            }
-            catch (...) {
-                logger->error("An unknown error occurred while processing file {}", filename);
-            }
-        }
-        else if (filename == "x") {
-            // User wants to exit, so exit
-            logger->info("Exiting...");
-            exit(0);
-        }
-        else if (filename == "") {
-            create_regression_input(parse_csv("C://Users//lubomir.balaz//Desktop//Projekty 2023//EvoRegr++//data//TestDataSpan.csv"));
-            break;
-        }
-        else {
-            // File failed to open, print an error message and try again
-            logger->error("Failed to open file {}, please try again.", filename);
-        }
+    try {
+        create_regression_input(parse_csv(filename));
+    }
+    catch (const std::exception& e) {
+        logger->error("Error processing file {}: {}", filename, e.what());
+    }
+    catch (...) {
+        logger->error("An unknown error occurred while processing file {}", filename);
     }
     logger->info("File {} loaded", filename);
 }

@@ -180,11 +180,11 @@ void EvoView::init_logger() {
     // FLTK sink
     auto fltk_sink = std::make_shared<Fl_Terminal_Sink<std::mutex>>(log_terminal);
     // logger
-    logger = std::make_shared<spdlog::logger>("EvoView", spdlog::sinks_init_list{ fltk_sink });
+    logger = std::make_shared<spdlog::logger>("EvoLogger", spdlog::sinks_init_list{ fltk_sink });
     // register the logger so it can be accessed using spdlog::get()
     spdlog::register_logger(logger);
     // settings
-    spdlog::set_pattern("[EvoView] [%H:%M:%S] [%^%l%$] [thread %t] %v");
+    spdlog::set_pattern("[EvoRegression++] [%H:%M:%S] [%^%l%$] [thread %t] %v");
     spdlog::set_level(spdlog::level::debug);
 }
 
