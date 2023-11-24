@@ -47,6 +47,25 @@ void EvoAPI::set_boundary_conditions(unsigned int generation_size_limit, unsigne
     this->interaction_cols = interaction_cols;
 }
 
+void EvoAPI::set_solver(std::string const& solver_name) {
+    if (solver_name == "LLT") {
+        solver = LLTSolver();
+        logger->info("Solver set to LLT");
+    }
+    else if (solver_name == "LDLT") {
+        solver = LDLTSolver();
+        logger->info("Solver set to LDLT");
+    }
+    else if (solver_name == "ColPivHouseholderQr") {
+        solver = ColPivHouseholderQrSolver();
+        logger->info("Solver set to ColPivHouseholderQr");
+    }
+    else {
+        solver = LDLTSolver();
+        logger->info("Unrecognized solver type. Solver set to default LDLT");
+    }
+}
+
 /**
  * Initializes the logger for the EvoAPI class.
  * If a logger with the name "EvoRegression++" already exists, it connects to it.
@@ -183,12 +202,13 @@ void EvoAPI::predict() {
 
             // merge & transform & make robust predictors & target / solve regression problem
             newborn.evaluate(
-                EvoMath::get_fitness(
+                EvoMath::get_fitness<std::function<RegressionSimpleResult(Eigen::MatrixXd const&, Eigen::VectorXd const&)>>(
                     Transform::data_transformation_robust(
                         x,
                         y,
                         newborn
-                    )
+                    ),
+                    solver
                 )
             );
 

@@ -58,7 +58,8 @@ namespace Reproduction {
 
 namespace EvoMath {
 
-    double get_fitness(Transform::EvoDataSet const&);
+    template <typename T>
+    double get_fitness(Transform::EvoDataSet const& dataset, T solver);
 
     template <typename T>
     std::vector<T> extract_column(std::vector<T> data, unsigned int column_count, unsigned int column_index);

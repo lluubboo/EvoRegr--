@@ -41,12 +41,10 @@ RegressionDetailedResult solve_system_by_ldlt_detailed(Eigen::MatrixXd const& pr
     return result;
 }
 
-RegressionSimpleResult solve_system_by_ldlt_simple(Eigen::MatrixXd const& predictors, Eigen::VectorXd const& target) {
+RegressionSimpleResult LLTSolver::operator()(Eigen::MatrixXd const& predictors, Eigen::VectorXd const& target) const {
     RegressionSimpleResult result = RegressionSimpleResult();
-
-    result.coefficients = (predictors.transpose() * predictors).ldlt().solve(predictors.transpose() * target);
+    result.coefficients = (predictors.transpose() * predictors).llt().solve(predictors.transpose() * target);
     result.isUsable = !result.coefficients.hasNaN() & result.coefficients.allFinite();
-
     if (result.isUsable) {
         result.prediction = predictors * result.coefficients;
         result.residuals = target - result.prediction;
@@ -57,3 +55,34 @@ RegressionSimpleResult solve_system_by_ldlt_simple(Eigen::MatrixXd const& predic
     }
     return result;
 }
+
+RegressionSimpleResult LDLTSolver::operator()(Eigen::MatrixXd const& predictors, Eigen::VectorXd const& target) const {
+    RegressionSimpleResult result = RegressionSimpleResult();
+    result.coefficients = (predictors.transpose() * predictors).ldlt().solve(predictors.transpose() * target);
+    result.isUsable = !result.coefficients.hasNaN() & result.coefficients.allFinite();
+    if (result.isUsable) {
+        result.prediction = predictors * result.coefficients;
+        result.residuals = target - result.prediction;
+        result.sum_squares_errors = result.residuals.array().square().sum();
+    }
+    else {
+        result.sum_squares_errors = std::numeric_limits<double>::max();
+    }
+    return result;
+}
+
+RegressionSimpleResult ColPivHouseholderQrSolver::operator()(Eigen::MatrixXd const& predictors, Eigen::VectorXd const& target) const {
+    RegressionSimpleResult result = RegressionSimpleResult();
+    result.coefficients = (predictors.transpose() * predictors).colPivHouseholderQr().solve(predictors.transpose() * target);
+    result.isUsable = !result.coefficients.hasNaN() & result.coefficients.allFinite();
+    if (result.isUsable) {
+        result.prediction = predictors * result.coefficients;
+        result.residuals = target - result.prediction;
+        result.sum_squares_errors = result.residuals.array().square().sum();
+    }
+    else {
+        result.sum_squares_errors = std::numeric_limits<double>::max();
+    }
+    return result;
+}
+

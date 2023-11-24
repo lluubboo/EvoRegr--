@@ -178,7 +178,7 @@ void EvoView::export_file_callback(Fl_Widget* w, void* v) {
 void EvoView::decomposition_choice_callback(Fl_Widget* w, void* v) {
     EvoView* T = (EvoView*)v;
     T->decomposition_method = ((Fl_Choice*)w)->text();
-    T->logger->info("Decomposition method set to: " + T->decomposition_method);
+    T->evo_api.set_solver(T->decomposition_method);
 }
 
 /**
@@ -334,7 +334,7 @@ Fl_Choice* EvoView::create_combo_box(int h) {
     Fl_Choice* combo_box = new Fl_Choice(0, 0, 0, h);
     combo_box->add("LLT");
     combo_box->add("LDLT");
-    combo_box->add("ColPivHouseholderQR");
+    combo_box->add("ColPivHouseholderQr");
     combo_box->value(1);
     combo_box->tooltip("Choose the decomposition method");
     combo_box->callback(decomposition_choice_callback, (void*)this);

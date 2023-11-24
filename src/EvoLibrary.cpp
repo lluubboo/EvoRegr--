@@ -1,4 +1,5 @@
 #include <Eigen/Dense>
+#include <functional>
 #include "EvoLibrary.hpp"
 #include "RandomChoices.hpp"
 #include "RandomNumberGenerator.hpp"
@@ -233,10 +234,14 @@ Transform::EvoDataSet Transform::data_transformation_nonrobust(Eigen::MatrixXd p
     return { predictor, target };
 };
 
-double EvoMath::get_fitness(Transform::EvoDataSet const& dataset) {
-    RegressionSimpleResult result = solve_system_by_ldlt_simple(dataset.predictor, dataset.target);
+template <typename T>
+double EvoMath::get_fitness(Transform::EvoDataSet const& dataset, T solver) {
+    RegressionSimpleResult result = solver(dataset.predictor, dataset.target);
     return result.sum_squares_errors;
-};
+}
+
+// Explicit instantiation
+template double EvoMath::get_fitness(Transform::EvoDataSet const& dataset, std::function<RegressionSimpleResult(Eigen::MatrixXd const&, Eigen::VectorXd const&)> solver);
 
 template <typename T>
 std::vector<T> EvoMath::extract_column(std::vector<T> data, unsigned int column_count, unsigned int column_index) {

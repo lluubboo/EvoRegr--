@@ -5,6 +5,7 @@
 #include <vector>
 #include <set>
 #include <spdlog/spdlog.h>
+#include <functional>
 #include "EvoIndividual.hpp"
 #include "RegressionSolver.hpp"
 #include "EvoLibrary.hpp"
@@ -20,6 +21,9 @@ class EvoAPI {
 
     // inputs
     Eigen::MatrixXd x, y;
+
+    // solver functor
+    std::function<RegressionSimpleResult(Eigen::MatrixXd const&, Eigen::VectorXd const&)> solver;
 
     // titan 
     EvoIndividual titan;
@@ -54,6 +58,8 @@ public:
 
     EvoAPI() = default;
     EvoAPI(unsigned int generation_size_limit, unsigned int generation_count_limit, unsigned int interaction_cols);
+
+    void set_solver(std::string const& solver_name);
     void reset_api_for_another_calculation();
     void load_file(const std::string& filename);
     void predict();

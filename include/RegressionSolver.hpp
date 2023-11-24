@@ -33,3 +33,15 @@ struct RegressionSimpleResult {
 
 RegressionDetailedResult solve_system_by_ldlt_detailed(Eigen::MatrixXd const&, Eigen::VectorXd const&);
 RegressionSimpleResult solve_system_by_ldlt_simple(Eigen::MatrixXd const&, Eigen::VectorXd const&);
+
+struct LLTSolver {
+    RegressionSimpleResult operator()(Eigen::MatrixXd const&, Eigen::VectorXd const&) const;
+};
+
+struct LDLTSolver {
+    RegressionSimpleResult operator()(Eigen::MatrixXd const&, Eigen::VectorXd const&) const;
+};
+
+struct ColPivHouseholderQrSolver {
+    RegressionSimpleResult operator()(Eigen::MatrixXd const&, Eigen::VectorXd const&) const;
+};
