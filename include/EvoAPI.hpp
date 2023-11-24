@@ -30,7 +30,6 @@ class EvoAPI {
     std::vector<double> titan_history;
     std::vector<double> generation_fitness_metrics;
 
-    void init_logger();
     void create_regression_input(std::tuple<int, int, std::vector<double>>);
     std::vector<XoshiroCpp::Xoshiro256Plus> create_random_engines(const std::uint64_t seed, int count);
 
@@ -53,8 +52,11 @@ class EvoAPI {
 
 public:
 
+    EvoAPI() = default;
     EvoAPI(unsigned int generation_size_limit, unsigned int generation_count_limit, unsigned int interaction_cols);
     void load_file(const std::string& filename);
     void predict();
     void show_result();
+    void init_logger();
+    void set_boundary_conditions(unsigned int generation_size_limit, unsigned int generation_count_limit, unsigned int interaction_cols);
 };

@@ -34,6 +34,18 @@ EvoAPI::EvoAPI(unsigned int generation_size_limit, unsigned int generation_count
         generation_size_limit, generation_count_limit, interaction_cols);
 }
 
+/**
+ * @brief Sets the boundary conditions for the evolutionary algorithm.
+ * 
+ * @param generation_size_limit The maximum size of each generation.
+ * @param generation_count_limit The maximum number of generations.
+ * @param interaction_cols The number of columns used for interaction.
+ */
+void EvoAPI::set_boundary_conditions(unsigned int generation_size_limit, unsigned int generation_count_limit, unsigned int interaction_cols) {
+    this->generation_size_limit = generation_size_limit;
+    this->generation_count_limit = generation_count_limit;
+    this->interaction_cols = interaction_cols;
+}
 
 /**
  * Initializes the logger for the EvoAPI class.
@@ -42,12 +54,16 @@ EvoAPI::EvoAPI(unsigned int generation_size_limit, unsigned int generation_count
  * The logger's pattern is set to "[EvoRegression++] [%H:%M:%S.%e] [%^%l%$] [thread %t] %v".
  */
 void EvoAPI::init_logger() {
-    logger = spdlog::get("EvoRegression++");
-    if (logger) {
+
+    auto shared_logger = spdlog::get("EvoLogger");
+    shared_logger->info("EvoAPI logger trying to connect to existing logger");
+
+    if (shared_logger) {
+        logger = shared_logger;
         logger->info("EvoAPI logger connected to existing logger");
     }
     else {
-        logger = spdlog::stdout_color_mt("EvoRegression++");
+        logger = spdlog::stdout_color_mt("EvoLogger");
         logger->set_level(spdlog::level::debug);
         logger->set_pattern("[EvoRegression++] [%H:%M:%S.%e] [%^%l%$] [thread %t] %v");
         logger->info("EvoAPI logger initialized");

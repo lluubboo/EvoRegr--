@@ -45,7 +45,12 @@ static constexpr int MENU_HEIGHT = 30;
 EvoView::EvoView(int width, int height, const char* title) : Fl_Window(width, height, title), decomposition_method{ "LDLT" }, export_log_file{ false }, generations_count { 100 }, generations_size{ 100 }, interference_size{ 0 } {
     set_appearance();
     render_main_window();
+
+    // EvoView is using widget as terminal sink, widget must be created first
     init_logger();
+
+    // EvoAPI is using EvoView logger
+    evo_api.init_logger();
 }
 
 //*************************************************************************************************callbacks
@@ -176,9 +181,25 @@ void EvoView::decomposition_choice_callback(Fl_Widget* w, void* v) {
     T->logger->info("Decomposition method set to: " + T->decomposition_method);
 }
 
-void EvoView::load_file_button_callback(Fl_Widget* w, void* v) {
+/**
+ * Callback function for the load file button in EvoView.
+ * This function is triggered when the load file button is clicked.
+ * It retrieves the file path from the EvoView instance, sets the boundary conditions using the Evo API,
+ * and loads the file using the Evo API.
+ *
+ * @param w The Fl_Widget object representing the load file button.
+ * @param v A pointer to the EvoView instance.
+ */
+void EvoView::load_file_button_callback(Fl_Widget* /*w*/, void* v) {
     EvoView* T = (EvoView*)v;
     T->get_filepath();
+    T->evo_api.set_boundary_conditions(T->generations_size, T->generations_count, T->interference_size);
+    T->evo_api.load_file(T->filepath);
+}
+
+void EvoView::predict_button_callback(Fl_Widget* /*w*/, void* v) {
+    EvoView* T = (EvoView*)v;
+    T->evo_api.predict();
 }
 
 //*************************************************************************************************methods
@@ -269,8 +290,9 @@ Fl_Pack* EvoView::create_main_widget_pack(int x, int y, int w, int h) {
  * @return Fl_Button* A pointer to the newly created button.
  */
 Fl_Button* EvoView::create_load_button(int h) {
-    Fl_Button* button = new Fl_Button(0, 0, 0, h, "Load data");
-    button -> callback(load_file_button_callback, (void*)this);
+    Fl_Button* button = new Fl_Button(0, 0, 0, h, "Create data");
+    button->callback(load_file_button_callback, (void*)this);
+    button->tooltip("Loads data from a file and adds interference columns according to boundary conditions to dataset. The file must be in the CSV format.");
     return button;
 }
 
@@ -283,7 +305,10 @@ Fl_Button* EvoView::create_load_button(int h) {
  * @return Fl_Button* A pointer to the newly created button.
  */
 Fl_Button* EvoView::create_predict_button(int h) {
-    return new Fl_Button(0, 0, 0, h, "Start prediction");
+    Fl_Button* button = new Fl_Button(0, 0, 0, h, "Start prediction");
+    button->callback(predict_button_callback, (void*)this);
+    button->tooltip("Starts the prediction process.");
+    return button;
 }
 
 /**
@@ -392,10 +417,10 @@ void EvoView::render_main_window() {
         );
         main_widget_pack->begin();
         {
-            load_button = create_load_button(BUTTON_HEIGHT);
             gen_count_box = create_gen_count_box(BUTTON_HEIGHT);
             gen_size_box = create_gen_size_box(BUTTON_HEIGHT);
             inter_size_box = create_inter_size_box(BUTTON_HEIGHT);
+            load_button = create_load_button(BUTTON_HEIGHT);
             export_log_checkbutton = create_export_file_box(BUTTON_HEIGHT);
             decomposition_choice_chbox = create_combo_box(BUTTON_HEIGHT);
             predict_button = create_predict_button(BUTTON_HEIGHT);

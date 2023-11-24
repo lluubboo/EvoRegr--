@@ -20,12 +20,17 @@
 #include <spdlog/sinks/base_sink.h>
 #include <spdlog/sinks/basic_file_sink.h>
 #include <spdlog/sinks/stdout_color_sinks.h>
+#include "EvoAPI.hpp"
 
 class EvoView : public Fl_Window {
 
     // logger
 
     std::shared_ptr<spdlog::logger> logger;
+
+    // evo api
+
+    EvoAPI evo_api;
 
     //flags
 
@@ -63,6 +68,7 @@ class EvoView : public Fl_Window {
     static void export_file_callback(Fl_Widget* w, void* v);
     static void decomposition_choice_callback(Fl_Widget* w, void* v);
     static void load_file_button_callback(Fl_Widget* w, void* v);
+    static void predict_button_callback(Fl_Widget* w, void* v);
 
     //methods
 
