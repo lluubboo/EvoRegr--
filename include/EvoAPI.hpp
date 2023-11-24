@@ -56,7 +56,7 @@ class EvoAPI {
 
 public:
 
-    EvoAPI() = default;
+    EvoAPI();
     EvoAPI(unsigned int generation_size_limit, unsigned int generation_count_limit, unsigned int interaction_cols);
 
     void set_solver(std::string const& solver_name);

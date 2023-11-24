@@ -18,13 +18,20 @@
 #include "omp.h"
 
 /**
+ * @brief Default constructor for the EvoAPI class.
+ *
+ * This constructor initializes the EvoAPI class with default solver functor.
+ */
+EvoAPI::EvoAPI() : solver(LDLTSolver()) {}
+
+/**
  * @brief Constructor for the EvoAPI class.
  *
  * @param generation_size_limit The maximum size of each generation.
  * @param generation_count_limit The maximum number of generations.
  * @param interaction_cols The number of interaction columns.
  */
-EvoAPI::EvoAPI(unsigned int generation_size_limit, unsigned int generation_count_limit, unsigned int interaction_cols) {
+EvoAPI::EvoAPI(unsigned int generation_size_limit, unsigned int generation_count_limit, unsigned int interaction_cols) : solver(LDLTSolver()) {
     this->generation_size_limit = generation_size_limit;
     this->generation_count_limit = generation_count_limit;
     this->interaction_cols = interaction_cols;
