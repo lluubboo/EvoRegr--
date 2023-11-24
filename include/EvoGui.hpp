@@ -44,7 +44,6 @@ class EvoView : public Fl_Window {
     int generations_size;
     int interference_size;
 
-
     //widgets
 
     Fl_Menu_Bar* menu_bar;

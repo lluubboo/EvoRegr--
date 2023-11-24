@@ -200,6 +200,7 @@ void EvoView::load_file_button_callback(Fl_Widget* /*w*/, void* v) {
 void EvoView::predict_button_callback(Fl_Widget* /*w*/, void* v) {
     EvoView* T = (EvoView*)v;
     T->evo_api.predict();
+    T->evo_api.show_result();
 }
 
 //*************************************************************************************************methods
@@ -263,7 +264,9 @@ Fl_Menu_Bar* EvoView::create_menu_bar(int width, int height) {
  * @return Fl_Terminal* A pointer to the newly created terminal.
  */
 Fl_Terminal* EvoView::create_terminal(int x, int y, int w, int h) {
-    return new Fl_Terminal(x, y, w, h);
+    Fl_Terminal* terminal = new Fl_Terminal(x, y, w, h);
+    terminal->history_lines(1000);
+    return terminal;
 }
 
 /**
