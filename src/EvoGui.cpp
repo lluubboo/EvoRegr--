@@ -205,8 +205,12 @@ void EvoView::load_file_button_callback(Fl_Widget* /*w*/, void* v) {
 void EvoView::predict_button_callback(Fl_Widget* /*w*/, void* v) {
     EvoView* T = (EvoView*)v;
     T->evo_api.reset_api_for_another_calculation();
-    T->evo_api.predict();
-    T->evo_api.log_result();
+
+    // run on separate thread because the method can be very long
+    std::thread([T]() {
+        T->evo_api.predict();
+        T->evo_api.log_result();
+    }).detach();
 }
 
 //*************************************************************************************************methods
