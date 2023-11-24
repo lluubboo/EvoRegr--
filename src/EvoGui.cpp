@@ -42,7 +42,7 @@ static constexpr int MENU_HEIGHT = 30;
  * @param height The height of the window in pixels.
  * @param title The title of the window.
  */
-EvoView::EvoView(int width, int height, const char* title) : Fl_Window(width, height, title), decomposition_method{ "LDLT" }, export_log_file{ false }, generations_count { 100 }, generations_size{ 100 }, interference_size{ 0 } {
+EvoView::EvoView(int width, int height, const char* title) : Fl_Window(width, height, title), decomposition_method{ "LDLT" }, export_log_file{ false }, generations_count{ 100 }, generations_size{ 100 }, interference_size{ 0 } {
     set_appearance();
     render_main_window();
 
@@ -156,7 +156,7 @@ void EvoView::gen_interference_size_callback(Fl_Widget* w, void* v) {
 /**
  * Callback function for exporting a file.
  * Updates the export_log_file flag in the EvoView object and logs the new value.
- * 
+ *
  * @param w The Fl_Widget triggering the callback.
  * @param v A pointer to the EvoView object.
  */
@@ -197,10 +197,18 @@ void EvoView::load_file_button_callback(Fl_Widget* /*w*/, void* v) {
     T->evo_api.load_file(T->filepath);
 }
 
+/**
+ * Callback function for the predict button in the EvoView class.
+ * Resets the API for another calculation, performs prediction, and shows the result.
+ *
+ * @param w The Fl_Widget object that triggered the callback (not used).
+ * @param v A pointer to the EvoView object.
+ */
 void EvoView::predict_button_callback(Fl_Widget* /*w*/, void* v) {
     EvoView* T = (EvoView*)v;
+    T->evo_api.reset_api_for_another_calculation();
     T->evo_api.predict();
-    T->evo_api.show_result();
+    T->evo_api.log_result();
 }
 
 //*************************************************************************************************methods

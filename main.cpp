@@ -12,5 +12,5 @@ int main(int, char**) {
     // EvoAPI api = EvoAPI(100, 100, 0);
     // api.load_file();
     // api.predict();
-    // api.show_result();
+    // api.log_result();
 }

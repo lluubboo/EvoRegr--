@@ -19,7 +19,7 @@
 
 /**
  * @brief Constructor for the EvoAPI class.
- * 
+ *
  * @param generation_size_limit The maximum size of each generation.
  * @param generation_count_limit The maximum number of generations.
  * @param interaction_cols The number of interaction columns.
@@ -36,7 +36,7 @@ EvoAPI::EvoAPI(unsigned int generation_size_limit, unsigned int generation_count
 
 /**
  * @brief Sets the boundary conditions for the evolutionary algorithm.
- * 
+ *
  * @param generation_size_limit The maximum size of each generation.
  * @param generation_count_limit The maximum number of generations.
  * @param interaction_cols The number of columns used for interaction.
@@ -210,7 +210,7 @@ void EvoAPI::predict() {
  * This function performs post-processing, shows the regression summary,
  * the Titan history, regression coefficients, genotype, and formula.
  */
-void EvoAPI::show_result() {
+void EvoAPI::log_result() {
     titan_postprocessing();
     logger->info(get_regression_summary_table());
     logger->info("Regression results showing...");
@@ -366,11 +366,24 @@ void EvoAPI::process_generation_fitness(std::set<double> const& generation_fitne
 }
 
 /**
+ * @brief Resets the API for another calculation.
+ *
+ * This function clears the titan_history, generation_fitness_metrics,
+ * titan_robust_dataset, titan_nonrobust_dataset, titan_result, titan,
+ * x, and y variables, effectively resetting the API for another calculation.
+ */
+void EvoAPI::reset_api_for_another_calculation() {
+    titan_history.clear();
+    generation_fitness_metrics.clear();
+    titan = EvoIndividual();    // reset titan
+};
+
+/**
  * @brief Returns the regression result table as a string.
- * 
+ *
  * This function generates a regression result table using the provided data and returns it as a string.
  * The table includes columns for the target, prediction, difference, and percentage difference.
- * 
+ *
  * @return The regression result table as a string.
  */
 std::string EvoAPI::get_regression_result_table() {
@@ -390,7 +403,7 @@ std::string EvoAPI::get_regression_result_table() {
 
 /**
  * @brief Returns the titan history table as a string.
- * 
+ *
  * @return std::string The titan history table.
  */
 std::string EvoAPI::get_titan_history_table() {
@@ -407,10 +420,10 @@ std::string EvoAPI::get_titan_history_table() {
 
 /**
  * @brief Retrieves the regression coefficients table.
- * 
+ *
  * This function creates a Plotter object to visualize the regression coefficients
  * and returns the table representation of the plot.
- * 
+ *
  * @return The regression coefficients table.
  */
 std::string EvoAPI::get_regression_coefficients_table() {
@@ -427,11 +440,11 @@ std::string EvoAPI::get_regression_coefficients_table() {
 
 /**
  * @brief Returns the genotype table as a string.
- * 
+ *
  * This function generates a genotype table using the Plotter class and returns it as a string.
  * The genotype table includes information about merge chromosome, transform predictor chromosome,
  * transform target chromosome, and robust chromosome.
- * 
+ *
  * @return The genotype table as a string.
  */
 std::string EvoAPI::get_genotype_table() {
@@ -477,9 +490,9 @@ std::string EvoAPI::get_genotype_table() {
 
 /**
  * @brief Retrieves the formula table.
- * 
+ *
  * This function returns a string representation of the formula table.
- * 
+ *
  * @return The formula table as a string.
  */
 std::string EvoAPI::get_formula_table() {
@@ -497,11 +510,11 @@ std::string EvoAPI::get_formula_table() {
 
 /**
  * @brief Returns a summary table for regression analysis.
- * 
+ *
  * This function generates a summary table for regression analysis by combining
  * various tables including regression result table, titan history table,
  * regression coefficients table, genotype table, and formula table.
- * 
+ *
  * @return A string containing the regression summary table.
  */
 std::string EvoAPI::get_regression_summary_table() {
