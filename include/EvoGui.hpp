@@ -85,10 +85,10 @@ class EvoView : public Fl_Window {
     void get_filepath();
     void set_appearance();
     void init_loggers();
+    void render_main_window();
 
 public:
     EvoView(int width, int height, const char* title);
-    void render_main_window();
 };
 
 template <typename T>
