@@ -79,7 +79,6 @@ void EvoView::help_callback(Fl_Widget* /*w*/, void* /*data*/) {
     Fl_Text_Buffer* buff = new Fl_Text_Buffer();
     Fl_Text_Display* disp = new Fl_Text_Display(20, 20, 360, 160, "Help");
     disp->buffer(buff);
-    window->resizable(*disp);
     window->show();
     buff->text("For help, please contact: lubomirbalazjob@gmail.com");
 }
@@ -453,6 +452,8 @@ void EvoView::set_appearance() {
     Fl::option(Fl::OPTION_VISIBLE_FOCUS, false);
     Fl::option(Fl::OPTION_DND_TEXT, true);
     Fl::set_fonts("Roboto-Regular.ttf");
+
+    this->resizable(this);
 }
 
 //*************************************************************************************************Fl_Terminal_Sink
