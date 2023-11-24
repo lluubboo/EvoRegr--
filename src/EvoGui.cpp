@@ -45,12 +45,9 @@ static constexpr int MENU_HEIGHT = 30;
 EvoView::EvoView(int width, int height, const char* title) : Fl_Window(width, height, title), decomposition_method{ "LDLT" }, export_log_file{ false }, generations_count{ 100 }, generations_size{ 100 }, interference_size{ 0 } {
     set_appearance();
     render_main_window();
-
     // EvoView is using widget as terminal sink, widget must be created first
-    init_logger();
-
-    // EvoAPI is using EvoView logger
-    evo_api.init_logger();
+    // It initializes the logger of both EvoView and EvoAPI(EvoAPI is using EvoView logger)
+    init_loggers();
 }
 
 //*************************************************************************************************callbacks
@@ -210,7 +207,7 @@ void EvoView::predict_button_callback(Fl_Widget* /*w*/, void* v) {
     std::thread([T]() {
         T->evo_api.predict();
         T->evo_api.log_result();
-    }).detach();
+        }).detach();
 }
 
 //*************************************************************************************************methods
@@ -228,12 +225,12 @@ void EvoView::get_filepath() {
 }
 
 /**
- * @brief Initializes the logger.
- *
- * This function initializes the logger. It creates a new Fl_Terminal_Sink instance and passes it to
- * the logger. It also sets the logger pattern and level.
+ * Initializes the loggers for EvoView.
+ * This function creates a logger named "EvoLogger" using the FLTK sink and registers it with spdlog.
+ * It also sets the log pattern and log level for the logger.
+ * Finally, it initializes the logger for EvoAPI.
  */
-void EvoView::init_logger() {
+void EvoView::init_loggers() {
     // FLTK sink
     auto fltk_sink = std::make_shared<Fl_Terminal_Sink<std::mutex>>(log_terminal);
     // logger
@@ -243,6 +240,8 @@ void EvoView::init_logger() {
     // settings
     spdlog::set_pattern("[EvoRegression++] [%H:%M:%S] [%^%l%$] [thread %t] %v");
     spdlog::set_level(spdlog::level::debug);
+    // EvoAPI is using EvoView logger
+    evo_api.init_logger();
 }
 
 /**

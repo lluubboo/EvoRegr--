@@ -84,7 +84,7 @@ class EvoView : public Fl_Window {
 
     void get_filepath();
     void set_appearance();
-    void init_logger();
+    void init_loggers();
 
 public:
     EvoView(int width, int height, const char* title);
