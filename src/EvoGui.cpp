@@ -167,13 +167,11 @@ void EvoView::export_file_callback(Fl_Widget* w, void* v) {
 }
 
 /**
- * @brief Handles the state change of the export file checkbox.
+ * Callback function for the decomposition method choice box.
+ * Updates the decomposition_method field in the EvoView object and logs the new value.
  *
- * This function is called when the user changes the state of the export file checkbox.
- * It updates the `export_log_file` field with the new state of the checkbox and logs a message.
- *
- * @param w The FLTK widget (an Fl_Check_Button instance) that triggered the callback.
- * @param v A pointer to the EvoView instance.
+ * @param w The Fl_Widget triggering the callback.
+ * @param v A pointer to the EvoView object.
  */
 void EvoView::decomposition_choice_callback(Fl_Widget* w, void* v) {
     EvoView* T = (EvoView*)v;
