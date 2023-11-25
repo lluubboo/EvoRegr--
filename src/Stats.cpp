@@ -11,6 +11,7 @@
  * @param array Pointer to the array.
  * @param size The size of the array.
  * @return The median value.
+ * @throws std::invalid_argument if the input vector is empty.
  */
 template <typename T>
 T DescriptiveStatistics::median(T* array, unsigned size) {
