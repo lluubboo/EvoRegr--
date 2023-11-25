@@ -9,8 +9,7 @@
 #include "EvoGene.hpp"
 #include "XoshiroCpp.hpp"
 
-using namespace std;
-
+/*****************************************EvoGene**********************************************/
 
 EvoGene::EvoGene() {}
 
@@ -18,8 +17,7 @@ EvoGene::EvoGene(int index) : column_index{ index }, characteristic_number{ 0 } 
 
 EvoGene::~EvoGene() {}
 
-
-
+/*****************************************MergeAllele******************************************/
 
 MergeAllele::MergeAllele(int index) : EvoGene(index), allele{} {}
 
@@ -72,9 +70,7 @@ std::string MergeAllele::to_string_code() const {
     return sallele;
 }
 
-
-
-
+/*****************************************TransformXAllele*************************************/
 
 TransformXAllele::TransformXAllele(int index) : EvoGene(index), allele{} {}
 
@@ -133,9 +129,7 @@ void TransformXAllele::resetCharacteristicNumber(float number) {
     characteristic_number = number;
 }
 
-
-
-
+/*****************************************TransformYAllele*************************************/
 
 TransformYAllele::TransformYAllele() : EvoGene(0), allele{} {}
 
@@ -233,9 +227,7 @@ std::string TransformYAllele::to_string_code() const {
     return sallele;
 }
 
-
-
-
+/*****************************************RobustAllele*****************************************/
 
 RobustAllele::RobustAllele() : EvoGene(0), allele{} {};
 
