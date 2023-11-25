@@ -1,20 +1,24 @@
 #include <vector>
 #include "IOTools.hpp"
-#define CSV_IO_NO_THREAD
 #include "csv.hpp"
     
 /**
- * The function `parse_csv` reads a CSV file, extracts the data, and returns the number of rows, number
- * of columns, and the data as a vector. Errors are handled above this function.
+ * Parses a CSV file and returns the number of columns and the data as a vector.
  * 
- * @param filename The filename parameter is a string that represents the name of the CSV file that you
- * want to parse.
- * 
- * @return The function `parse_csv` returns a `std::tuple<int, int, std::vector<double>>`.
+ * @param filename The path to the CSV file.
+ * @return A tuple containing the number of columns and the data as a vector.
+ * @throws std::runtime_error if the file cannot be opened.
  */
-std::tuple<int, int, std::vector<double>> parse_csv(const std::string& filename) {
+template<typename T>
+std::tuple<int, std::vector<T>> parse_csv(const std::string& filename) {
+    // Check if file exists and can be opened
+    std::ifstream file(filename);
+    if (!file.good()) {
+        throw std::runtime_error("File cannot be opened");
+    }
+    file.close();
 
-    std::vector<double> data;
+    std::vector<T> data;
     csv::CSVFileInfo info;
     info = csv::get_file_info(filename);
     csv::CSVFormat format;
@@ -22,9 +26,13 @@ std::tuple<int, int, std::vector<double>> parse_csv(const std::string& filename)
 
     for (csv::CSVRow& row : reader) {
         for (csv::CSVField& field : row) {
-            data.push_back(field.get<double>());
+            data.emplace_back(field.get<T>());
         }
     }
 
-    return make_tuple(info.n_rows, info.n_cols, data);
+    return make_tuple(info.n_cols, data);
 }
+
+template std::tuple<int, std::vector<int>> parse_csv(const std::string&);
+template std::tuple<int, std::vector<float>> parse_csv(const std::string&);
+template std::tuple<int, std::vector<double>> parse_csv(const std::string&);

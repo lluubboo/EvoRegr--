@@ -34,7 +34,7 @@ class EvoAPI {
     std::vector<double> titan_history;
     std::vector<double> generation_fitness_metrics;
 
-    void create_regression_input(std::tuple<int, int, std::vector<double>>);
+    void create_regression_input(std::tuple<int, std::vector<double>>);
     std::vector<XoshiroCpp::Xoshiro256Plus> create_random_engines(const std::uint64_t seed, int count);
 
     void setTitan(EvoIndividual, int);

@@ -3,4 +3,5 @@
 #include <iostream>
 #include <tuple>
 
-std::tuple<int, int, std::vector<double>> parse_csv(const std::string&);
+template<typename T>
+std::tuple<int, std::vector<T>> parse_csv(const std::string&);

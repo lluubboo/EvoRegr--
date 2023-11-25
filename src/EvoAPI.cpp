@@ -102,7 +102,7 @@ void EvoAPI::init_logger() {
  */
 void EvoAPI::load_file(const std::string& filename) {
     try {
-        create_regression_input(parse_csv(filename));
+        create_regression_input(parse_csv<double>(filename));
     }
     catch (const std::exception& e) {
         logger->error("Error processing file {}: {}", filename, e.what());
@@ -123,14 +123,13 @@ void EvoAPI::load_file(const std::string& filename) {
  *
  * @param input A tuple containing the number of rows, number of columns, and a vector of data values.
  */
-void EvoAPI::create_regression_input(std::tuple<int, int, std::vector<double>> input) {
+void EvoAPI::create_regression_input(std::tuple<int, std::vector<double>> input) {
 
-    std::vector<double> data = std::get<2>(input);
+    std::vector<double> data = std::get<1>(input);
 
-    //input matrix rows (with header)
-    int m_input{ std::get<0>(input) };
     //input matrix columns (with target column)
-    int n_input{ std::get<1>(input) };
+    int n_input{ std::get<0>(input) };
+    int m_input{ static_cast<int>(data.size()) / n_input };
 
     // predictor matrix column count (n_input - 1 (because of target column) + 1 + interaction columns)
     int n_output = n_input + interaction_cols;
