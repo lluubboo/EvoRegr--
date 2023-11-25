@@ -5,13 +5,18 @@
 #include "RandomNumberGenerator.hpp"
 #include "RegressionSolver.hpp"
 
-
-std::vector<EvoIndividual> sort_by_fitness_desc(std::vector<EvoIndividual>& source) {
-    std::stable_sort(source.begin(), source.end(), [](EvoIndividual const& lhs, EvoIndividual const& rhs) {
-        return lhs.fitness < rhs.fitness;});
-    return source;
-};
-
+/**
+ * @brief Performs tournament selection in a genetic algorithm.
+ *
+ * @param generation A vector of EvoIndividual objects representing the current generation.
+ * @param random_engine A random engine to be used for generating random numbers.
+ *
+ * @return An array of two EvoIndividual objects that have been selected as parents for the next generation.
+ *
+ * This function performs tournament selection, a method of selecting individuals in a genetic algorithm.
+ * It works by choosing a number of individuals at random from the population, and then selecting the best individual
+ * out of that group to become a parent. This process is repeated to select the second parent.
+ */
 std::array<EvoIndividual, 2> Selection::tournament_selection(std::vector<EvoIndividual> const& generation, XoshiroCpp::Xoshiro256Plus& random_engine) {
 
     EvoIndividual first = Random::randomChoice(generation, random_engine);
@@ -32,7 +37,20 @@ std::array<EvoIndividual, 2> Selection::tournament_selection(std::vector<EvoIndi
     return std::array{ first, second };
 };
 
-EvoIndividual Factory::getRandomEvoIndividual(int row_count, int predictor_column_count, XoshiroCpp::Xoshiro256Plus& random_engine) {
+/**
+ * @brief Generates a random EvoIndividual object.
+ *
+ * @param predictor_row_count The number of rows in the predictor matrix.
+ * @param predictor_column_count The number of columns in the predictor matrix.
+ * @param random_engine A random engine to be used for generating random numbers.
+ *
+ * @return An EvoIndividual object with randomly generated chromosomes.
+ *
+ * This function generates a random EvoIndividual object, which represents a potential solution in a genetic algorithm.
+ * The EvoIndividual object contains several chromosomes, each of which is a vector of alleles.
+ * The function generates these chromosomes by calling other functions in the Factory class to generate random alleles.
+ */
+EvoIndividual Factory::getRandomEvoIndividual(int predictor_row_count, int predictor_column_count, XoshiroCpp::Xoshiro256Plus& random_engine) {
     EvoIndividual individual{};
     // create genofond
     for (int i = 0; i < predictor_column_count; i++)
@@ -40,11 +58,24 @@ EvoIndividual Factory::getRandomEvoIndividual(int row_count, int predictor_colum
         individual.merger_chromosome.push_back(Factory::getRandomMergeAllele(i, predictor_column_count, random_engine));
         individual.x_transformer_chromosome.push_back(Factory::getRandomTransformXAllele(i, random_engine));
     }
-    individual.robuster_chromosome.push_back(Factory::getRandomRobustAllele(row_count, random_engine));
+    individual.robuster_chromosome.push_back(Factory::getRandomRobustAllele(predictor_row_count, random_engine));
     individual.y_transformer_chromosome.push_back(Factory::getRandomTransformYAllele(random_engine));
     return individual;
 }
 
+/**
+ * @brief Generates a random MergeAllele object.
+ *
+ * @param column_index The index of the column in the predictor matrix.
+ * @param predictor_column_count The number of columns in the predictor matrix.
+ * @param random_engine A random engine to be used for generating random numbers.
+ *
+ * @return A MergeAllele object with randomly generated alleles.
+ *
+ * This function generates a random MergeAllele object, which represents a potential solution in a genetic algorithm.
+ * The MergeAllele object contains several alleles, each of which is a vector of MergeTwins.
+ * The function generates these alleles by calling other functions in the Factory class to generate random MergeTwins.
+ */
 MergeAllele Factory::getRandomMergeAllele(int column_index, int predictor_column_count, XoshiroCpp::Xoshiro256Plus& random_engine) {
 
     MergeAllele merge_allele{ column_index };
@@ -57,14 +88,10 @@ MergeAllele Factory::getRandomMergeAllele(int column_index, int predictor_column
         std::iota(begin(free_cols), end(free_cols), 0);
         free_cols.erase(std::find(free_cols.begin(), free_cols.end(), column_index));
         std::shuffle(free_cols.begin(), free_cols.end(), random_engine);
+        int number_of_cols_to_merge = RandomNumbers::rand_interval_int(0, predictor_column_count - 1, random_engine);
 
-        int cols_to_merged = RandomNumbers::rand_interval_int(0, predictor_column_count - 1, random_engine);
-
-        for (int i = 0; i < cols_to_merged; i++) {
-            MergeTwin twin = MergeTwin();
-            twin.merge_column = free_cols.back();
-            twin.merge_operator = Merge_operator(RandomNumbers::rand_interval_int(0, merge_operator_maxindex, random_engine));
-            merge_allele.allele.push_back(twin);
+        for (int i = 0; i < number_of_cols_to_merge; i++) {
+            merge_allele.allele.emplace_back(free_cols.back(), Merge_operator(RandomNumbers::rand_interval_int(0, merge_operator_maxindex, random_engine)));
             free_cols.pop_back();
         }
     }

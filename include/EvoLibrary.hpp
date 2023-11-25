@@ -5,8 +5,6 @@
 #include "EvoGene.hpp"
 #include "XoshiroCpp.hpp"
 
-std::vector<EvoIndividual> sort_by_fitness_desc(std::vector<EvoIndividual>&);
-
 namespace Factory {
 
     EvoIndividual getRandomEvoIndividual(int row_count, int predictor_column_count, XoshiroCpp::Xoshiro256Plus& random_engine);
