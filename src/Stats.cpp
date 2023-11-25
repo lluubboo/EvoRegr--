@@ -13,15 +13,16 @@
  * @return The median value.
  */
 template <typename T>
-T DescriptiveStatistics::median(T* array, int size) {
+T DescriptiveStatistics::median(T* array, unsigned size) {
+    if (size == 0) throw std::invalid_argument("Input vector must not be empty");
     std::vector<T> vec(array, array + size);
     return DescriptiveStatistics::median(vec);
 }
 
 //explicit instantiation 
-template double DescriptiveStatistics::median(double*, int);
-template int DescriptiveStatistics::median(int*, int);
-template float DescriptiveStatistics::median(float*, int);
+template double DescriptiveStatistics::median(double*, unsigned int);
+template int DescriptiveStatistics::median(int*, unsigned int);
+template float DescriptiveStatistics::median(float*, unsigned int);
 
 /**
  * Calculates the median of a given vector.
@@ -36,7 +37,7 @@ T DescriptiveStatistics::median(std::vector<T> vector) {
     if (vector.empty()) throw std::invalid_argument("Input vector must not be empty");
     std::sort(vector.begin(), vector.end());
     int vector_size = vector.size();
-    else if (vector_size == 1) {
+    if (vector_size == 1) {
         return vector.at(0);
     }
     else if (vector_size == 2) {

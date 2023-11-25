@@ -3,7 +3,7 @@
 namespace DescriptiveStatistics {
 
     template <typename T>
-    T median(T*, int);
+    T median(T*, unsigned int);
 
     template <typename T>
     T median(std::vector<T>);
