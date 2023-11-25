@@ -11,18 +11,45 @@
 
 /*****************************************EvoGene**********************************************/
 
+/**
+ * The above code defines a default constructor for the EvoGene class in C++.
+ */
 EvoGene::EvoGene() {}
 
+/**
+ * @brief Constructs an instance of the EvoGene class.
+ * 
+ * @param index The index of the gene.
+ */
 EvoGene::EvoGene(int index) : column_index{ index }, characteristic_number{ 0 } {}
 
+/**
+ * @brief Destructor for the EvoGene class.
+ */
 EvoGene::~EvoGene() {}
 
 /*****************************************MergeAllele******************************************/
 
+/**
+ * @brief Constructs a MergeAllele object with the specified index.
+ * 
+ * @param index The index of the MergeAllele object.
+ */
 MergeAllele::MergeAllele(int index) : EvoGene(index), allele{} {}
 
+/**
+ * @brief Destructor for the MergeAllele class.
+ * 
+ * This destructor is responsible for cleaning up any resources
+ * allocated by the MergeAllele class.
+ */
 MergeAllele::~MergeAllele() {}
 
+/**
+ * Transforms the given matrix according to the allele.
+ * 
+ * @param matrix The matrix to be transformed.
+ */
 void MergeAllele::transform(Eigen::MatrixXd& matrix) const {
     Eigen::MatrixXd original_matrix = matrix;
     for (auto const& twin : allele) {
@@ -30,6 +57,13 @@ void MergeAllele::transform(Eigen::MatrixXd& matrix) const {
     }
 }
 
+/**
+ * Modifies the given matrix according to the provided twin using the specified merge operator.
+ * 
+ * @param twin The twin containing the merge operator and merge column information.
+ * @param matrix The matrix to be modified.
+ * @param original_matrix The original matrix used for merging.
+ */
 void MergeAllele::modifyMatrixAccordingToTwin(MergeTwin const& twin, Eigen::MatrixXd& matrix, Eigen::MatrixXd const& original_matrix) const {
     switch (twin.merge_operator) {
     case Merge_operator::Add:
@@ -47,6 +81,13 @@ void MergeAllele::modifyMatrixAccordingToTwin(MergeTwin const& twin, Eigen::Matr
     }
 }
 
+/**
+ * Converts the MergeAllele object to a string representation.
+ * If the allele is empty, it returns a string in the format "(colX)" where X is the column index.
+ * If the allele is not empty, it returns a string in the format "(...)(colX)(...)(colY)...",
+ * where each "..." represents the merge operator symbol and merge column index.
+ * @return The string representation of the MergeAllele object.
+ */
 std::string MergeAllele::to_string() const {
     std::string sallele;
     if (allele.empty()) {
@@ -60,6 +101,14 @@ std::string MergeAllele::to_string() const {
     }
 }
 
+/**
+ * Converts the MergeAllele object to a string representation.
+ * The string representation consists of the prefix "MA" followed by the column index,
+ * followed by the merge operator names and merge column numbers of each twin in the allele,
+ * and ending with the suffix "E".
+ *
+ * @return The string representation of the MergeAllele object.
+ */
 std::string MergeAllele::to_string_code() const {
     std::string sallele;
     sallele = "MA" + std::to_string(column_index);
@@ -72,10 +121,27 @@ std::string MergeAllele::to_string_code() const {
 
 /*****************************************TransformXAllele*************************************/
 
+/**
+ * @brief Constructs a new TransformXAllele object with the given index.
+ *
+ * @param index The index of the allele.
+ */
 TransformXAllele::TransformXAllele(int index) : EvoGene(index), allele{} {}
 
+/**
+ * @brief Destructor for the TransformXAllele class.
+ * 
+ * This destructor is responsible for cleaning up any resources
+ * allocated by the TransformXAllele class.
+ */
 TransformXAllele::~TransformXAllele() {}
 
+/**
+ * Applies a transformation operation to a specific column of a matrix.
+ * The type of transformation is determined by the value of the 'allele' parameter.
+ *
+ * @param matrix The matrix to be transformed.
+ */
 void TransformXAllele::transform(Eigen::MatrixXd& matrix) const {
     switch (allele) {
     case Transform_operator::Sqr:
@@ -113,34 +179,76 @@ void TransformXAllele::transform(Eigen::MatrixXd& matrix) const {
     }
 }
 
+/**
+ * Converts the TransformXAllele object to a string representation.
+ * 
+ * @return The string representation of the TransformXAllele object.
+ */
 std::string TransformXAllele::to_string() const {
     std::string sallele;
     sallele = transform_operator_symbols.at(allele) + ((characteristic_number == 0) ? "" : std::to_string(characteristic_number));
     return sallele;
 }
 
+/**
+ * @brief Converts the TransformXAllele object to a string representation.
+ * 
+ * @return The string representation of the TransformXAllele object.
+ */
 std::string TransformXAllele::to_string_code() const {
     std::string sallele;
     sallele = "TX" + std::to_string(column_index) + std::to_string(characteristic_number) + transform_operator_names.at(allele);
     return sallele;
 }
 
+/**
+ * @brief Resets the characteristic number of the TransformXAllele object.
+ * 
+ * This function sets the characteristic number of the TransformXAllele object to the specified value.
+ * 
+ * @param number The new value for the characteristic number.
+ */
 void TransformXAllele::resetCharacteristicNumber(float number) {
     characteristic_number = number;
 }
 
 /*****************************************TransformYAllele*************************************/
 
+/**
+ * @brief Constructs a new TransformYAllele object.
+ *
+ * This constructor initializes the TransformYAllele object with a default value of 0 for the EvoGene base class and an empty allele.
+ */
 TransformYAllele::TransformYAllele() : EvoGene(0), allele{} {}
 
+/**
+ * @brief Destructor for the TransformYAllele class.
+ */
 TransformYAllele::~TransformYAllele() {};
 
+/**
+ * @brief Resets the characteristic number of the TransformYAllele object.
+ * 
+ * This function sets the characteristic number of the TransformYAllele object to the specified value.
+ * 
+ * @param number The new value for the characteristic number.
+ */
 void TransformYAllele::resetCharacteristicNumber(float number) {
     characteristic_number = number;
 }
 
+/**
+ * Transforms the given matrix.
+ *
+ * @param matrix The matrix to be transformed.
+ */
 void TransformYAllele::transform(Eigen::MatrixXd& /*matrix*/) const {}
 
+/**
+ * Transforms the elements of the given vector based on the selected allele.
+ *
+ * @param vector The vector to be transformed.
+ */
 void TransformYAllele::transformVector(Eigen::VectorXd& vector) const {
     switch (allele) {
     case Transform_operator::Sqr:
@@ -178,6 +286,11 @@ void TransformYAllele::transformVector(Eigen::VectorXd& vector) const {
     }
 }
 
+/**
+ * Transforms the given vector back based on the selected allele.
+ * 
+ * @param vector The vector to be transformed.
+ */
 void TransformYAllele::transformBack(Eigen::VectorXd& vector) const {
     switch (allele) {
     case Transform_operator::Sqr:
@@ -215,12 +328,22 @@ void TransformYAllele::transformBack(Eigen::VectorXd& vector) const {
     }
 }
 
+/**
+ * Converts the TransformYAllele object to a string representation.
+ * 
+ * @return The string representation of the TransformYAllele object.
+ */
 std::string TransformYAllele::to_string() const {
     std::string sallele;
     sallele = transform_operator_symbols.at(allele) + ((characteristic_number == 0) ? "" : std::to_string(characteristic_number));
     return sallele;
 }
 
+/**
+ * Converts the TransformYAllele object to a string representation.
+ * 
+ * @return The string representation of the TransformYAllele object.
+ */
 std::string TransformYAllele::to_string_code() const {
     std::string sallele;
     sallele += "TY" + std::to_string(characteristic_number) + transform_operator_names.at(allele);
@@ -229,10 +352,24 @@ std::string TransformYAllele::to_string_code() const {
 
 /*****************************************RobustAllele*****************************************/
 
+/**
+ * @brief Constructs a RobustAllele object.
+ *
+ * This constructor initializes a RobustAllele object with a default value of 0 for the EvoGene base class,
+ * and an empty allele array.
+ */
 RobustAllele::RobustAllele() : EvoGene(0), allele{} {};
 
+/**
+ * @brief Destructor for the RobustAllele class.
+ */
 RobustAllele::~RobustAllele() {};
 
+/**
+ * Transforms the given matrix using the allele values.
+ * 
+ * @param matrix The matrix to be transformed.
+ */
 void RobustAllele::transform(Eigen::MatrixXd& matrix) const {
     int size = allele.size();
     std::vector<int> data(allele);
@@ -241,6 +378,13 @@ void RobustAllele::transform(Eigen::MatrixXd& matrix) const {
     matrix.swap(transformedMatrix);
 }
 
+/**
+ * Transforms the given vector using the allele values.
+ * The allele values are used as indices to rearrange the elements of the vector.
+ * The transformed vector replaces the original vector.
+ *
+ * @param vector The vector to be transformed.
+ */
 void RobustAllele::transformVector(Eigen::VectorXd& vector) const {
     int size = allele.size();
     std::vector<int> data(allele);
@@ -249,6 +393,11 @@ void RobustAllele::transformVector(Eigen::VectorXd& vector) const {
     vector.swap(transformeVector);
 }
 
+/**
+ * Converts the RobustAllele object to a string representation.
+ * 
+ * @return The string representation of the RobustAllele object.
+ */
 std::string RobustAllele::to_string() const { 
     std::string sallele;
     sallele = "(";
@@ -259,6 +408,12 @@ std::string RobustAllele::to_string() const {
     return sallele;
 }
 
+/**
+ * Converts the RobustAllele object to a string representation.
+ * The string representation includes the prefix "RA" followed by the characters in the allele.
+ * 
+ * @return The string representation of the RobustAllele object.
+ */
 std::string RobustAllele::to_string_code() const {
     std::string sallele;
     sallele = "RA" + std::string(allele.begin(), allele.end());
