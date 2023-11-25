@@ -4,13 +4,29 @@
 #include "XoshiroCpp.hpp"
 #include "EvoIndividual.hpp"
 
+/**
+ * The EvoIndividual constructor initializes the fitness value to the maximum double value and sets the
+ * is_healthy flag to false.
+ */
 EvoIndividual::EvoIndividual() : fitness(std::numeric_limits<double>::max()), is_healthy(false) {}
 
+/**
+ * The function "evaluate" assigns a fitness value to an EvoIndividual object and determines if it is
+ * healthy based on the value.
+ * 
+ * @param value The parameter "value" is a double that represents the fitness value of the individual.
+ */
 void EvoIndividual::evaluate(double value) {
     fitness = value;
     is_healthy = (value == std::numeric_limits<double>::max()) ? false : true;
 }
 
+/**
+ * The function "merge_chromosome_to_string_vector" converts each allele in the "merger_chromosome"
+ * vector to a string and stores them in a new vector.
+ * 
+ * @return a vector of strings.
+ */
 std::vector<std::string> EvoIndividual::merge_chromosome_to_string_vector() const {
     std::vector<std::string> string_vector;
     for (auto const& allele : merger_chromosome) {
@@ -19,6 +35,11 @@ std::vector<std::string> EvoIndividual::merge_chromosome_to_string_vector() cons
     return string_vector;
 }
 
+/**
+ * The function converts the alleles of a robust chromosome into a vector of strings.
+ * 
+ * @return The function `robust_chromosome_to_string_vector` returns a `std::vector<std::string>`.
+ */
 std::vector<std::string> EvoIndividual::robust_chromosome_to_string_vector() const {
     std::vector<std::string> string_vector;
     for (auto const& allele : robuster_chromosome) {
@@ -26,6 +47,12 @@ std::vector<std::string> EvoIndividual::robust_chromosome_to_string_vector() con
     }
     return string_vector;
 };
+
+/**
+ * The function transforms a chromosome of alleles into a vector of strings.
+ * 
+ * @return a vector of strings.
+ */
 std::vector<std::string> EvoIndividual::transform_predictor_chromosome_to_string_vector() const {
     std::vector<std::string> string_vector;
     for (auto const& allele : x_transformer_chromosome) {
@@ -34,6 +61,11 @@ std::vector<std::string> EvoIndividual::transform_predictor_chromosome_to_string
     return string_vector;
 };
 
+/**
+ * The function transforms the target chromosome of an EvoIndividual object into a vector of strings.
+ * 
+ * @return a vector of strings.
+ */
 std::vector<std::string> EvoIndividual::transform_target_chromosome_to_string_vector() const {
     std::vector<std::string> string_vector;
     for (auto const& allele : y_transformer_chromosome) {
@@ -43,7 +75,10 @@ std::vector<std::string> EvoIndividual::transform_target_chromosome_to_string_ve
 };
 
 /**
- * The function `to_math_formula` converts the individual's chromosomes into a mathematical formula.
+ * The function `to_math_formula` returns a string representation of a mathematical formula based on
+ * the values of certain chromosomes.
+ * 
+ * @return a string representation of a mathematical formula.
  */
 std::string EvoIndividual::to_math_formula() const {
     std::string formula;
