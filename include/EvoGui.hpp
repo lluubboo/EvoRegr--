@@ -35,7 +35,7 @@ class EvoView : public Fl_Window {
     //flags
 
     std::string decomposition_method;
-    bool export_log_file;
+    bool export_log_file_flag;
 
     //variables
 
@@ -86,6 +86,7 @@ class EvoView : public Fl_Window {
     void set_appearance();
     void init_loggers();
     void render_main_window();
+    
 
 public:
     EvoView(int width, int height, const char* title);

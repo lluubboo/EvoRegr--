@@ -242,6 +242,13 @@ void EvoAPI::log_result() {
     logger->info("Regression results showing...");
 }
 
+void EvoAPI::export_report() {
+    std::ofstream report_file("report.log");
+    report_file << get_regression_summary_table();
+    report_file.close();
+    logger->info("Report exported to evo_report.log");
+}
+
 /**
  * The function "generation_postprocessing" takes a vector of EvoIndividual objects and an integer
  * representing the generation index, and performs post-processing tasks on the generation data.

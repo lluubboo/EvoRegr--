@@ -42,7 +42,7 @@ static constexpr int MENU_HEIGHT = 30;
  * @param height The height of the window in pixels.
  * @param title The title of the window.
  */
-EvoView::EvoView(int width, int height, const char* title) : Fl_Window(width, height, title), decomposition_method{ "LDLT" }, export_log_file{ false }, generations_count{ 100 }, generations_size{ 100 }, interference_size{ 0 } {
+EvoView::EvoView(int width, int height, const char* title) : Fl_Window(width, height, title), decomposition_method{ "LDLT" }, export_log_file_flag{ false }, generations_count{ 100 }, generations_size{ 100 }, interference_size{ 0 } {
     set_appearance();
     render_main_window();
     // EvoView is using widget as terminal sink, widget must be created first
@@ -158,8 +158,8 @@ void EvoView::gen_interference_size_callback(Fl_Widget* w, void* v) {
  */
 void EvoView::export_file_callback(Fl_Widget* w, void* v) {
     EvoView* T = (EvoView*)v;
-    T->export_log_file = ((Fl_Check_Button*)w)->value();
-    T->logger->info("Export log file set to: " + std::to_string(T->export_log_file));
+    T->export_log_file_flag = ((Fl_Check_Button*)w)->value();
+    T->logger->info("Export log file flag set to: " + std::to_string(T->export_log_file_flag));
 }
 
 /**
@@ -206,7 +206,14 @@ void EvoView::predict_button_callback(Fl_Widget* /*w*/, void* v) {
     std::thread([T]() {
         T->evo_api.predict();
         T->evo_api.log_result();
-        }).detach();
+        }
+    ).detach();
+
+    // create report if checked log export checkbox
+    if (T->export_log_file_flag) {
+        T->evo_api.export_report();
+    }
+
 }
 
 //*************************************************************************************************methods
