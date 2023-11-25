@@ -77,28 +77,34 @@ EvoIndividual Factory::getRandomEvoIndividual(int predictor_row_count, int predi
  * The function generates these alleles by calling other functions in the Factory class to generate random MergeTwins.
  */
 MergeAllele Factory::getRandomMergeAllele(int column_index, int predictor_column_count, XoshiroCpp::Xoshiro256Plus& random_engine) {
-
     MergeAllele merge_allele{ column_index };
-
     // column index 0 marks x0 (no merging)
-
     if (column_index != 0) {
-
         std::vector<int> free_cols(predictor_column_count);
         std::iota(begin(free_cols), end(free_cols), 0);
         free_cols.erase(std::find(free_cols.begin(), free_cols.end(), column_index));
         std::shuffle(free_cols.begin(), free_cols.end(), random_engine);
         int number_of_cols_to_merge = RandomNumbers::rand_interval_int(0, predictor_column_count - 1, random_engine);
-
         for (int i = 0; i < number_of_cols_to_merge; i++) {
             merge_allele.allele.emplace_back(free_cols.back(), Merge_operator(RandomNumbers::rand_interval_int(0, merge_operator_maxindex, random_engine)));
             free_cols.pop_back();
         }
     }
-
     return merge_allele;
 };
 
+/**
+ * @brief Generates a random TransformXAllele object.
+ *
+ * @param column_index The index of the column in the predictor matrix.
+ * @param random_engine A random engine to be used for generating random numbers.
+ *
+ * @return A TransformXAllele object with randomly generated alleles.
+ *
+ * This function generates a random TransformXAllele object, which represents a potential solution in a genetic algorithm.
+ * The TransformXAllele object contains several alleles, each of which is a Transform_operator.
+ * The function generates these alleles by calling other functions in the Factory class to generate random Transform_operators.
+ */
 TransformXAllele Factory::getRandomTransformXAllele(int column_index, XoshiroCpp::Xoshiro256Plus& random_engine) {
     TransformXAllele transformx_allele{ column_index };
     if (column_index != 0) {
@@ -111,6 +117,17 @@ TransformXAllele Factory::getRandomTransformXAllele(int column_index, XoshiroCpp
     return transformx_allele;
 };
 
+/**
+ * @brief Generates a random TransformYAllele object.
+ *
+ * @param random_engine A random engine to be used for generating random numbers.
+ *
+ * @return A TransformYAllele object with randomly generated alleles.
+ *
+ * This function generates a random TransformYAllele object, which represents a potential solution in a genetic algorithm.
+ * The TransformYAllele object contains a Transform_operator allele, which is randomly generated.
+ * If the generated Transform_operator is Pow or Wek, the function also generates a characteristic number for the TransformYAllele.
+ */
 TransformYAllele Factory::getRandomTransformYAllele(XoshiroCpp::Xoshiro256Plus& random_engine) {
     TransformYAllele transformy_allele{};
     transformy_allele.allele = Transform_operator{ RandomNumbers::rand_interval_int(0, transform_y_operator_maxindex, random_engine) };
@@ -118,6 +135,18 @@ TransformYAllele Factory::getRandomTransformYAllele(XoshiroCpp::Xoshiro256Plus& 
     return transformy_allele;
 };
 
+/**
+ * @brief Generates a random RobustAllele object.
+ *
+ * @param row_count The number of rows in the predictor matrix.
+ * @param random_engine A random engine to be used for generating random numbers.
+ *
+ * @return A RobustAllele object with randomly generated alleles.
+ *
+ * This function generates a random RobustAllele object, which represents a potential solution in a genetic algorithm.
+ * The RobustAllele object contains a vector of integers representing the rows of the predictor matrix that should be used.
+ * The function generates this vector by randomly selecting a subset of the rows from the predictor matrix.
+ */
 RobustAllele Factory::getRandomRobustAllele(int row_count, XoshiroCpp::Xoshiro256Plus& random_engine) {
     RobustAllele robust_allele{};
     int rows_to_erase = RandomNumbers::rand_interval_int(0, row_count / 4., random_engine);
@@ -130,6 +159,19 @@ RobustAllele Factory::getRandomRobustAllele(int row_count, XoshiroCpp::Xoshiro25
     return robust_allele;
 };
 
+/**
+ * @brief Performs crossover operation on two parent EvoIndividuals to generate a new EvoIndividual.
+ *
+ * @param parents An array of two EvoIndividual objects that are the parents.
+ * @param chromosome_size The size of the chromosomes in the EvoIndividual objects.
+ * @param random_engine A random engine to be used for generating random numbers.
+ *
+ * @return An EvoIndividual object that is the result of the crossover operation.
+ *
+ * This function performs a crossover operation, a method of generating new individuals in a genetic algorithm.
+ * It works by selecting a random crossover point in the chromosomes of the parents, and then creating a new individual
+ * that inherits the genes from the first parent up to the crossover point, and the genes from the second parent after the crossover point.
+ */
 EvoIndividual Crossover::cross(std::array<EvoIndividual, 2> const& parents, int chromosome_size, XoshiroCpp::Xoshiro256Plus& random_engine) {
     EvoIndividual youngling{};
     // indexes which points to place of chromosome cut & recombination
@@ -148,6 +190,20 @@ EvoIndividual Crossover::cross(std::array<EvoIndividual, 2> const& parents, int 
     return youngling;
 }
 
+/**
+ * @brief Performs mutation operation on an EvoIndividual.
+ *
+ * @param individual The EvoIndividual object to be mutated.
+ * @param chromosome_size The size of the chromosomes in the EvoIndividual object.
+ * @param predictor_row_count The number of rows in the predictor matrix.
+ * @param random_engine A random engine to be used for generating random numbers.
+ *
+ * @return An EvoIndividual object that is the result of the mutation operation.
+ *
+ * This function performs a mutation operation, a method of generating new individuals in a genetic algorithm.
+ * It works by selecting a random mutation index and then mutating the corresponding part of the individual's chromosomes.
+ * The mutation can occur on the x_transformer_chromosome, merger_chromosome, robuster_chromosome, or y_transformer_chromosome.
+ */
 EvoIndividual Mutation::mutate(EvoIndividual& individual, int chromosome_size, int predictor_row_count, XoshiroCpp::Xoshiro256Plus& random_engine) {
     if (RandomNumbers::rand_interval_int(0, 10, random_engine) == 0) {
 
@@ -171,6 +227,20 @@ EvoIndividual Mutation::mutate(EvoIndividual& individual, int chromosome_size, i
     return individual;
 }
 
+/**
+ * @brief Performs reproduction operation on two parent EvoIndividuals to generate a new EvoIndividual.
+ *
+ * @param parents An array of two EvoIndividual objects that are the parents.
+ * @param chromosomes_size The size of the chromosomes in the EvoIndividual objects.
+ * @param predictor_row_count The number of rows in the predictor matrix.
+ * @param random_engine A random engine to be used for generating random numbers.
+ *
+ * @return An EvoIndividual object that is the result of the reproduction operation.
+ *
+ * This function performs a reproduction operation, a method of generating new individuals in a genetic algorithm.
+ * It works by first performing a crossover operation on the parents to generate a new individual,
+ * and then performing a mutation operation on the new individual.
+ */
 EvoIndividual Reproduction::reproduction(std::array<EvoIndividual, 2> const& parents, int chromosomes_size, int predictor_row_count, XoshiroCpp::Xoshiro256Plus& random_engine) {
     // crossover
     EvoIndividual individual = Crossover::cross(parents, chromosomes_size, random_engine);
@@ -179,6 +249,19 @@ EvoIndividual Reproduction::reproduction(std::array<EvoIndividual, 2> const& par
     return individual;
 };
 
+/**
+ * @brief Transforms a predictor matrix based on the characteristics of an EvoIndividual.
+ *
+ * @param matrix The predictor matrix to be transformed.
+ * @param individual The EvoIndividual object that defines the transformation.
+ *
+ * @return The transformed predictor matrix.
+ *
+ * This function transforms a predictor matrix based on the characteristics of an EvoIndividual.
+ * It first erases some rows based on the robuster_chromosome of the EvoIndividual.
+ * Then, it merges predictors based on the merger_chromosome of the EvoIndividual.
+ * Finally, it transforms predictors based on the x_transformer_chromosome of the EvoIndividual.
+ */
 Eigen::MatrixXd Transform::full_predictor_transform(Eigen::MatrixXd& matrix, EvoIndividual const& individual) {
 
     // erase some rows
@@ -199,6 +282,19 @@ Eigen::MatrixXd Transform::full_predictor_transform(Eigen::MatrixXd& matrix, Evo
     return matrix;
 };
 
+/**
+ * @brief Performs a partial transformation on a predictor matrix based on the characteristics of an EvoIndividual.
+ *
+ * @param matrix The predictor matrix to be transformed.
+ * @param individual The EvoIndividual object that defines the transformation.
+ *
+ * @return The partially transformed predictor matrix.
+ *
+ * This function performs a partial transformation on a predictor matrix based on the characteristics of an EvoIndividual.
+ * It first merges predictors based on the merger_chromosome of the EvoIndividual.
+ * Then, it transforms predictors based on the x_transformer_chromosome of the EvoIndividual.
+ * Unlike the full_predictor_transform function, this function does not erase any rows from the predictor matrix.
+ */
 Eigen::MatrixXd Transform::half_predictor_transform(Eigen::MatrixXd& matrix, EvoIndividual const& individual) {
     //merge predictors
     for (int i = 0; i < matrix.cols(); i++)
@@ -213,17 +309,52 @@ Eigen::MatrixXd Transform::half_predictor_transform(Eigen::MatrixXd& matrix, Evo
     return matrix;
 };
 
+/**
+ * @brief Performs a robust transformation on a predictor matrix based on the characteristics of an EvoIndividual.
+ *
+ * @param matrix The predictor matrix to be transformed.
+ * @param individual The EvoIndividual object that defines the transformation.
+ *
+ * @return The robustly transformed predictor matrix.
+ *
+ * This function performs a robust transformation on a predictor matrix based on the characteristics of an EvoIndividual.
+ * It erases some rows from the predictor matrix based on the robuster_chromosome of the EvoIndividual.
+ */
 Eigen::MatrixXd Transform::robust_predictor_transform(Eigen::MatrixXd& matrix, EvoIndividual const& individual) {
     individual.robuster_chromosome.at(0).transform(matrix);
     return matrix;
 };
 
+/**
+ * @brief Performs a full transformation on a target vector based on the characteristics of an EvoIndividual.
+ *
+ * @param vector The target vector to be transformed.
+ * @param individual The EvoIndividual object that defines the transformation.
+ *
+ * @return The fully transformed target vector.
+ *
+ * This function performs a full transformation on a target vector based on the characteristics of an EvoIndividual.
+ * It first applies a robust transformation on the vector based on the robuster_chromosome of the EvoIndividual.
+ * Then, it applies a transformation on the vector based on the y_transformer_chromosome of the EvoIndividual.
+ */
 Eigen::VectorXd Transform::full_target_transform(Eigen::VectorXd& vector, EvoIndividual const& individual) {
     individual.robuster_chromosome.at(0).transformVector(vector);
     individual.y_transformer_chromosome.at(0).transformVector(vector);
     return vector;
 };
 
+/**
+ * @brief Performs a half transformation on a target vector based on the characteristics of an EvoIndividual.
+ *
+ * @param vector The target vector to be transformed.
+ * @param individual The EvoIndividual object that defines the transformation.
+ *
+ * @return The half transformed target vector.
+ *
+ * This function performs a half transformation on a target vector based on the characteristics of an EvoIndividual.
+ * It applies a transformation on the vector based on the y_transformer_chromosome of the EvoIndividual.
+ * Unlike the full_target_transform function, this function does not apply any robust transformation.
+ */
 Eigen::VectorXd Transform::half_target_transform(Eigen::VectorXd& vector, EvoIndividual const& individual) {
     individual.y_transformer_chromosome.at(0).transformVector(vector);
     return vector;
@@ -261,6 +392,18 @@ Transform::EvoDataSet Transform::data_transformation_nonrobust(Eigen::MatrixXd p
     return { predictor, target };
 };
 
+/**
+ * @brief Calculates the fitness of a solver on a given dataset.
+ *
+ * @tparam T The type of the solver.
+ * @param dataset The dataset on which the fitness of the solver is to be calculated.
+ * @param solver The solver whose fitness is to be calculated.
+ *
+ * @return The fitness of the solver, represented as the sum of squares of errors.
+ *
+ * This function calculates the fitness of a solver on a given dataset.
+ * The fitness is calculated as the sum of squares of errors of the solver on the dataset.
+ */
 template <typename T>
 double EvoMath::get_fitness(Transform::EvoDataSet const& dataset, T solver) {
     RegressionSimpleResult result = solver(dataset.predictor, dataset.target);
@@ -270,6 +413,20 @@ double EvoMath::get_fitness(Transform::EvoDataSet const& dataset, T solver) {
 // Explicit instantiation
 template double EvoMath::get_fitness(Transform::EvoDataSet const& dataset, std::function<RegressionSimpleResult(Eigen::MatrixXd const&, Eigen::VectorXd const&)> solver);
 
+/**
+ * @brief Extracts a column from a 1D vector representing a 2D matrix.
+ *
+ * @tparam T The type of the elements in the data vector.
+ * @param data The 1D vector representing a 2D matrix.
+ * @param column_count The number of columns in the 2D matrix.
+ * @param column_index The index of the column to be extracted.
+ *
+ * @return A vector representing the extracted column.
+ *
+ * This function extracts a column from a 1D vector that represents a 2D matrix.
+ * The 2D matrix is assumed to have a row-major layout in the 1D vector.
+ * The function returns a new vector that contains the elements of the extracted column.
+ */
 template <typename T>
 std::vector<T> EvoMath::extract_column(std::vector<T> data, unsigned int column_count, unsigned int column_index) {
     int row_count = data.size() / column_count;
