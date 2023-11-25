@@ -76,7 +76,7 @@ TransformXAllele Factory::getRandomTransformXAllele(int column_index, XoshiroCpp
     TransformXAllele transformx_allele{ column_index };
     if (column_index != 0) {
         transformx_allele.allele = Transform_operator{ RandomNumbers::rand_interval_int(0, transform_operator_maxindex, random_engine) };
-        if (transformx_allele.allele == Transform_operator::Pow || transformx_allele.allele == Transform_operator::Wek) transformx_allele.resetCharacteristicNumber(RandomNumbers::rand_interval_float(1, 3, random_engine));
+        if (transformx_allele.allele == Transform_operator::Pow || transformx_allele.allele == Transform_operator::Wek) transformx_allele.resetCharacteristicNumber(RandomNumbers::rand_interval_decimal_number(1., 3., random_engine));
     }
     else {
         transformx_allele.allele = Transform_operator::Let;
@@ -87,7 +87,7 @@ TransformXAllele Factory::getRandomTransformXAllele(int column_index, XoshiroCpp
 TransformYAllele Factory::getRandomTransformYAllele(XoshiroCpp::Xoshiro256Plus& random_engine) {
     TransformYAllele transformy_allele{};
     transformy_allele.allele = Transform_operator{ RandomNumbers::rand_interval_int(0, transform_y_operator_maxindex, random_engine) };
-    if (transformy_allele.allele == Transform_operator::Pow || transformy_allele.allele == Transform_operator::Wek) transformy_allele.resetCharacteristicNumber(RandomNumbers::rand_interval_float(1, 3, random_engine));
+    if (transformy_allele.allele == Transform_operator::Pow || transformy_allele.allele == Transform_operator::Wek) transformy_allele.resetCharacteristicNumber(RandomNumbers::rand_interval_decimal_number(1., 3., random_engine));
     return transformy_allele;
 };
 

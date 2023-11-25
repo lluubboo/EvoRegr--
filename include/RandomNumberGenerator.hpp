@@ -1,6 +1,10 @@
 #include "XoshiroCpp.hpp"
 
 namespace RandomNumbers {
-    int rand_interval_int(int const, int const, XoshiroCpp::Xoshiro256Plus&);
-    float rand_interval_float(float const, float const, XoshiroCpp::Xoshiro256Plus&);
+
+    template<typename Engine>
+    int rand_interval_int(int const, int const, Engine&);
+
+    template<typename Engine, typename Number>
+    Number rand_interval_decimal_number(Number const, Number const, Engine&);
 }
