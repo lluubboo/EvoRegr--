@@ -1,10 +1,22 @@
 #include <vector>
 
 namespace DescriptiveStatistics {
-    double median(double*, int);
-    double median(std::vector<double>);
-    double mean(std::vector<double> const&);
-    double geometric_mean(std::vector<double> const&);
-    double standard_deviation(std::vector<double> const&);
-    std::vector<double> squared_residuals(std::vector<double>);
+
+    template <typename T>
+    T median(T*, int);
+
+    template <typename T>
+    T median(std::vector<T>);
+
+    template <typename T>
+    T mean(std::vector<T> const&);
+
+    template <typename T>
+    T geometric_mean(std::vector<T> const&);
+
+    template <typename T>
+    T standard_deviation(std::vector<T> const&);
+
+    template <typename T>
+    std::vector<T> squared_residuals(std::vector<T>);
 }

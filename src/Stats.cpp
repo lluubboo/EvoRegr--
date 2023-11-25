@@ -6,32 +6,37 @@
 
 
 /**
- * The function calculates the median of an array of numbers.
- *
- * @param array An array of double values.
- * @param size The parameter "size" represents the number of elements in the array.
- *
- * @return the median value of the given array.
+ * Calculates the median of an array.
+ * 
+ * @tparam T The type of the elements in the array.
+ * @param array Pointer to the array.
+ * @param size The size of the array.
+ * @return The median value.
  */
-double DescriptiveStatistics::median(double* array, int size) {
-    std::vector<double> vec(array, array + size);
+template <typename T>
+T DescriptiveStatistics::median(T* array, int size) {
+    std::vector<T> vec(array, array + size);
     return DescriptiveStatistics::median(vec);
 }
 
+//explicit instantiation 
+template double DescriptiveStatistics::median(double*, int);
+template int DescriptiveStatistics::median(int*, int);
+template float DescriptiveStatistics::median(float*, int);
 
 /**
- * The function calculates the median of a given vector of doubles.
- *
- * @param vector The "vector" parameter is a vector of double values. It represents the dataset for
- * which we want to calculate the median.
- *
- * @return the median value of the given vector of doubles.
+ * Calculates the median of a given vector.
+ * 
+ * @tparam T The type of elements in the vector.
+ * @param vector The input vector.
+ * @return The median value of the vector.
  */
-double DescriptiveStatistics::median(std::vector<double> vector) {
+template <typename T>
+T DescriptiveStatistics::median(std::vector<T> vector) {
     std::sort(vector.begin(), vector.end());
     int vector_size = vector.size();
     if (vector.empty()) {
-        return std::numeric_limits<double>::max();
+        return std::numeric_limits<T>::max();
     }
     else if (vector_size == 1) {
         return vector.at(0);
@@ -49,55 +54,79 @@ double DescriptiveStatistics::median(std::vector<double> vector) {
     }
 }
 
+//explicit instantiation 
+template double DescriptiveStatistics::median(std::vector<double>);
+template int DescriptiveStatistics::median(std::vector<int>);
+template float DescriptiveStatistics::median(std::vector<float>);
+
 /**
- * The function calculates the mean of a vector of doubles.
- *
- * @param vector The parameter "vector" is a vector of type double, which is a container that stores a
- * sequence of double values.
- *
- * @return The mean (average) of the given vector of doubles.
+ * Calculates the mean of a vector.
+ * 
+ * @tparam T The type of elements in the vector.
+ * @param vector The input vector.
+ * @return The mean value of the vector.
  */
-double DescriptiveStatistics::mean(std::vector<double> const& vector) {
+template <typename T>
+T DescriptiveStatistics::mean(std::vector<T> const& vector) {
     return std::reduce(vector.begin(), vector.end()) / vector.size();
 }
 
+//explicit instantiation 
+template double DescriptiveStatistics::mean(std::vector<double> const&);
+template int DescriptiveStatistics::mean(std::vector<int> const&);
+template float DescriptiveStatistics::mean(std::vector<float> const&);
 
 /**
- * The function calculates the geometric mean of a vector of doubles.
+ * Calculates the geometric mean of a vector.
  * 
- * @param vector A vector of double values for which we want to calculate the geometric mean.
- * 
- * @return the geometric mean of the elements in the input vector.
+ * @tparam T The type of elements in the vector.
+ * @param vector The input vector.
+ * @return The geometric mean of the vector.
  */
-double DescriptiveStatistics::geometric_mean(std::vector<double> const& vector) {
-    double product = std::accumulate(vector.begin(), vector.end(), 1.0, std::multiplies<double>());
+template <typename T>
+T DescriptiveStatistics::geometric_mean(std::vector<T> const& vector) {
+    T product = std::accumulate(vector.begin(), vector.end(), 1.0, std::multiplies<T>());
     return std::pow(product, 1.0 / vector.size());
 }
 
+//explicit instantiation 
+template double DescriptiveStatistics::geometric_mean(std::vector<double> const&);
+template int DescriptiveStatistics::geometric_mean(std::vector<int> const&);
+template float DescriptiveStatistics::geometric_mean(std::vector<float> const&);
+
 /**
- * The function calculates the standard deviation of a vector of numbers.
+ * Calculates the standard deviation of a given vector.
  * 
- * @param vector The "vector" parameter is a vector of double values for which we want to calculate the
- * standard deviation.
- * 
- * @return the standard deviation of the input vector.
+ * @tparam T The type of elements in the vector.
+ * @param vector The input vector.
+ * @return The standard deviation of the vector.
  */
-double DescriptiveStatistics::standard_deviation(std::vector<double> const& vector) {
-    std::vector<double> squared_residuals = DescriptiveStatistics::squared_residuals(vector);
+template <typename T>
+T DescriptiveStatistics::standard_deviation(std::vector<T> const& vector) {
+    std::vector<T> squared_residuals = DescriptiveStatistics::squared_residuals(vector);
     return sqrt(std::reduce(squared_residuals.begin(), squared_residuals.end()) / (squared_residuals.size() - 1));
 }
 
+//explicit instantiation 
+template double DescriptiveStatistics::standard_deviation(std::vector<double> const&);
+template int DescriptiveStatistics::standard_deviation(std::vector<int> const&);
+template float DescriptiveStatistics::standard_deviation(std::vector<float> const&);
+
 /**
- * The function calculates the squared residuals of a vector by subtracting the mean from each element
- * and squaring the result.
+ * Calculates the squared residuals of a vector.
  * 
- * @param vector The "vector" parameter is a std::vector<double> object that represents a collection of
- * double values.
- * 
- * @return a vector of squared residuals.
+ * @tparam T The type of elements in the vector.
+ * @param vector The input vector.
+ * @return A vector containing the squared residuals.
  */
-std::vector<double> DescriptiveStatistics::squared_residuals(std::vector<double> vector) {
-    double mean = DescriptiveStatistics::mean(vector);
-    std::for_each(vector.begin(), vector.end(), [&mean](double& x) {x -= mean; x *= x;});
+template <typename T>
+std::vector<T> DescriptiveStatistics::squared_residuals(std::vector<T> vector) {
+    T mean = DescriptiveStatistics::mean(vector);
+    std::for_each(vector.begin(), vector.end(), [&mean](T& x) {x -= mean; x *= x;});
     return vector;
 }
+
+//explicit instantiation 
+template std::vector<double> DescriptiveStatistics::squared_residuals(std::vector<double>);
+template std::vector<int> DescriptiveStatistics::squared_residuals(std::vector<int>);
+template std::vector<float> DescriptiveStatistics::squared_residuals(std::vector<float>);
