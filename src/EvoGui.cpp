@@ -42,7 +42,15 @@ static constexpr int MENU_HEIGHT = 30;
  * @param height The height of the window in pixels.
  * @param title The title of the window.
  */
-EvoView::EvoView(int width, int height, const char* title) : Fl_Window(width, height, title), decomposition_method{ "LDLT" }, export_log_file_flag{ false }, generations_count{ 100 }, generations_size{ 100 }, interference_size{ 0 } {
+EvoView::EvoView(int width, int height, const char* title) :
+    Fl_Window(width, height, title),
+    decomposition_method{ "LDLT" },
+    export_log_file_flag{ false },
+    filename{ "Regression_report" },
+    generations_count{ 100 },
+    generations_size{ 100 },
+    interference_size{ 0 }
+{
     set_appearance();
     render_main_window();
     // EvoView is using widget as terminal sink, widget must be created first
@@ -81,6 +89,25 @@ void EvoView::help_callback(Fl_Widget* /*w*/, void* /*data*/) {
     disp->buffer(buff);
     window->show();
     buff->text("For help, please contact: lubomirbalazjob@gmail.com");
+}
+
+/**
+ * Callback function for handling user input in the filename input field.
+ * Updates the filename member variable of the EvoView class with the entered value.
+ * If the input value is empty, displays an error message.
+ * 
+ * @param w The widget that triggered the callback.
+ * @param v The user data associated with the widget.
+ */
+void EvoView::filename_input_callback(Fl_Widget* w, void* v) {
+    EvoView* T = (EvoView*)v;
+    std::string input_value = ((Fl_Input*)w)->value();
+    if (input_value.empty()) {
+        fl_alert("Invalid filename. Please enter a non-empty filename.");
+        //filename will be let as default
+        return;
+    }
+    T->filename = input_value;
 }
 
 /**
@@ -200,20 +227,25 @@ void EvoView::load_file_button_callback(Fl_Widget* /*w*/, void* v) {
  */
 void EvoView::predict_button_callback(Fl_Widget* /*w*/, void* v) {
     EvoView* T = (EvoView*)v;
-    T->evo_api.reset_api_for_another_calculation();
-
+    EvoAPI evo_api_copy = T->evo_api;
+    std::string filename = T->filename;
     // run on separate thread because the method can be very long
-    std::thread([T]() {
-        T->evo_api.predict();
-        T->evo_api.log_result();
-        }
-    ).detach();
-
-    // create report if checked log export checkbox
+    // for me is the best solution to send copy of evo_api to thread
+    // i do not need clean up api after thread
     if (T->export_log_file_flag) {
-        T->evo_api.export_report();
+        std::thread([evo_api_copy, filename]() mutable {
+            evo_api_copy.predict();
+            evo_api_copy.log_result();
+            evo_api_copy.export_report(filename);
+            }
+        ).detach();
+    } else {
+        std::thread([evo_api_copy]() mutable {
+            evo_api_copy.predict();
+            evo_api_copy.log_result();
+            }
+        ).detach();
     }
-
 }
 
 //*************************************************************************************************methods
@@ -348,6 +380,14 @@ Fl_Choice* EvoView::create_combo_box(int h) {
     return combo_box;
 }
 
+Fl_Input* EvoView::create_filename_box(int h) {
+    Fl_Input* inputBox = new Fl_Input(0, 0, 0, h);
+    inputBox->value(filename.c_str());
+    inputBox->tooltip("Enter the filename prefix");
+    inputBox->callback(filename_input_callback, (void*)(this));
+    return inputBox;
+}
+
 
 /**
  * @brief Creates a new input box.
@@ -435,6 +475,7 @@ void EvoView::render_main_window() {
         );
         main_widget_pack->begin();
         {
+            filename_box = create_filename_box(BUTTON_HEIGHT);
             gen_count_box = create_gen_count_box(BUTTON_HEIGHT);
             gen_size_box = create_gen_size_box(BUTTON_HEIGHT);
             inter_size_box = create_inter_size_box(BUTTON_HEIGHT);

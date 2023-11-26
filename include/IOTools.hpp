@@ -5,3 +5,5 @@
 
 template<typename T>
 std::tuple<int, std::vector<T>> parse_csv(const std::string&);
+
+std::string get_regression_report_filename(std::string const& prefix);

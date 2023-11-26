@@ -36,3 +36,25 @@ std::tuple<int, std::vector<T>> parse_csv(const std::string& filename) {
 template std::tuple<int, std::vector<int>> parse_csv(const std::string&);
 template std::tuple<int, std::vector<float>> parse_csv(const std::string&);
 template std::tuple<int, std::vector<double>> parse_csv(const std::string&);
+
+/**
+ * @brief Returns the filename for a regression report.
+ * 
+ * This function generates a filename for a regression report based on the given prefix and the current date and time.
+ * The filename format is "regression_report_prefix_year-month-day_hour-minute.txt".
+ * 
+ * @param prefix The prefix to be included in the filename.
+ * @return The generated filename for the regression report.
+ */
+std::string get_regression_report_filename(std::string const& prefix) {
+    std::time_t t = std::time(nullptr);
+    std::tm tm = *std::localtime(&t);
+    std::string filename = prefix + "_";
+    filename += std::to_string(tm.tm_year + 1900) + "-";
+    filename += std::to_string(tm.tm_mon + 1) + "-";
+    filename += std::to_string(tm.tm_mday) + "_";
+    filename += std::to_string(tm.tm_hour) + "-";
+    filename += std::to_string(tm.tm_min) + "-";
+    filename += std::to_string(tm.tm_sec) + ".txt";
+    return filename;
+};

@@ -242,11 +242,16 @@ void EvoAPI::log_result() {
     logger->info("Regression results showing...");
 }
 
-void EvoAPI::export_report() {
-    std::ofstream report_file("report.log");
+/**
+ * Exports a report with the given prefix.
+ * 
+ * @param prefix The prefix to be used in the report filename.
+ */
+void EvoAPI::export_report(std::string const& prefix) {
+    std::ofstream report_file(get_regression_report_filename(prefix));
     report_file << get_regression_summary_table();
     report_file.close();
-    logger->info("Report exported to evo_report.log");
+    logger->info("Report exported.");
 }
 
 /**
@@ -359,7 +364,7 @@ void EvoAPI::titan_postprocessing() {
  *         - Column 2: Difference between original and predicted values
  *         - Column 3: Percentage difference between original and predicted values
  */
-Eigen::MatrixXd EvoAPI::get_regression_summary_matrix(RegressionDetailedResult const& result, Eigen::MatrixXd original_x, Eigen::VectorXd original_y) {
+Eigen::MatrixXd EvoAPI::get_regression_summary_matrix(RegressionDetailedResult const& result, Eigen::MatrixXd const& original_x, Eigen::VectorXd original_y) {
     Eigen::MatrixXd regression_result_matrix(original_x.rows(), 4);
 
     // get target for coefficients not disturbed by outliers

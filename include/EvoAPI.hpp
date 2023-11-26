@@ -45,7 +45,7 @@ class EvoAPI {
     void titan_postprocessing();
     void generation_postprocessing(std::vector<EvoIndividual> const& generation, int generation_index);
 
-    Eigen::MatrixXd get_regression_summary_matrix(RegressionDetailedResult const& result, Eigen::MatrixXd original_x, Eigen::VectorXd original_y);
+    Eigen::MatrixXd get_regression_summary_matrix(RegressionDetailedResult const& result, Eigen::MatrixXd const& original_x, Eigen::VectorXd original_y);
 
     std::string get_regression_summary_table();
     std::string get_regression_result_table();
@@ -59,7 +59,7 @@ public:
     EvoAPI();
     EvoAPI(unsigned int generation_size_limit, unsigned int generation_count_limit, unsigned int interaction_cols);
 
-    void export_report();
+    void export_report(std::string const& prefix);
     void set_solver(std::string const& solver_name);
     void reset_api_for_another_calculation();
     void load_file(const std::string& filename);
