@@ -30,6 +30,7 @@ static constexpr int WINDOW_HEIGHT = 600;
 static constexpr int MAIN_WIDGET_PACK_WIDTH = 200;
 static constexpr int BUTTON_HEIGHT = 30;
 static constexpr int SPACER_HEIGHT = 0;
+static constexpr int LABEL_HEIGHT = 25;
 static constexpr int MENU_HEIGHT = 30;
 
 /**
@@ -49,7 +50,8 @@ EvoView::EvoView(int width, int height, const char* title) :
     filename{ "Regression_report" },
     generations_count{ 100 },
     generations_size{ 100 },
-    interference_size{ 0 }
+    interference_size{ 0 },
+    mutation_rate{ 0.15f }
 {
     set_appearance();
     render_main_window();
@@ -173,6 +175,27 @@ void EvoView::gen_interference_size_callback(Fl_Widget* w, void* v) {
     }
     else {
         T->logger->error("Invalid input. Please enter a valid integer.");
+    }
+}
+
+/**
+ * @brief Callback function for mutation rate input.
+ *
+ * This function is called when the mutation rate input box is modified. It validates the input to ensure it's a decimal number between 0 and 1. If the input is valid, it updates the mutation_rate member of the EvoView object and logs a message. If the input is not valid, it logs an error message.
+ *
+ * @param w The Fl_Widget that triggered the callback (the mutation rate input box).
+ * @param v A void pointer to the EvoView object.
+ */
+void EvoView::mutation_rate_callback(Fl_Widget* w, void* v) {
+    EvoView* T = (EvoView*)v;
+    std::istringstream iss(((Fl_Input*)w)->value());
+    float value;
+    if (!(iss >> value) || !iss.eof() || value < 0.0f || value > 1.0f) {
+        T->logger->error("Invalid input. Please enter a decimal number between 0 and 1.");
+    }
+    else {
+        T->mutation_rate = value;
+        T->logger->info("Mutation rate set to: " + std::to_string(T->mutation_rate));
     }
 }
 
@@ -332,6 +355,22 @@ Fl_Pack* EvoView::create_main_widget_pack(int x, int y, int w, int h) {
 }
 
 /**
+ * @brief Creates a new Fl_Box with the specified label.
+ *
+ * This function creates a new Fl_Box with a specified height and label. The box is aligned to the left and inside.
+ *
+ * @param height The height of the box.
+ * @param label The label to display in the box.
+ * @return Fl_Box* A pointer to the newly created Fl_Box.
+ */
+Fl_Box* EvoView::create_label(int height, const char* label) {
+    Fl_Box* box = new Fl_Box(0, 0, 0, height, label);
+    box->align(FL_ALIGN_LEFT | FL_ALIGN_INSIDE);
+    box->box(FL_UP_BOX);
+    return box;
+}
+
+/**
  * @brief Creates a new button.
  *
  * This function creates a new button.
@@ -438,6 +477,23 @@ Fl_Input* EvoView::create_inter_size_box(int h) {
 }
 
 /**
+ * @brief Creates a new input box for entering the mutation rate.
+ *
+ * This function creates a new Fl_Input object, sets its initial value to the current mutation rate,
+ * sets its tooltip to "Enter the mutation rate here [0 - 1]", and sets its callback to mutation_rate_callback.
+ *
+ * @param h The height of the input box.
+ * @return Fl_Input* A pointer to the new input box.
+ */
+Fl_Input* EvoView::create_mutation_rate_box(int h) {
+    Fl_Input* inputBox = new Fl_Input(0, 0, 0, h);
+    inputBox->value(mutation_rate);
+    inputBox->tooltip("Enter the mutation here [0 - 1]");
+    inputBox->callback(mutation_rate_callback, (void*)(this));
+    return inputBox;
+}
+
+/**
  * @brief Creates a new check button.
  *
  * This function creates a new check button.
@@ -451,6 +507,20 @@ Fl_Check_Button* EvoView::create_export_file_box(int h) {
     checkbox->tooltip("Check this box to enable log file export before running the prediction.");
     checkbox->callback(export_file_callback, (void*)this);
     return checkbox;
+}
+
+/**
+ * @brief Creates an invisible Fl_Box to be used as a spacer.
+ *
+ * This function creates a new Fl_Box with a specified height and makes it invisible. This can be used to create space between widgets in a layout.
+ *
+ * @param height The height of the spacer.
+ * @return Fl_Box* A pointer to the newly created invisible Fl_Box.
+ */
+Fl_Box* EvoView::create_spacer(int height) {
+    Fl_Box* spacer = new Fl_Box(0, 0, 0, height);
+    spacer->box(FL_NO_BOX); // Make the box invisible
+    return spacer;
 }
 
 /**
@@ -475,14 +545,20 @@ void EvoView::render_main_window() {
         );
         main_widget_pack->begin();
         {
+            filename_label = create_label(LABEL_HEIGHT, "Report prefix:");
             filename_box = create_filename_box(BUTTON_HEIGHT);
+            gen_count_label = create_label(LABEL_HEIGHT, "Generations count:");
             gen_count_box = create_gen_count_box(BUTTON_HEIGHT);
+            gen_size_label = create_label(LABEL_HEIGHT, "Generations size:");
             gen_size_box = create_gen_size_box(BUTTON_HEIGHT);
+            inter_size_label = create_label(LABEL_HEIGHT, "Interference columns:");
             inter_size_box = create_inter_size_box(BUTTON_HEIGHT);
+            mutation_rate_label = create_label(LABEL_HEIGHT, "Mutation rate:");
+            mutation_rate_box = create_mutation_rate_box(BUTTON_HEIGHT);
             load_button = create_load_button(BUTTON_HEIGHT);
-            export_log_checkbutton = create_export_file_box(BUTTON_HEIGHT);
             decomposition_choice_chbox = create_combo_box(BUTTON_HEIGHT);
             predict_button = create_predict_button(BUTTON_HEIGHT);
+            export_log_checkbutton = create_export_file_box(BUTTON_HEIGHT);
         }
         main_widget_pack->end();
     }
@@ -500,7 +576,7 @@ void EvoView::set_appearance() {
     Fl::option(Fl::OPTION_VISIBLE_FOCUS, false);
     Fl::option(Fl::OPTION_DND_TEXT, true);
     Fl::set_fonts("Roboto-Regular.ttf");
-
+    Fl::set_boxtype(FL_UP_BOX, FL_ENGRAVED_BOX);
     this->resizable(this);
 }
 
