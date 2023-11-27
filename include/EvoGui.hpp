@@ -40,7 +40,7 @@ class EvoView : public Fl_Window {
     //variables
 
     std::string filepath;
-    std::string filename;
+    std::string report_file_prefix;
     int generations_count;
     int generations_size;
     int interference_size;

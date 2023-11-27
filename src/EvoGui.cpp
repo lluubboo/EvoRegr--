@@ -47,7 +47,7 @@ EvoView::EvoView(int width, int height, const char* title) :
     Fl_Window(width, height, title),
     decomposition_method{ "LDLT" },
     export_log_file_flag{ false },
-    filename{ "Regression_report" },
+    report_file_prefix{ "Regression_report" },
     generations_count{ 100 },
     generations_size{ 100 },
     interference_size{ 0 },
@@ -97,7 +97,7 @@ void EvoView::help_callback(Fl_Widget* /*w*/, void* /*data*/) {
  * Callback function for handling user input in the filename input field.
  * Updates the filename member variable of the EvoView class with the entered value.
  * If the input value is empty, displays an error message.
- * 
+ *
  * @param w The widget that triggered the callback.
  * @param v The user data associated with the widget.
  */
@@ -109,7 +109,7 @@ void EvoView::filename_input_callback(Fl_Widget* w, void* v) {
         //filename will be let as default
         return;
     }
-    T->filename = input_value;
+    T->report_file_prefix = input_value;
 }
 
 /**
@@ -251,18 +251,19 @@ void EvoView::load_file_button_callback(Fl_Widget* /*w*/, void* v) {
 void EvoView::predict_button_callback(Fl_Widget* /*w*/, void* v) {
     EvoView* T = (EvoView*)v;
     EvoAPI evo_api_copy = T->evo_api;
-    std::string filename = T->filename;
+    std::string file_prefix = T->report_file_prefix;
     // run on separate thread because the method can be very long
     // for me is the best solution to send copy of evo_api to thread
     // i do not need clean up api after thread
     if (T->export_log_file_flag) {
-        std::thread([evo_api_copy, filename]() mutable {
+        std::thread([evo_api_copy, file_prefix]() mutable {
             evo_api_copy.predict();
             evo_api_copy.log_result();
-            evo_api_copy.export_report(filename);
+            evo_api_copy.export_report(file_prefix);
             }
         ).detach();
-    } else {
+    }
+    else {
         std::thread([evo_api_copy]() mutable {
             evo_api_copy.predict();
             evo_api_copy.log_result();
@@ -421,7 +422,7 @@ Fl_Choice* EvoView::create_combo_box(int h) {
 
 Fl_Input* EvoView::create_filename_box(int h) {
     Fl_Input* inputBox = new Fl_Input(0, 0, 0, h);
-    inputBox->value(filename.c_str());
+    inputBox->value(report_file_prefix.c_str());
     inputBox->tooltip("Enter the filename prefix");
     inputBox->callback(filename_input_callback, (void*)(this));
     return inputBox;
