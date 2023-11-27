@@ -67,4 +67,6 @@ public:
     void log_result();
     void init_logger();
     void set_boundary_conditions(unsigned int generation_size_limit, unsigned int generation_count_limit, unsigned int interaction_cols, unsigned int mutation_rate);
+
+    bool is_ready_to_predict();
 };

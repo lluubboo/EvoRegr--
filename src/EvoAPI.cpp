@@ -166,6 +166,17 @@ void EvoAPI::create_regression_input(std::tuple<int, std::vector<double>> input)
 }
 
 /**
+ * @brief Checks if the model is ready to make predictions.
+ *
+ * The model is considered ready if both the input (x) and output (y) data sets are not empty.
+ *
+ * @return true if both x and y data sets are not empty, false otherwise.
+ */
+bool EvoAPI::is_ready_to_predict() {
+    return x.size() > 0 && y.size() > 0;
+};
+
+/**
  * Performs the prediction process using a fixed generation size genetic algorithm.
  * This function generates a new generation of EvoIndividuals for a specified number of generations.
  * Each EvoIndividual is evaluated, transformed, and used to solve a regression problem.

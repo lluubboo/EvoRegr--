@@ -252,6 +252,12 @@ void EvoView::predict_button_callback(Fl_Widget* /*w*/, void* v) {
     EvoView* T = (EvoView*)v;
     EvoAPI evo_api_copy = T->evo_api;
     std::string file_prefix = T->report_file_prefix;
+
+    if (!T->evo_api.is_ready_to_predict()) {
+        T->logger->error("Cannot start prediction. Please load a file first.");
+        return;
+    }
+    
     // run on separate thread because the method can be very long
     // for me is the best solution to send copy of evo_api to thread
     // i do not need clean up api after thread
