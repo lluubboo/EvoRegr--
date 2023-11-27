@@ -18,6 +18,7 @@ class EvoAPI {
 
     // algorithm boundary conditions
     int generation_size_limit, generation_count_limit, interaction_cols;
+    float mutation_rate;
 
     // inputs
     Eigen::MatrixXd x, y;
@@ -66,5 +67,5 @@ public:
     void predict();
     void log_result();
     void init_logger();
-    void set_boundary_conditions(unsigned int generation_size_limit, unsigned int generation_count_limit, unsigned int interaction_cols);
+    void set_boundary_conditions(unsigned int generation_size_limit, unsigned int generation_count_limit, unsigned int interaction_cols, unsigned int mutation_rate);
 };

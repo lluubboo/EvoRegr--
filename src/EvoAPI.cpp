@@ -48,10 +48,16 @@ EvoAPI::EvoAPI(unsigned int generation_size_limit, unsigned int generation_count
  * @param generation_count_limit The maximum number of generations.
  * @param interaction_cols The number of columns used for interaction.
  */
-void EvoAPI::set_boundary_conditions(unsigned int generation_size_limit, unsigned int generation_count_limit, unsigned int interaction_cols) {
+void EvoAPI::set_boundary_conditions(
+    unsigned int generation_size_limit,
+    unsigned int generation_count_limit, 
+    unsigned int interaction_cols,
+    unsigned int mutation_rate
+) {
     this->generation_size_limit = generation_size_limit;
     this->generation_count_limit = generation_count_limit;
     this->interaction_cols = interaction_cols;
+    this->mutation_rate = mutation_rate;
 }
 
 void EvoAPI::set_solver(std::string const& solver_name) {
@@ -202,6 +208,7 @@ void EvoAPI::predict() {
                     Selection::tournament_selection(past_generation, random_engines[omp_get_thread_num()]),
                     x.cols(),
                     x.rows(),
+                    mutation_rate,
                     random_engines[omp_get_thread_num()]
                 );
             }

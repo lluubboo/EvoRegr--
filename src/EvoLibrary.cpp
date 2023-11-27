@@ -193,22 +193,23 @@ EvoIndividual Crossover::cross(std::array<EvoIndividual, 2> const& parents, int 
 /**
  * @brief Performs mutation operation on an EvoIndividual.
  *
- * @param individual The EvoIndividual object to be mutated.
+ * @param individual The EvoIndividual object that is to be mutated.
  * @param chromosome_size The size of the chromosomes in the EvoIndividual object.
  * @param predictor_row_count The number of rows in the predictor matrix.
+ * @param mutation_rate The mutation rate of the genetic algorithm.
  * @param random_engine A random engine to be used for generating random numbers.
  *
- * @return An EvoIndividual object that is the result of the mutation operation.
+ * @return The mutated EvoIndividual object.
  *
  * This function performs a mutation operation, a method of generating new individuals in a genetic algorithm.
- * It works by selecting a random mutation index and then mutating the corresponding part of the individual's chromosomes.
- * The mutation can occur on the x_transformer_chromosome, merger_chromosome, robuster_chromosome, or y_transformer_chromosome.
+ * It works by selecting a random mutation point in the chromosomes of the individual, and then mutating the allele at that point.
+ * The function first selects a random mutation point in the chromosomes of the individual.
+ * Then, it selects a random chromosome to mutate, and finally mutates the allele at the selected mutation point.
  */
-EvoIndividual Mutation::mutate(EvoIndividual& individual, int chromosome_size, int predictor_row_count, XoshiroCpp::Xoshiro256Plus& random_engine) {
-    if (RandomNumbers::rand_interval_int(0, 10, random_engine) == 0) {
-
+EvoIndividual Mutation::mutate(EvoIndividual& individual, int chromosome_size, int predictor_row_count, int mutation_rate, XoshiroCpp::Xoshiro256Plus& random_engine) {
+    double rand_num = RandomNumbers::rand_interval_decimal_number(0., 1., random_engine);
+    if (rand_num <= mutation_rate) {
         int mutation_index = RandomNumbers::rand_interval_int(0, 3, random_engine);
-
         if (mutation_index == 0) {
             int col = RandomNumbers::rand_interval_int(0, chromosome_size - 1, random_engine);
             individual.x_transformer_chromosome.at(col) = Factory::getRandomTransformXAllele(col, random_engine);
@@ -241,11 +242,17 @@ EvoIndividual Mutation::mutate(EvoIndividual& individual, int chromosome_size, i
  * It works by first performing a crossover operation on the parents to generate a new individual,
  * and then performing a mutation operation on the new individual.
  */
-EvoIndividual Reproduction::reproduction(std::array<EvoIndividual, 2> const& parents, int chromosomes_size, int predictor_row_count, XoshiroCpp::Xoshiro256Plus& random_engine) {
+EvoIndividual Reproduction::reproduction(
+    std::array<EvoIndividual, 2> const& parents,
+    int chromosomes_size,
+    int predictor_row_count,
+    int mutation_rate,
+    XoshiroCpp::Xoshiro256Plus& random_engine
+    ) {
     // crossover
     EvoIndividual individual = Crossover::cross(parents, chromosomes_size, random_engine);
     // mutation
-    Mutation::mutate(individual, chromosomes_size, predictor_row_count, random_engine);
+    Mutation::mutate(individual, chromosomes_size, predictor_row_count, mutation_rate, random_engine);
     return individual;
 };
 

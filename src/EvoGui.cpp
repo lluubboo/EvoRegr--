@@ -237,7 +237,7 @@ void EvoView::decomposition_choice_callback(Fl_Widget* w, void* v) {
 void EvoView::load_file_button_callback(Fl_Widget* /*w*/, void* v) {
     EvoView* T = (EvoView*)v;
     T->get_filepath();
-    T->evo_api.set_boundary_conditions(T->generations_size, T->generations_count, T->interference_size);
+    T->evo_api.set_boundary_conditions(T->generations_size, T->generations_count, T->interference_size, T->mutation_rate);
     T->evo_api.load_file(T->filepath);
 }
 

@@ -29,7 +29,7 @@ namespace Crossover {
 
 namespace Mutation {
 
-    EvoIndividual mutate(EvoIndividual&, int, int, XoshiroCpp::Xoshiro256Plus&);
+    EvoIndividual mutate(EvoIndividual&, int, int, int, XoshiroCpp::Xoshiro256Plus&);
 
 }
 
@@ -51,7 +51,7 @@ namespace Transform {
 }
 
 namespace Reproduction {
-    EvoIndividual reproduction(std::array<EvoIndividual, 2> const& parents, int chromosome_size, int predictor_row_count, XoshiroCpp::Xoshiro256Plus&);
+    EvoIndividual reproduction(std::array<EvoIndividual, 2> const& parents, int chromosome_size, int predictor_row_count, int mutation_rate, XoshiroCpp::Xoshiro256Plus&);
 }
 
 namespace EvoMath {
