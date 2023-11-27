@@ -44,7 +44,7 @@ class EvoView : public Fl_Window {
     int generations_count;
     int generations_size;
     int interference_size;
-    float mutation_rate;
+    int mutation_rate;
 
     //widgets
 

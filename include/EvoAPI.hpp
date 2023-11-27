@@ -17,8 +17,7 @@ class EvoAPI {
     std::shared_ptr<spdlog::logger> logger;
 
     // algorithm boundary conditions
-    int generation_size_limit, generation_count_limit, interaction_cols;
-    float mutation_rate;
+    int generation_size_limit, generation_count_limit, interaction_cols, mutation_rate;
 
     // inputs
     Eigen::MatrixXd x, y;

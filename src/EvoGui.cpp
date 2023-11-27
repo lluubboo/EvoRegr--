@@ -51,7 +51,7 @@ EvoView::EvoView(int width, int height, const char* title) :
     generations_count{ 100 },
     generations_size{ 100 },
     interference_size{ 0 },
-    mutation_rate{ 0.15f }
+    mutation_rate{ 15 }
 {
     set_appearance();
     render_main_window();
@@ -189,9 +189,9 @@ void EvoView::gen_interference_size_callback(Fl_Widget* w, void* v) {
 void EvoView::mutation_rate_callback(Fl_Widget* w, void* v) {
     EvoView* T = (EvoView*)v;
     std::istringstream iss(((Fl_Input*)w)->value());
-    float value;
-    if (!(iss >> value) || !iss.eof() || value < 0.0f || value > 1.0f) {
-        T->logger->error("Invalid input. Please enter a decimal number between 0 and 1.");
+    int value;
+    if (!(iss >> value) || !iss.eof() || value < 0 || value > 100) {
+        T->logger->error("Invalid input. Please enter an integer number between 0 and 100.");
     }
     else {
         T->mutation_rate = value;
@@ -488,7 +488,7 @@ Fl_Input* EvoView::create_inter_size_box(int h) {
 Fl_Input* EvoView::create_mutation_rate_box(int h) {
     Fl_Input* inputBox = new Fl_Input(0, 0, 0, h);
     inputBox->value(mutation_rate);
-    inputBox->tooltip("Enter the mutation here [0 - 1]");
+    inputBox->tooltip("Enter the mutation ratio here 0 - 100 [%]");
     inputBox->callback(mutation_rate_callback, (void*)(this));
     return inputBox;
 }
