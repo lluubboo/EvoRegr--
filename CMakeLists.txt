@@ -7,12 +7,16 @@ set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED On)
 set(CMAKE_CXX_EXTENSIONS Off)
 
-set(CMAKE_BUILD_TYPE Debug)
+set(CMAKE_BUILD_TYPE Release)
 
 if (CMAKE_BUILD_TYPE STREQUAL "Debug") 
     add_compile_options(-Wall -Wpedantic -Wextra -fexceptions)
 elseif (CMAKE_BUILD_TYPE STREQUAL "Release")
-    add_compile_options(-march=native)
+    if(WIN32)
+        add_compile_options(-mwindows -march=native)
+    else()
+        add_compile_options(-march=native)
+    endif()
 endif()
 
 add_executable(EVOREGR++ main.cpp)
