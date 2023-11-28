@@ -421,17 +421,19 @@ void EvoAPI::process_generation_fitness(std::set<double> const& generation_fitne
     generation_fitness_metrics.push_back(DescriptiveStatistics::standard_deviation(generation_fitness_vector));
 }
 
+
 /**
  * @brief Resets the API for another calculation.
- *
- * This function clears the titan_history, generation_fitness_metrics,
- * titan_robust_dataset, titan_nonrobust_dataset, titan_result, titan,
- * x, and y variables, effectively resetting the API for another calculation.
+ * 
+ * This method clears the titan_history and generation_fitness_metrics vectors,
+ * resets the titan object to its default state, and resizes the x and y vectors to 0.
  */
 void EvoAPI::reset_api_for_another_calculation() {
     titan_history.clear();
     generation_fitness_metrics.clear();
-    titan = EvoIndividual();    // reset titan
+    titan = EvoIndividual();    
+    x.resize(0, 0);
+    y.resize(0, 0);     
 };
 
 /**
