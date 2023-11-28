@@ -31,7 +31,7 @@ struct RegressionSimpleResult {
     bool isUsable;
 };
 
-RegressionDetailedResult solve_system_by_ldlt_detailed(Eigen::MatrixXd const&, Eigen::VectorXd const&);
+RegressionDetailedResult solve_system_detailed(Eigen::MatrixXd const&, Eigen::VectorXd const&);
 RegressionSimpleResult solve_system_by_ldlt_simple(Eigen::MatrixXd const&, Eigen::VectorXd const&);
 
 struct LLTSolver {

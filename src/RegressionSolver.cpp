@@ -13,11 +13,11 @@
  * the residuals of the regression, the sum of squares of the residuals, the variance, the standard deviation, the mean sum of squares errors,
  * the root mean square error (RMSE), the R-squared value, and the adjusted R-squared value.
  */
-RegressionDetailedResult solve_system_by_ldlt_detailed(Eigen::MatrixXd const& predictors, Eigen::VectorXd const& target) {
+RegressionDetailedResult solve_system_detailed(Eigen::MatrixXd const& predictors, Eigen::VectorXd const& target) {
 
     RegressionDetailedResult result = RegressionDetailedResult();
 
-    result.theta = (predictors.transpose() * predictors).ldlt().solve(predictors.transpose() * target);
+    result.theta = (predictors.transpose() * predictors).colPivHouseholderQr().solve(predictors.transpose() * target);
     result.isUsable = !result.theta.hasNaN() & result.theta.allFinite();
 
     if (result.isUsable) {
@@ -73,7 +73,7 @@ RegressionSimpleResult LLTSolver::operator()(Eigen::MatrixXd const& predictors, 
 
     RegressionSimpleResult result;
 
-    result.coefficients = (predictors.transpose() * predictors).llt().solve(predictors.transpose()* target);
+    result.coefficients = (predictors.transpose() * predictors).llt().solve(predictors.transpose() * target);
 
     // Check if the result is usable (no NaN or infinite values)
     result.isUsable = !result.coefficients.hasNaN() && result.coefficients.allFinite();

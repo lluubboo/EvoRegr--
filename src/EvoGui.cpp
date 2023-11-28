@@ -265,7 +265,7 @@ void EvoView::predict_button_callback(Fl_Widget* /*w*/, void* v) {
         std::thread([evo_api_copy, file_prefix]() mutable {
             evo_api_copy.predict();
             evo_api_copy.log_result();
-            evo_api_copy.export_report(file_prefix);
+            evo_api_copy.export_report_to_console(file_prefix);
             }
         ).detach();
     }

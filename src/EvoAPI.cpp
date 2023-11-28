@@ -33,7 +33,7 @@ EvoAPI::EvoAPI() : solver(LDLTSolver()) {}
  */
 void EvoAPI::set_boundary_conditions(
     unsigned int generation_size_limit,
-    unsigned int generation_count_limit, 
+    unsigned int generation_count_limit,
     unsigned int interaction_cols,
     unsigned int mutation_rate
 ) {
@@ -41,6 +41,9 @@ void EvoAPI::set_boundary_conditions(
     this->generation_count_limit = generation_count_limit;
     this->interaction_cols = interaction_cols;
     this->mutation_rate = mutation_rate;
+
+    logger->info("Boundary conditions set generation size limit: {}, generation count limit: {}, interaction cols: {}, mutation rate: {}",
+        generation_size_limit, generation_count_limit, interaction_cols, mutation_rate);
 }
 
 void EvoAPI::set_solver(std::string const& solver_name) {
@@ -245,10 +248,10 @@ void EvoAPI::log_result() {
 
 /**
  * Exports a report with the given prefix.
- * 
+ *
  * @param prefix The prefix to be used in the report filename.
  */
-void EvoAPI::export_report(std::string const& prefix) {
+void EvoAPI::create_report_file(std::string const& prefix) {
     std::ofstream report_file(get_regression_report_filename(prefix));
     report_file << get_regression_summary_table();
     report_file.close();
@@ -346,7 +349,7 @@ void EvoAPI::titan_postprocessing() {
     // data witho outliers
     titan_nonrobust_dataset = Transform::data_transformation_nonrobust(x, y, titan);
     // regression result
-    titan_result = solve_system_by_ldlt_detailed(titan_robust_dataset.predictor, titan_robust_dataset.target);
+    titan_result = solve_system_detailed(titan_robust_dataset.predictor, titan_robust_dataset.target);
 
     logger->info("Titan postprocessing finished");
 }
@@ -407,16 +410,16 @@ void EvoAPI::process_generation_fitness(std::set<double> const& generation_fitne
 
 /**
  * @brief Resets the API for another calculation.
- * 
+ *
  * This method clears the titan_history and generation_fitness_metrics vectors,
  * resets the titan object to its default state, and resizes the x and y vectors to 0.
  */
 void EvoAPI::reset_api_for_another_calculation() {
     titan_history.clear();
     generation_fitness_metrics.clear();
-    titan = EvoIndividual();    
+    titan = EvoIndividual();
     x.resize(0, 0);
-    y.resize(0, 0);     
+    y.resize(0, 0);
 };
 
 /**
@@ -568,7 +571,7 @@ std::string EvoAPI::get_result_metrics_table() {
     Plotter<double> plt = Plotter(
         metrics.data(),
         "Regression result metrics [robust]",
-        { "Result median", "Result standard deviation", "Robust result COD (R2)"},
+        { "Result median", "Result standard deviation", "Robust result COD (R2)" },
         149,
         metrics.size(),
         DataArrangement::RowMajor
