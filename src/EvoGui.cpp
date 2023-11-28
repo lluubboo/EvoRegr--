@@ -265,7 +265,7 @@ void EvoView::predict_button_callback(Fl_Widget* /*w*/, void* v) {
         std::thread([evo_api_copy, file_prefix]() mutable {
             evo_api_copy.predict();
             evo_api_copy.log_result();
-            evo_api_copy.export_report_to_console(file_prefix);
+            evo_api_copy.create_report_file(file_prefix);
             }
         ).detach();
     }
@@ -556,7 +556,7 @@ void EvoView::render_main_window() {
             filename_box = create_filename_box(BUTTON_HEIGHT);
             gen_count_label = create_label(LABEL_HEIGHT, "Generations count:");
             gen_count_box = create_gen_count_box(BUTTON_HEIGHT);
-            gen_size_label = create_label(LABEL_HEIGHT, "Generations size:");
+            gen_size_label = create_label(LABEL_HEIGHT, "Generation size:");
             gen_size_box = create_gen_size_box(BUTTON_HEIGHT);
             inter_size_label = create_label(LABEL_HEIGHT, "Interference columns:");
             inter_size_box = create_inter_size_box(BUTTON_HEIGHT);
