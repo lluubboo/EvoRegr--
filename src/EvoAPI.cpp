@@ -25,23 +25,6 @@
 EvoAPI::EvoAPI() : solver(LDLTSolver()) {}
 
 /**
- * @brief Constructor for the EvoAPI class.
- *
- * @param generation_size_limit The maximum size of each generation.
- * @param generation_count_limit The maximum number of generations.
- * @param interaction_cols The number of interaction columns.
- */
-EvoAPI::EvoAPI(unsigned int generation_size_limit, unsigned int generation_count_limit, unsigned int interaction_cols) : solver(LDLTSolver()) {
-    this->generation_size_limit = generation_size_limit;
-    this->generation_count_limit = generation_count_limit;
-    this->interaction_cols = interaction_cols;
-
-    init_logger();
-    logger->info("EvoAPI initialized with generation size limit: {}, generation count limit: {}, interaction columns: {}",
-        generation_size_limit, generation_count_limit, interaction_cols);
-}
-
-/**
  * @brief Sets the boundary conditions for the evolutionary algorithm.
  *
  * @param generation_size_limit The maximum size of each generation.
