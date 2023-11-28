@@ -566,6 +566,14 @@ std::string EvoAPI::get_formula_table() {
     return plt.get_table();
 };
 
+/**
+ * @brief Generates a table of regression result metrics.
+ *
+ * This function calculates the median of the percentage error, the standard deviation, and the coefficient of determination (R2) of the regression results.
+ * These metrics are then displayed in a table.
+ *
+ * @return A string representing a table of the regression result metrics.
+ */
 std::string EvoAPI::get_result_metrics_table() {
 
     std::vector<double> metrics{
