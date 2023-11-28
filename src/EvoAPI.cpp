@@ -420,6 +420,8 @@ void EvoAPI::reset_api_for_another_calculation() {
     titan = EvoIndividual();
     x.resize(0, 0);
     y.resize(0, 0);
+
+    logger->info("API reset for another calculation");
 };
 
 /**
@@ -598,6 +600,8 @@ std::string EvoAPI::get_regression_summary_table() {
     table << get_genotype_table();
     table << get_formula_table();
     return table.str();
+
+    logger->info("Regression summary table generated");
 };
 
 
