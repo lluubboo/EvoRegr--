@@ -18,5 +18,8 @@ namespace DescriptiveStatistics {
     T standard_deviation(std::vector<T> const&);
 
     template <typename T>
+    T standard_deviation(T*, unsigned int);
+
+    template <typename T>
     std::vector<T> squared_residuals(std::vector<T>);
 }

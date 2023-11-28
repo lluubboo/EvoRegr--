@@ -15,7 +15,8 @@
  */
 template <typename T>
 T DescriptiveStatistics::median(T* array, unsigned size) {
-    if (size == 0) throw std::invalid_argument("Input vector must not be empty");
+    if (array == nullptr) throw std::invalid_argument("Input array must not be null");
+    if (size == 0) throw std::invalid_argument("Input size must not be empty");
     std::vector<T> vec(array, array + size);
     return DescriptiveStatistics::median(vec);
 }
@@ -118,6 +119,29 @@ T DescriptiveStatistics::standard_deviation(std::vector<T> const& vector) {
 template double DescriptiveStatistics::standard_deviation(std::vector<double> const&);
 template int DescriptiveStatistics::standard_deviation(std::vector<int> const&);
 template float DescriptiveStatistics::standard_deviation(std::vector<float> const&);
+
+/**
+ * Calculates the standard deviation of an array.
+ * 
+ * @tparam T The type of elements in the array.
+ * @param array Pointer to the array.
+ * @param size The size of the array.
+ * @return The standard deviation of the array.
+ * @throws std::invalid_argument if the input vector is empty.
+ */
+template <typename T>
+T DescriptiveStatistics::standard_deviation(T* array, unsigned int size) {
+    if (array == nullptr) throw std::invalid_argument("Input array must not be null");
+    if (size == 0) throw std::invalid_argument("Input size must not be empty");
+    std::vector<T> vector(array, array + size);
+    std::vector<T> squared_residuals = DescriptiveStatistics::squared_residuals(vector);
+    return sqrt(std::reduce(squared_residuals.begin(), squared_residuals.end()) / (squared_residuals.size() - 1));
+}
+
+//explicit instantiation 
+template double DescriptiveStatistics::standard_deviation(double*, unsigned int);
+template int DescriptiveStatistics::standard_deviation(int*, unsigned int);
+template float DescriptiveStatistics::standard_deviation(float*, unsigned int);
 
 /**
  * Calculates the squared residuals of a vector.

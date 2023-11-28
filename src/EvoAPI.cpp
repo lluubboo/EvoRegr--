@@ -566,6 +566,25 @@ std::string EvoAPI::get_formula_table() {
     return plt.get_table();
 };
 
+std::string EvoAPI::get_result_metrics_table() {
+
+    std::vector<double> metrics{
+        DescriptiveStatistics::median(titan_result.percentage_error.data(), titan_result.percentage_error.size()),
+        titan_result.standard_deviation,
+        titan_result.rsquared
+    };
+
+    Plotter<double> plt = Plotter(
+        metrics.data(),
+        "Regression result metrics [robust]",
+        { "Result median", "Result standard deviation", "Robust result COD (R2)"},
+        149,
+        metrics.size(),
+        DataArrangement::RowMajor
+    );
+    return plt.get_table();
+};
+
 /**
  * @brief Returns a summary table for regression analysis.
  *
@@ -579,6 +598,7 @@ std::string EvoAPI::get_regression_summary_table() {
     std::stringstream table;
     table << "\n";
     table << get_regression_result_table();
+    table << get_result_metrics_table();
     table << get_titan_history_table();
     table << get_regression_coefficients_table();
     table << get_genotype_table();
