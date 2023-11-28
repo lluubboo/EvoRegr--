@@ -599,9 +599,11 @@ std::string EvoAPI::get_regression_summary_table() {
     table << get_regression_coefficients_table();
     table << get_genotype_table();
     table << get_formula_table();
-    return table.str();
+
 
     logger->info("Regression summary table generated");
+    
+    return table.str();
 };
 
 
