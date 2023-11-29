@@ -37,10 +37,10 @@ template void DescriptiveStatistics::check_arguments<double>(std::vector<double>
 template <typename T>
 void DescriptiveStatistics::check_arguments(T* ptr, unsigned int size) {
     if (ptr == nullptr) {
-        throw std::invalid_argument("check_arguments: input pointer cannot be null");
+        throw std::invalid_argument("DescriptiveStatistics: input pointer cannot be null");
     }
     if (size == 0) {
-        throw std::invalid_argument("check_arguments: size cannot be zero");
+        throw std::invalid_argument("DescriptiveStatistics: size cannot be zero");
     }
 }
 

@@ -35,9 +35,17 @@ Plotter<T>::Plotter(T* data, std::string name, std::vector<std::string> column_n
  */
 template <typename T>
 void Plotter<T>::print_table() {
-    print_table_header();
-    print_columns_header();
-    print_content();
+    try {
+        print_table_header();
+        print_columns_header();
+        print_content();
+    }
+    catch (const std::exception& e) {
+        std::cout << "Error printing table: " << e.what();
+    }
+    catch (...) {
+        std::cout << "Error: An unknown error occurred while printing the table.";
+    }
     _table << "\n";
     std::cout << _table.str();
 }
@@ -53,9 +61,18 @@ void Plotter<T>::print_table() {
  */
 template <typename T>
 std::string Plotter<T>::get_table() {
-    print_table_header();
-    print_columns_header();
-    print_content();
+    try {
+        print_table_header();
+        print_columns_header();
+        print_content();
+    }
+    catch (const std::exception& e) {
+        std::cerr << "Error printing table: " + _name + "\n" << e.what() <<  "\n";
+    }
+    catch (...) {
+        std::cerr << "Error: An unknown error occurred while printing the table: " + _name + "\n";
+    }
+
     _table << "\n";
     return _table.str();
 }
