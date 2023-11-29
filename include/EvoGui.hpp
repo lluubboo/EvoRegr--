@@ -102,6 +102,7 @@ class EvoView : public Fl_Window {
     void set_appearance();
     void init_loggers();
     void render_main_window();
+    EvoAPI call_predict(EvoAPI evo_api);
 
 public:
     EvoView(int width, int height, const char* title);

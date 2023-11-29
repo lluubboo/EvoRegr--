@@ -600,7 +600,6 @@ std::string EvoAPI::get_regression_summary_table() {
     table << get_genotype_table();
     table << get_formula_table();
 
-
     logger->info("Regression summary table generated");
     
     return table.str();

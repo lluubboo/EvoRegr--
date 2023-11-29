@@ -190,13 +190,19 @@ bool Plotter<T>::col_width_is_sufficient(auto value, unsigned int column_width) 
 template <typename T>
 void Plotter<T>::validate_inputs_throw_exception() {
     if (_data == nullptr) {
-        std::cerr << "Error: Invalid input." << std::endl;
-        throw std::invalid_argument("Invalid input to plotter table - no data.");
+        throw std::invalid_argument("Plotter: data pointer cannot be null.");
     }
 
-    if (_column_names.size() == 0) {
-        std::cerr << "Error: Invalid column names." << std::endl;
-        throw std::invalid_argument("Invalid input to plotter table - no column names.");
+    if (_column_names.empty()) {
+        throw std::invalid_argument("Plotter: column names vector cannot be empty.");
+    }
+
+    if (_table_width == 0) {
+        throw std::invalid_argument("Plotter: table width cannot be zero.");
+    }
+
+    if (_size == 0) {
+        throw std::invalid_argument("Plotter: size cannot be zero.");
     }
 }
 

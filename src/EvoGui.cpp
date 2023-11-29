@@ -15,6 +15,7 @@
 #include <FL/Fl_Text_Buffer.H>
 #include <FL/Fl_File_Chooser.H>
 #include <cstdlib>
+#include <future>
 #include <spdlog/spdlog.h>
 #include <spdlog/sinks/base_sink.h>
 #include <spdlog/sinks/basic_file_sink.h>
@@ -250,35 +251,40 @@ void EvoView::load_file_button_callback(Fl_Widget* /*w*/, void* v) {
  */
 void EvoView::predict_button_callback(Fl_Widget* /*w*/, void* v) {
     EvoView* T = (EvoView*)v;
-    EvoAPI evo_api_copy = T->evo_api;
-    std::string file_prefix = T->report_file_prefix;
 
     if (!T->evo_api.is_ready_to_predict()) {
         T->logger->error("Cannot start prediction. Please load a file first.");
         return;
     }
-    
-    // run on separate thread because the method can be very long
-    // for me is the best solution to send copy of evo_api to thread
-    // i do not need clean up api after thread
+
+    std::future<EvoAPI> future_api = std::async(std::launch::async, &EvoView::call_predict, T, T->evo_api);
+    EvoAPI api = future_api.get();
+
     if (T->export_log_file_flag) {
-        std::thread([evo_api_copy, file_prefix]() mutable {
-            evo_api_copy.predict();
-            evo_api_copy.log_result();
-            evo_api_copy.create_report_file(file_prefix);
-            }
-        ).detach();
+        api.log_result();
+        api.create_report_file(T->report_file_prefix);
     }
     else {
-        std::thread([evo_api_copy]() mutable {
-            evo_api_copy.predict();
-            evo_api_copy.log_result();
-            }
-        ).detach();
+        api.log_result();
     }
 }
 
 //*************************************************************************************************methods
+
+EvoAPI EvoView::call_predict(EvoAPI evo_api) {
+    try {
+        evo_api.predict();
+        return evo_api;
+    }
+    catch (const std::exception& e) {
+        std::cerr << "Standard exception caught in predict method call: " << e.what() << std::endl;
+    }
+    catch (...) {
+        std::cerr << "Unknown exception caught in predict method call." << std::endl;
+    }
+    return EvoAPI();
+};
+
 
 void EvoView::get_filepath() {
     Fl_File_Chooser chooser(".", "*", Fl_File_Chooser::SINGLE, "Select a file");

@@ -3,6 +3,15 @@
 namespace DescriptiveStatistics {
 
     template <typename T>
+    void check_arguments(std::vector<T> const& vector);
+
+    template <typename T>
+    void check_arguments(T* ptr, unsigned int size);
+
+    template <typename T>
+    std::vector<T> generate_vector(T* ptr, unsigned int size);
+
+    template <typename T>
     T median(T*, unsigned int);
 
     template <typename T>
