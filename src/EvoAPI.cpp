@@ -495,44 +495,53 @@ std::string EvoAPI::get_regression_coefficients_table() {
  */
 std::string EvoAPI::get_genotype_table() {
     std::stringstream genotype_table;
+
+    std::vector<std::string> merge_chromosome = titan.merge_chromosome_to_string_vector();
     Plotter<std::string> plt = Plotter(
-        titan.merge_chromosome_to_string_vector().data(),
+        merge_chromosome.data(),
         "Merge chromosome",
         { "Alleles" },
         149,
-        titan.merge_chromosome_to_string_vector().size(),
+        merge_chromosome.size(),
         DataArrangement::RowMajor
     );
     genotype_table << plt.get_table();
+
+    std::vector<std::string> transform_predictor_chromosome = titan.transform_predictor_chromosome_to_string_vector();
     plt = Plotter(
-        titan.transform_predictor_chromosome_to_string_vector().data(),
+        transform_predictor_chromosome.data(),
         "Transform predictor chromosome",
         { "Alleles" },
         149,
-        titan.transform_predictor_chromosome_to_string_vector().size(),
+        transform_predictor_chromosome.size(),
         DataArrangement::RowMajor
     );
     genotype_table << plt.get_table();
+
+    std::vector<std::string> transform_target_chromosome = titan.transform_target_chromosome_to_string_vector();
     plt = Plotter(
-        titan.transform_target_chromosome_to_string_vector().data(),
+        transform_target_chromosome.data(),
         "Transform target chromosome",
         { "Alleles" },
         149,
-        titan.transform_target_chromosome_to_string_vector().size(),
+        transform_target_chromosome.size(),
         DataArrangement::RowMajor
     );
     genotype_table << plt.get_table();
+
+    std::vector<std::string> robust_chromosome = titan.robust_chromosome_to_string_vector();
     plt = Plotter(
-        titan.robust_chromosome_to_string_vector().data(),
+        robust_chromosome.data(),
         "Robust chromosome",
         { "Alleles" },
         149,
-        titan.robust_chromosome_to_string_vector().size(),
+        robust_chromosome.size(),
         DataArrangement::RowMajor
     );
+
     genotype_table << plt.get_table();
     return genotype_table.str();
-};
+}
 
 /**
  * @brief Retrieves the formula table.
