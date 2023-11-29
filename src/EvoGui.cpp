@@ -248,11 +248,12 @@ void EvoView::load_file_button_callback(Fl_Widget* /*w*/, void* v) {
 }
 
 /**
- * Callback function for the predict button in the EvoView class.
- * Resets the API for another calculation, performs prediction, and shows the result.
+ * Callback function for the predict button in EvoView.
+ * This function is triggered when the predict button is clicked.
+ * It checks if the Evo API is ready to predict. If it is, it creates a new thread and calls the Evo API predict method.
  *
- * @param w The Fl_Widget object that triggered the callback (not used).
- * @param v A pointer to the EvoView object.
+ * @param w The Fl_Widget object representing the predict button.
+ * @param v A pointer to the EvoView instance.
  */
 void EvoView::predict_button_callback(Fl_Widget* /*w*/, void* v) {
     EvoView* T = (EvoView*)v;
@@ -275,9 +276,20 @@ void EvoView::predict_button_callback(Fl_Widget* /*w*/, void* v) {
 
 //*************************************************************************************************methods
 
+/**
+ * @brief Calls the Evo API predict method.
+ *
+ * This function calls the Evo API predict method and logs the result.
+ *
+ * @param evo_api The Evo API instance.
+ * @param export_log_file_flag A flag indicating whether to export the log file.
+ * @param report_file_prefix The prefix for the report file.
+ */
 void EvoView::call_predict(EvoAPI evo_api, bool export_log_file_flag, std::string report_file_prefix) {
     try {
+
         evo_api.predict();
+
         if (export_log_file_flag) {
             evo_api.log_result();
             evo_api.create_report_file(report_file_prefix);
@@ -294,7 +306,12 @@ void EvoView::call_predict(EvoAPI evo_api, bool export_log_file_flag, std::strin
     }
 };
 
-
+/**
+ * @brief Gets the file path from the user.
+ *
+ * This function displays a file chooser dialog and gets the file path from the user.
+ * It sets the `filepath` field to the selected file path and logs the result.
+ */
 void EvoView::get_filepath() {
     Fl_File_Chooser chooser(".", "*", Fl_File_Chooser::SINGLE, "Select a file");
     chooser.show();
