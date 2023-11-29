@@ -34,6 +34,7 @@ class EvoView : public Fl_Window {
 
     //flags
 
+    std::atomic<bool> keep_redrawing{ true };
     std::string decomposition_method;
     bool export_log_file_flag;
 
@@ -69,6 +70,7 @@ class EvoView : public Fl_Window {
 
     //callbacks
 
+    static void terminal_redraw_callback(void* v);
     static void quit_callback(Fl_Widget* /*w*/, void* /*data*/);
     static void help_callback(Fl_Widget* /*w*/, void* /*data*/);
     static void filename_input_callback(Fl_Widget* w, void* v);
@@ -102,7 +104,7 @@ class EvoView : public Fl_Window {
     void set_appearance();
     void init_loggers();
     void render_main_window();
-    EvoAPI call_predict(EvoAPI evo_api);
+    void call_predict(EvoAPI evo_api, bool export_log_file_flag, std::string report_file_prefix);
 
 public:
     EvoView(int width, int height, const char* title);

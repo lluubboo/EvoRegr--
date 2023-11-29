@@ -94,6 +94,11 @@ void EvoView::help_callback(Fl_Widget* /*w*/, void* /*data*/) {
     buff->text("For help, please contact: lubomirbalazjob@gmail.com");
 }
 
+void EvoView::terminal_redraw_callback(void* v) {
+    EvoView* T = (EvoView*)v;
+    T->log_terminal->redraw();
+}
+
 /**
  * Callback function for handling user input in the filename input field.
  * Updates the filename member variable of the EvoView class with the entered value.
@@ -257,24 +262,29 @@ void EvoView::predict_button_callback(Fl_Widget* /*w*/, void* v) {
         return;
     }
 
-    std::future<EvoAPI> future_api = std::async(std::launch::async, &EvoView::call_predict, T, T->evo_api);
-    EvoAPI api = future_api.get();
+    std::thread predict_thread(
+        &EvoView::call_predict,
+        T,
+        T->evo_api,
+        T->export_log_file_flag,
+        T->report_file_prefix
+    );
 
-    if (T->export_log_file_flag) {
-        api.log_result();
-        api.create_report_file(T->report_file_prefix);
-    }
-    else {
-        api.log_result();
-    }
+    predict_thread.detach();
 }
 
 //*************************************************************************************************methods
 
-EvoAPI EvoView::call_predict(EvoAPI evo_api) {
+void EvoView::call_predict(EvoAPI evo_api, bool export_log_file_flag, std::string report_file_prefix) {
     try {
         evo_api.predict();
-        return evo_api;
+        if (export_log_file_flag) {
+            evo_api.log_result();
+            evo_api.create_report_file(report_file_prefix);
+        }
+        else {
+            evo_api.log_result();
+        }
     }
     catch (const std::exception& e) {
         std::cerr << "Standard exception caught in predict method call: " << e.what() << std::endl;
@@ -282,7 +292,6 @@ EvoAPI EvoView::call_predict(EvoAPI evo_api) {
     catch (...) {
         std::cerr << "Unknown exception caught in predict method call." << std::endl;
     }
-    return EvoAPI();
 };
 
 
