@@ -94,11 +94,6 @@ void EvoView::help_callback(Fl_Widget* /*w*/, void* /*data*/) {
     buff->text("For help, please contact: lubomirbalazjob@gmail.com");
 }
 
-void EvoView::terminal_redraw_callback(void* v) {
-    EvoView* T = (EvoView*)v;
-    T->log_terminal->redraw();
-}
-
 /**
  * Callback function for handling user input in the filename input field.
  * Updates the filename member variable of the EvoView class with the entered value.
