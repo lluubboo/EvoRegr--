@@ -111,11 +111,12 @@ void EvoView::filename_input_callback(Fl_Widget* w, void* v) {
     EvoView* T = (EvoView*)v;
     std::string input_value = ((Fl_Input*)w)->value();
     if (input_value.empty()) {
-        fl_alert("Invalid filename. Please enter a non-empty filename.");
+        T->logger->error("Invalid input. Please enter a valid filename prefix.");
         //filename will be let as default
         return;
     }
     T->report_file_prefix = input_value;
+    T->logger->info("Report file prefix set to: " + T->report_file_prefix);
 }
 
 /**
