@@ -133,10 +133,10 @@ void EvoAPI::create_regression_input(std::tuple<int, std::vector<double>> input)
     int target_col_index = n_input - 1;
 
     // initialize predictors matrix to matrix of ones because of x0 and interaction columns
-    x = Eigen::MatrixXd::Ones(m_output, n_output);
-    y.resize(m_output, 1);
+    x = Eigen::MatrixXd::Ones(m_input, n_output);
+    y.resize(m_input, 1);
 
-    for (int row = 0; row < m_output; ++row) {
+    for (int row = 0; row < m_input; ++row) {
         for (int col = 0; col < n_input; ++col) {
             // last column is always Y or in other words regressant, dependant variable
             if (col == target_col_index) {
@@ -148,7 +148,9 @@ void EvoAPI::create_regression_input(std::tuple<int, std::vector<double>> input)
             }
         }
     }
+
     logger->info("Predictor matrix initialized with {} rows and {} columns", m_output, n_output);
+    logger->info("Target vector initialized with {} rows", m_output);
 }
 
 /**
