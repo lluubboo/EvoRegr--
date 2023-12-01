@@ -46,6 +46,16 @@ void EvoAPI::set_boundary_conditions(
         generation_size_limit, generation_count_limit, interaction_cols, mutation_rate);
 }
 
+/**
+ * @brief Sets the solver to be used in the EvoAPI.
+ *
+ * This function sets the solver to be used in the EvoAPI based on the provided solver name.
+ * The solver can be one of the following types: "LLT", "LDLT", "ColPivHouseholderQr".
+ * If an unrecognized solver name is provided, the solver is set to the default "LDLT".
+ *
+ * @param solver_name A string representing the name of the solver.
+ * It should be one of the following: "LLT", "LDLT", "ColPivHouseholderQr".
+ */
 void EvoAPI::set_solver(std::string const& solver_name) {
     if (solver_name == "LLT") {
         solver = LLTSolver();
