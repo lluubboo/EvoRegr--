@@ -35,13 +35,16 @@ class EvoAPI {
     std::vector<double> generation_fitness_metrics;
 
     void create_regression_input(std::tuple<int, std::vector<double>>);
+
+    // concurrent random engines
     std::vector<XoshiroCpp::Xoshiro256Plus> create_random_engines(const std::uint64_t seed, int count);
 
+    // fitness & generation postprocessing
     void setTitan(EvoIndividual, int);
     void titan_evaluation(EvoIndividual participant, int generation_index);
     void process_generation_fitness(std::set<double> const& generation_fitness);
 
-    // postprocessing after main loop
+    // final postprocessing 
     void titan_postprocessing();
     void generation_postprocessing(std::vector<EvoIndividual> const& generation, int generation_index);
 
@@ -65,6 +68,7 @@ public:
     void reset_api_for_another_calculation();
     void load_file(const std::string& filename);
     void predict();
+    void batch_predict();
     void log_result();
     void init_logger();
     void set_boundary_conditions(unsigned int generation_size_limit, unsigned int generation_count_limit, unsigned int interaction_cols, unsigned int mutation_rate);
