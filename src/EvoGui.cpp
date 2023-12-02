@@ -270,6 +270,25 @@ void EvoView::predict_button_callback(Fl_Widget* /*w*/, void* v) {
     predict_thread.detach();
 }
 
+void EvoView::batch_predict_button_callback(Fl_Widget* /*w*/, void* v) {
+    EvoView* T = (EvoView*)v;
+
+    if (!T->evo_api.is_ready_to_predict()) {
+        T->logger->error("Cannot start prediction. Please load a file first.");
+        return;
+    }
+
+    std::thread predict_thread(
+        &EvoView::call_batch_predict,
+        T,
+        T->evo_api,
+        T->export_log_file_flag,
+        T->report_file_prefix
+    );
+
+    predict_thread.detach();
+}
+
 //*************************************************************************************************methods
 
 /**
@@ -283,9 +302,7 @@ void EvoView::predict_button_callback(Fl_Widget* /*w*/, void* v) {
  */
 void EvoView::call_predict(EvoAPI evo_api, bool export_log_file_flag, std::string report_file_prefix) {
     try {
-
         evo_api.predict();
-
         if (export_log_file_flag) {
             evo_api.log_result();
             evo_api.create_report_file(report_file_prefix);
@@ -295,10 +312,22 @@ void EvoView::call_predict(EvoAPI evo_api, bool export_log_file_flag, std::strin
         }
     }
     catch (const std::exception& e) {
-        std::cerr << "Standard exception caught in predict method call: " << e.what() << std::endl;
+        logger->error("Standard exception caught in predict method call: " + std::string(e.what()));
     }
     catch (...) {
-        std::cerr << "Unknown exception caught in predict method call." << std::endl;
+        logger->error("Unknown exception caught in predict method call.");
+    }
+};
+
+void EvoView::call_batch_predict(EvoAPI evo_api, bool export_log_file_flag, std::string report_file_prefix) {
+    try {
+        evo_api.batch_predict();
+    }
+    catch (const std::exception& e) {
+        logger->error("Standard exception caught in batch predict method call: " + std::string(e.what()));
+    }
+    catch (...) {
+        logger->error("Unknown exception caught in batch predict method call.");
     }
 };
 
@@ -432,6 +461,13 @@ Fl_Button* EvoView::create_predict_button(int h) {
     Fl_Button* button = new Fl_Button(0, 0, 0, h, "Start prediction");
     button->callback(predict_button_callback, (void*)this);
     button->tooltip("Starts the prediction process.");
+    return button;
+}
+
+Fl_Button* EvoView::create_batch_predict_button(int h) {
+    Fl_Button* button = new Fl_Button(0, 0, 0, h, "Start batch prediction");
+    button->callback(batch_predict_button_callback, (void*)this);
+    button->tooltip("Starts the batch prediction process.");
     return button;
 }
 
@@ -593,6 +629,7 @@ void EvoView::render_main_window() {
             load_button = create_load_button(BUTTON_HEIGHT);
             decomposition_choice_chbox = create_combo_box(BUTTON_HEIGHT);
             predict_button = create_predict_button(BUTTON_HEIGHT);
+            batch_predict_button = create_batch_predict_button(BUTTON_HEIGHT);
             export_log_checkbutton = create_export_file_box(BUTTON_HEIGHT);
         }
         main_widget_pack->end();

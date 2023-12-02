@@ -8,6 +8,7 @@
 #include <spdlog/sinks/basic_file_sink.h>
 #include <spdlog/sinks/stdout_color_sinks.h>
 #include <fstream>
+#include <future>
 #include "EvoAPI.hpp"
 #include "IOTools.hpp"
 #include "EvoIndividual.hpp"
@@ -16,6 +17,9 @@
 #include "Stats.hpp"
 #include "Plotter.hpp"
 #include "omp.h"
+
+// Define the static logger
+std::shared_ptr<spdlog::logger> EvoAPI::logger;
 
 /**
  * @brief Default constructor for the EvoAPI class.
@@ -42,7 +46,7 @@ void EvoAPI::set_boundary_conditions(
     this->interaction_cols = interaction_cols;
     this->mutation_rate = mutation_rate;
 
-    logger->info("Boundary conditions set generation size limit: {}, generation count limit: {}, interaction cols: {}, mutation rate: {}",
+    EvoAPI::logger->info("Boundary conditions set generation size limit: {}, generation count limit: {}, interaction cols: {}, mutation rate: {}",
         generation_size_limit, generation_count_limit, interaction_cols, mutation_rate);
 }
 
@@ -59,19 +63,19 @@ void EvoAPI::set_boundary_conditions(
 void EvoAPI::set_solver(std::string const& solver_name) {
     if (solver_name == "LLT") {
         solver = LLTSolver();
-        logger->info("Solver set to LLT");
+        EvoAPI::logger->info("Solver set to LLT");
     }
     else if (solver_name == "LDLT") {
         solver = LDLTSolver();
-        logger->info("Solver set to LDLT");
+        EvoAPI::logger->info("Solver set to LDLT");
     }
     else if (solver_name == "ColPivHouseholderQr") {
         solver = ColPivHouseholderQrSolver();
-        logger->info("Solver set to ColPivHouseholderQr");
+        EvoAPI::logger->info("Solver set to ColPivHouseholderQr");
     }
     else {
         solver = LDLTSolver();
-        logger->info("Unrecognized solver type. Solver set to default LDLT");
+        EvoAPI::logger->info("Unrecognized solver type. Solver set to default LDLT");
     }
 }
 
@@ -87,14 +91,14 @@ void EvoAPI::init_logger() {
     shared_logger->info("EvoAPI logger trying to connect to existing logger");
 
     if (shared_logger) {
-        logger = shared_logger;
-        logger->info("EvoAPI logger connected to existing logger");
+        EvoAPI::logger = shared_logger;
+        EvoAPI::logger->info("EvoAPI logger connected to existing logger");
     }
     else {
-        logger = spdlog::stdout_color_mt("EvoLogger");
-        logger->set_level(spdlog::level::debug);
-        logger->set_pattern("[EvoRegression++] [%H:%M:%S.%e] [%^%l%$] [thread %t] %v");
-        logger->info("EvoAPI logger initialized");
+        EvoAPI::logger = spdlog::stdout_color_mt("EvoLogger");
+        EvoAPI::logger->set_level(spdlog::level::debug);
+        EvoAPI::logger->set_pattern("[EvoRegression++] [%H:%M:%S.%e] [%^%l%$] [thread %t] %v");
+        EvoAPI::logger->info("EvoAPI logger initialized");
     }
 }
 
@@ -107,12 +111,12 @@ void EvoAPI::load_file(const std::string& filename) {
         create_regression_input(parse_csv<double>(filename));
     }
     catch (const std::exception& e) {
-        logger->error("Error processing file {}: {}", filename, e.what());
+        EvoAPI::logger->error("Error processing file {}: {}", filename, e.what());
     }
     catch (...) {
-        logger->error("An unknown error occurred while processing file {}", filename);
+        EvoAPI::logger->error("An unknown error occurred while processing file {}", filename);
     }
-    logger->info("File {} loaded", filename);
+    EvoAPI::logger->info("File {} loaded", filename);
 }
 
 /**
@@ -159,8 +163,8 @@ void EvoAPI::create_regression_input(std::tuple<int, std::vector<double>> input)
         }
     }
 
-    logger->info("Predictor matrix initialized with {} rows and {} columns", m_output, n_output);
-    logger->info("Target vector initialized with {} rows", m_output);
+    EvoAPI::logger->info("Predictor matrix initialized with {} rows and {} columns", m_output, n_output);
+    EvoAPI::logger->info("Target vector initialized with {} rows", m_output);
 }
 
 /**
@@ -183,7 +187,7 @@ bool EvoAPI::is_ready_to_predict() {
  */
 void EvoAPI::predict() {
 
-    logger->info("Starting prediction process...");
+    EvoAPI::logger->info("Starting prediction process...");
 
     // random engines for parallel loops
     std::vector<XoshiroCpp::Xoshiro256Plus> random_engines = create_random_engines(12346, omp_get_max_threads());
@@ -198,7 +202,7 @@ void EvoAPI::predict() {
 
     for (int gen_index = 0; gen_index < generation_count_limit; gen_index++) {
 
-        if (gen_index % 10 == 0) logger->info("Generation {} of {}", gen_index, generation_count_limit);
+        if (gen_index % 10 == 0) EvoAPI::logger->info("Generation {} of {}", gen_index, generation_count_limit);
 
 #pragma omp parallel for reduction (merge_individuals : generation) schedule(dynamic)
         for (int entity_index = 0; entity_index < generation_size_limit; entity_index++) {
@@ -244,7 +248,98 @@ void EvoAPI::predict() {
 
     auto stop = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double> elapsed = stop - start;
-    logger->info("Prediction process finished in /s: {}", elapsed.count());
+    EvoAPI::logger->info("Prediction process finished in /s: {}", elapsed.count());
+}
+
+void EvoAPI::batch_predict() {
+
+    int island_count = omp_get_max_threads();
+
+    std::vector<XoshiroCpp::Xoshiro256Plus> random_engines = create_random_engines(12346, island_count);
+    std::vector<std::vector<EvoIndividual>> population{ island_count };
+
+    EvoRegressionInput regression_input{
+        x,
+        y,
+        mutation_rate,
+        generation_size_limit,
+        generation_count_limit,
+        solver
+    };
+
+    // Vector of futures
+    std::vector<std::future<EvoIndividual>> futures;
+
+    std::vector<EvoIndividual> results;
+
+    for (int island_index = 0; island_index < island_count; island_index++) {
+        // Start a new task for each island
+        futures.push_back(std::async(std::launch::async, &EvoAPI::run_island, regression_input, std::ref(population[island_index]), std::ref(random_engines[island_index])));
+    }
+
+    for (auto& future : futures) {
+        results.push_back(future.get());
+    }
+
+    for (auto& result : results) {
+        if (titan.fitness > result.fitness) {
+            titan_evaluation(result, 0);
+        }
+    }
+
+    EvoAPI::logger->info("Batch prediction finished");
+}
+
+EvoIndividual EvoAPI::run_island(EvoRegressionInput input, std::vector<EvoIndividual>& generation, XoshiroCpp::Xoshiro256Plus& random_engine) {
+
+    std::vector<EvoIndividual> past_generation;
+    EvoIndividual island_titan;
+
+    for (int gen_index = 0; gen_index < input.generation_count_limit; gen_index++) {
+
+        for (int entity_index = 0; entity_index < input.generation_size_limit; entity_index++) {
+
+            EvoIndividual newborn;
+
+            if (gen_index == 0) {
+                //generate random individual if generation is 0
+                newborn = Factory::getRandomEvoIndividual(input.y.rows(), input.x.cols(), random_engine);
+            }
+            else {
+                //crossover & mutation [vector sex]
+                newborn = Reproduction::reproduction(
+                    Selection::tournament_selection(past_generation, random_engine),
+                    input.x.cols(),
+                    input.x.rows(),
+                    input.mutation_rate,
+                    random_engine
+                );
+            }
+
+            // merge & transform & make robust predictors & target / solve regression problem
+            newborn.evaluate(
+                EvoMath::get_fitness<std::function<RegressionSimpleResult(Eigen::MatrixXd const&, Eigen::VectorXd const&)>>(
+                    Transform::data_transformation_robust(
+                        input.x,
+                        input.y,
+                        newborn
+                    ),
+                    input.solver
+                )
+            );
+
+            if (island_titan.fitness > newborn.fitness) {
+                island_titan = newborn;
+                EvoAPI::logger->info("New titan set with fitness: {} and generation index: {}", island_titan.fitness, gen_index);
+            }
+
+            generation.push_back(std::move(newborn));
+        }
+
+        past_generation = std::move(generation);
+    }
+
+    return island_titan;
 }
 
 /**
@@ -254,8 +349,8 @@ void EvoAPI::predict() {
  */
 void EvoAPI::log_result() {
     titan_postprocessing();
-    logger->info(get_regression_summary_table());
-    logger->info("Regression results showing...");
+    EvoAPI::logger->info(get_regression_summary_table());
+    EvoAPI::logger->info("Regression results showing...");
 }
 
 /**
@@ -267,7 +362,7 @@ void EvoAPI::create_report_file(std::string const& prefix) {
     std::ofstream report_file(get_regression_report_filename(prefix));
     report_file << get_regression_summary_table();
     report_file.close();
-    logger->info("Report exported.");
+    EvoAPI::logger->info("Report exported.");
 }
 
 /**
@@ -307,7 +402,7 @@ void EvoAPI::setTitan(EvoIndividual titan, int generation_index) {
     this->titan_history.push_back(titan.fitness);
     this->titan_history.push_back(generation_index);
 
-    logger->info("New titan set with fitness: {} and generation index: {}", titan.fitness, generation_index);
+    EvoAPI::logger->info("New titan set with fitness: {} and generation index: {}", titan.fitness, generation_index);
 }
 
 /**
@@ -346,7 +441,7 @@ std::vector<XoshiroCpp::Xoshiro256Plus> EvoAPI::create_random_engines(std::uint6
         random_engines.emplace_back(master_random_engine.serialize());
     }
 
-    logger->info("Created {} random engines", count);
+    EvoAPI::logger->info("Created {} random engines", count);
     return random_engines;
 }
 
@@ -363,7 +458,7 @@ void EvoAPI::titan_postprocessing() {
     // regression result
     titan_result = solve_system_detailed(titan_robust_dataset.predictor, titan_robust_dataset.target);
 
-    logger->info("Titan postprocessing finished");
+    EvoAPI::logger->info("Titan postprocessing finished");
 }
 
 /**
@@ -433,7 +528,7 @@ void EvoAPI::reset_api_for_another_calculation() {
     x.resize(0, 0);
     y.resize(0, 0);
 
-    logger->info("API reset for another calculation");
+    EvoAPI::logger->info("API reset for another calculation");
 };
 
 /**
@@ -621,7 +716,7 @@ std::string EvoAPI::get_regression_summary_table() {
     table << get_genotype_table();
     table << get_formula_table();
 
-    logger->info("Regression summary table generated");
+    EvoAPI::logger->info("Regression summary table generated");
     
     return table.str();
 };

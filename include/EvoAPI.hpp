@@ -11,10 +11,19 @@
 #include "EvoLibrary.hpp"
 #include "XoshiroCpp.hpp"
 
+struct EvoRegressionInput {
+    Eigen::MatrixXd x;
+    Eigen::VectorXd y;
+    int mutation_rate;
+    int generation_size_limit;
+    int generation_count_limit;
+    std::function<RegressionSimpleResult(Eigen::MatrixXd const&, Eigen::VectorXd const&)> solver;
+};
+
 class EvoAPI {
 
     // logger
-    std::shared_ptr<spdlog::logger> logger;
+    static std::shared_ptr<spdlog::logger> logger;
 
     // algorithm boundary conditions
     int generation_size_limit, generation_count_limit, interaction_cols, mutation_rate;
@@ -35,6 +44,8 @@ class EvoAPI {
     std::vector<double> generation_fitness_metrics;
 
     void create_regression_input(std::tuple<int, std::vector<double>>);
+
+    static EvoIndividual run_island(EvoRegressionInput, std::vector<EvoIndividual>&,  XoshiroCpp::Xoshiro256Plus&);
 
     // concurrent random engines
     std::vector<XoshiroCpp::Xoshiro256Plus> create_random_engines(const std::uint64_t seed, int count);
@@ -61,7 +72,6 @@ class EvoAPI {
 public:
 
     EvoAPI();
-    EvoAPI(unsigned int generation_size_limit, unsigned int generation_count_limit, unsigned int interaction_cols);
 
     void create_report_file(std::string const& prefix);
     void set_solver(std::string const& solver_name);

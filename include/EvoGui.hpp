@@ -55,6 +55,7 @@ class EvoView : public Fl_Window {
     Fl_Pack* main_widget_pack;
     Fl_Button* load_button;
     Fl_Button* predict_button;
+    Fl_Button* batch_predict_button;
     Fl_Box* mutation_rate_label;
     Fl_Input* mutation_rate_box;
     Fl_Box* gen_count_label;
@@ -70,7 +71,6 @@ class EvoView : public Fl_Window {
 
     //callbacks
 
-    static void terminal_redraw_callback(void* v);
     static void quit_callback(Fl_Widget* /*w*/, void* /*data*/);
     static void help_callback(Fl_Widget* /*w*/, void* /*data*/);
     static void filename_input_callback(Fl_Widget* w, void* v);
@@ -82,6 +82,7 @@ class EvoView : public Fl_Window {
     static void decomposition_choice_callback(Fl_Widget* w, void* v);
     static void load_file_button_callback(Fl_Widget* w, void* v);
     static void predict_button_callback(Fl_Widget* w, void* v);
+    static void batch_predict_button_callback(Fl_Widget* /*w*/, void* v);
 
     //methods
 
@@ -91,6 +92,7 @@ class EvoView : public Fl_Window {
     Fl_Pack* create_main_widget_pack(int x, int y, int w, int h);
     Fl_Button* create_load_button(int h);
     Fl_Button* create_predict_button(int h);
+    Fl_Button* create_batch_predict_button(int h);
     Fl_Choice* create_combo_box(int h);
     Fl_Input* create_gen_count_box(int h);
     Fl_Input* create_gen_size_box(int h);
@@ -105,6 +107,7 @@ class EvoView : public Fl_Window {
     void init_loggers();
     void render_main_window();
     void call_predict(EvoAPI evo_api, bool export_log_file_flag, std::string report_file_prefix);
+    void call_batch_predict(EvoAPI evo_api, bool export_log_file_flag, std::string report_file_prefix);
 
 public:
     EvoView(int width, int height, const char* title);
