@@ -258,23 +258,25 @@ void EvoAPI::batch_predict() {
     std::vector<XoshiroCpp::Xoshiro256Plus> random_engines = create_random_engines(12346, island_count);
     std::vector<std::vector<EvoIndividual>> population{ island_count };
 
-    EvoRegressionInput regression_input{
-        x,
-        y,
-        mutation_rate,
-        generation_size_limit,
-        generation_count_limit,
-        solver
-    };
-
     // Vector of futures
     std::vector<std::future<EvoIndividual>> futures;
 
     std::vector<EvoIndividual> results;
 
     for (int island_index = 0; island_index < island_count; island_index++) {
+        
+        EvoRegressionInput regression_input{
+        x,
+        y,
+        mutation_rate,
+        generation_size_limit,
+        generation_count_limit,
+        island_index,
+        solver
+        };
+
         // Start a new task for each island
-        futures.push_back(std::async(std::launch::async, &EvoAPI::run_island, regression_input, std::ref(population[island_index]), std::ref(random_engines[island_index])));
+        futures.push_back(std::async(std::launch::async, &EvoAPI::run_island, regression_input, std::ref(population), std::ref(random_engines[island_index])));
     }
 
     for (auto& future : futures) {
@@ -290,7 +292,7 @@ void EvoAPI::batch_predict() {
     EvoAPI::logger->info("Batch prediction finished");
 }
 
-EvoIndividual EvoAPI::run_island(EvoRegressionInput input, std::vector<EvoIndividual>& generation, XoshiroCpp::Xoshiro256Plus& random_engine) {
+EvoIndividual EvoAPI::run_island(EvoRegressionInput input, std::vector<std::vector<EvoIndividual>>& population, XoshiroCpp::Xoshiro256Plus& random_engine) {
 
     std::vector<EvoIndividual> past_generation;
     EvoIndividual island_titan;
@@ -333,10 +335,10 @@ EvoIndividual EvoAPI::run_island(EvoRegressionInput input, std::vector<EvoIndivi
                 EvoAPI::logger->info("New titan set with fitness: {} and generation index: {}", island_titan.fitness, gen_index);
             }
 
-            generation.push_back(std::move(newborn));
+            population[input.island_id].push_back(std::move(newborn));
         }
 
-        past_generation = std::move(generation);
+        past_generation = std::move(population[input.island_id]);
     }
 
     return island_titan;
