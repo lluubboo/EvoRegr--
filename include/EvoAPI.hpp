@@ -18,6 +18,7 @@ struct EvoRegressionInput {
     int generation_size_limit;
     int generation_count_limit;
     int island_id;
+    int island_count;
     std::function<RegressionSimpleResult(Eigen::MatrixXd const&, Eigen::VectorXd const&)> solver;
 };
 
@@ -25,6 +26,9 @@ class EvoAPI {
 
     // logger
     static std::shared_ptr<spdlog::logger> logger;
+
+    // 
+    static std::mutex population_mutex;
 
     // algorithm boundary conditions
     int generation_size_limit, generation_count_limit, interaction_cols, mutation_rate;

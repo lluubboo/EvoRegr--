@@ -6,6 +6,29 @@
 #include "RandomNumberGenerator.hpp"
 #include "RegressionSolver.hpp"
 
+void Selection::do_migration(
+    std::array<unsigned int, 2> migration_interval,
+    unsigned int ratio,
+    std::vector<EvoIndividual>& population,
+    XoshiroCpp::Xoshiro256Plus& random_engine,
+    std::mutex& population_mutex)
+{
+    unsigned int threshold = population.size() * ratio;
+    std::lock_guard<std::mutex> lock(population_mutex);
+    {
+        for (unsigned int i = 0; i < threshold; i++) {
+            std::swap(
+                population[RandomNumbers::rand_interval_int(migration_interval[0], migration_interval[1], random_engine)],
+                population[RandomNumbers::rand_interval_int(migration_interval[0], migration_interval[1], random_engine)]
+            );
+        }
+    }
+};
+
+std::array<unsigned int, 2> Selection::calculate_migration_interval(unsigned int island_id, unsigned int island_count, unsigned int generation_size_limit) {
+    return { std::max(0u, (island_id - 1) * generation_size_limit), std::min((island_id + 2) * generation_size_limit, island_count * generation_size_limit) };
+}
+
 /**
  * @brief Performs tournament selection in a genetic algorithm.
  *
@@ -38,24 +61,18 @@ std::array<EvoIndividual, 2> Selection::tournament_selection(std::vector<EvoIndi
     return std::array{ std::move(first), std::move(second) };
 };
 
-std::array<EvoIndividual, 2> Selection::tournament_selection(std::span<EvoIndividual> const& generation, XoshiroCpp::Xoshiro256Plus& random_engine) {
-
-    EvoIndividual first = Random::randomChoice(generation, random_engine);
-    EvoIndividual second = Random::randomChoice(generation, random_engine);
-
-    if (second.fitness < first.fitness) std::swap(first, second);
-
-    for (int i = 0; i < 2; i++) {
-        EvoIndividual entity = Random::randomChoice(generation, random_engine);
-        if (entity.fitness < first.fitness) {
-            std::swap(first, entity);
-            second = std::move(entity);
-        }
-        else if (entity.fitness < second.fitness) {
-            second = std::move(entity);
+std::array<EvoIndividual, 2> Selection::tournament_selection(std::span<EvoIndividual> const& generation, XoshiroCpp::Xoshiro256Plus& random_engine, std::mutex& population_mutex) {
+    std::array<EvoIndividual, 4> individuals;
+    {
+        std::lock_guard<std::mutex> lock(population_mutex);
+        for (int i = 0; i < 4; i++) {
+            individuals[i] = Random::randomChoice(generation, random_engine);
         }
     }
-    return std::array{ std::move(first), std::move(second) };
+    std::sort(individuals.begin(), individuals.end(), [](const EvoIndividual& a, const EvoIndividual& b) {
+        return a.fitness < b.fitness;
+        });
+    return std::array{ individuals[0], individuals[1] };
 };
 
 /**
