@@ -301,7 +301,7 @@ EvoIndividual EvoAPI::run_island(EvoRegressionInput input, std::vector<EvoIndivi
     end_index = start_index + input.generation_size_limit - 1;
     actual_index = start_index;
 
-    EvoIndividual island_titan;
+    EvoIndividual island_titan, newborn;
 
     std::span<EvoIndividual> island_population(population.begin() + start_index, population.begin() + end_index);
 
@@ -310,8 +310,6 @@ EvoIndividual EvoAPI::run_island(EvoRegressionInput input, std::vector<EvoIndivi
         actual_index = start_index;
 
         for (int entity_index = 0; entity_index < input.generation_size_limit; entity_index++) {
-
-            EvoIndividual newborn;
 
             if (gen_index == 0) {
                 //generate random individual if generation is 0
