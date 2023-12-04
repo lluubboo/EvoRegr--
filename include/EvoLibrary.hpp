@@ -1,6 +1,7 @@
 #pragma once
 #include <Eigen/Dense>
 #include <vector>
+#include <span>
 #include "EvoIndividual.hpp"
 #include "EvoGene.hpp"
 #include "XoshiroCpp.hpp"
@@ -18,6 +19,7 @@ namespace Factory {
 namespace Selection {
 
     std::array<EvoIndividual, 2> tournament_selection(std::vector<EvoIndividual> const&, XoshiroCpp::Xoshiro256Plus&);
+    std::array<EvoIndividual, 2> tournament_selection(std::span<EvoIndividual> const&, XoshiroCpp::Xoshiro256Plus&);
 
 }
 

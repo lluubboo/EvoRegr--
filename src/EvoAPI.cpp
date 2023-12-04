@@ -9,6 +9,7 @@
 #include <spdlog/sinks/stdout_color_sinks.h>
 #include <fstream>
 #include <future>
+#include <span>
 #include "EvoAPI.hpp"
 #include "IOTools.hpp"
 #include "EvoIndividual.hpp"
@@ -256,7 +257,7 @@ void EvoAPI::batch_predict() {
     int island_count = omp_get_max_threads();
 
     std::vector<XoshiroCpp::Xoshiro256Plus> random_engines = create_random_engines(12346, island_count);
-    std::vector<std::vector<EvoIndividual>> population{ island_count };
+    std::vector<EvoIndividual> population(island_count * generation_size_limit);
 
     // Vector of futures
     std::vector<std::future<EvoIndividual>> futures;
@@ -292,12 +293,21 @@ void EvoAPI::batch_predict() {
     EvoAPI::logger->info("Batch prediction finished");
 }
 
-EvoIndividual EvoAPI::run_island(EvoRegressionInput input, std::vector<std::vector<EvoIndividual>>& population, XoshiroCpp::Xoshiro256Plus& random_engine) {
+EvoIndividual EvoAPI::run_island(EvoRegressionInput input, std::vector<EvoIndividual>& population, XoshiroCpp::Xoshiro256Plus& random_engine) {
 
-    std::vector<EvoIndividual> past_generation;
+    unsigned int start_index, end_index, actual_index;
+
+    start_index = input.island_id * input.generation_size_limit;
+    end_index = start_index + input.generation_size_limit - 1;
+    actual_index = start_index;
+
     EvoIndividual island_titan;
 
+    std::span<EvoIndividual> island_population(population.begin() + start_index, population.begin() + end_index);
+
     for (int gen_index = 0; gen_index < input.generation_count_limit; gen_index++) {
+
+        actual_index = start_index;
 
         for (int entity_index = 0; entity_index < input.generation_size_limit; entity_index++) {
 
@@ -307,10 +317,20 @@ EvoIndividual EvoAPI::run_island(EvoRegressionInput input, std::vector<std::vect
                 //generate random individual if generation is 0
                 newborn = Factory::getRandomEvoIndividual(input.y.rows(), input.x.cols(), random_engine);
             }
+            else if (gen_index % 5 == 0) {
+                //crossover & mutation [vector sex]
+                newborn = Reproduction::reproduction(
+                    Selection::tournament_selection(population, random_engine),
+                    input.x.cols(),
+                    input.x.rows(),
+                    input.mutation_rate,
+                    random_engine
+                );
+            }
             else {
                 //crossover & mutation [vector sex]
                 newborn = Reproduction::reproduction(
-                    Selection::tournament_selection(past_generation, random_engine),
+                    Selection::tournament_selection(island_population, random_engine),
                     input.x.cols(),
                     input.x.rows(),
                     input.mutation_rate,
@@ -335,12 +355,12 @@ EvoIndividual EvoAPI::run_island(EvoRegressionInput input, std::vector<std::vect
                 EvoAPI::logger->info("New titan set with fitness: {} and generation index: {}", island_titan.fitness, gen_index);
             }
 
-            population[input.island_id].push_back(std::move(newborn));
+            population[actual_index] = std::move(newborn);
+
+            actual_index++;
         }
-
-        past_generation = std::move(population[input.island_id]);
     }
-
+    EvoAPI::logger->info("Island {} with borders {} and {} finished", input.island_id, start_index, end_index);
     return island_titan;
 }
 

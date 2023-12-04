@@ -46,7 +46,7 @@ class EvoAPI {
 
     void create_regression_input(std::tuple<int, std::vector<double>>);
 
-    static EvoIndividual run_island(EvoRegressionInput, std::vector<std::vector<EvoIndividual>>&, XoshiroCpp::Xoshiro256Plus&);
+    static EvoIndividual run_island(EvoRegressionInput, std::vector<EvoIndividual>&, XoshiroCpp::Xoshiro256Plus&);
 
     // concurrent random engines
     std::vector<XoshiroCpp::Xoshiro256Plus> create_random_engines(const std::uint64_t seed, int count);

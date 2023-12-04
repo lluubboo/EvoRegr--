@@ -1,5 +1,6 @@
 #include <Eigen/Dense>
 #include <functional>
+#include <span>
 #include "EvoLibrary.hpp"
 #include "RandomChoices.hpp"
 #include "RandomNumberGenerator.hpp"
@@ -18,6 +19,26 @@
  * out of that group to become a parent. This process is repeated to select the second parent.
  */
 std::array<EvoIndividual, 2> Selection::tournament_selection(std::vector<EvoIndividual> const& generation, XoshiroCpp::Xoshiro256Plus& random_engine) {
+
+    EvoIndividual first = Random::randomChoice(generation, random_engine);
+    EvoIndividual second = Random::randomChoice(generation, random_engine);
+
+    if (second.fitness < first.fitness) std::swap(first, second);
+
+    for (int i = 0; i < 2; i++) {
+        EvoIndividual entity = Random::randomChoice(generation, random_engine);
+        if (entity.fitness < first.fitness) {
+            std::swap(first, entity);
+            second = std::move(entity);
+        }
+        else if (entity.fitness < second.fitness) {
+            second = std::move(entity);
+        }
+    }
+    return std::array{ first, second };
+};
+
+std::array<EvoIndividual, 2> Selection::tournament_selection(std::span<EvoIndividual> const& generation, XoshiroCpp::Xoshiro256Plus& random_engine) {
 
     EvoIndividual first = Random::randomChoice(generation, random_engine);
     EvoIndividual second = Random::randomChoice(generation, random_engine);
