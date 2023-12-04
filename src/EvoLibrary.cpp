@@ -35,7 +35,7 @@ std::array<EvoIndividual, 2> Selection::tournament_selection(std::vector<EvoIndi
             second = std::move(entity);
         }
     }
-    return std::array{ first, second };
+    return std::array{ std::move(first), std::move(second) };
 };
 
 std::array<EvoIndividual, 2> Selection::tournament_selection(std::span<EvoIndividual> const& generation, XoshiroCpp::Xoshiro256Plus& random_engine) {
@@ -55,7 +55,7 @@ std::array<EvoIndividual, 2> Selection::tournament_selection(std::span<EvoIndivi
             second = std::move(entity);
         }
     }
-    return std::array{ first, second };
+    return std::array{ std::move(first), std::move(second) };
 };
 
 /**
