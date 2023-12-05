@@ -14,7 +14,7 @@
 #include <random>
 #include "EvoAPI.hpp"
 #include "IOTools.hpp"
-#include "EvoIndividual.hpp"
+#include "EvoPopulation.hpp"
 #include "EvoLibrary.hpp"
 #include "XoshiroCpp.hpp"
 #include "Stats.hpp"

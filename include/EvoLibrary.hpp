@@ -2,7 +2,7 @@
 #include <Eigen/Dense>
 #include <vector>
 #include <span>
-#include "EvoIndividual.hpp"
+#include "EvoPopulation.hpp"
 #include "EvoGene.hpp"
 #include "XoshiroCpp.hpp"
 
@@ -24,13 +24,11 @@ namespace Selection {
     std::array<unsigned int, 2> calculate_migration_interval(unsigned int island_id, unsigned int island_count, unsigned int generation_size_limit);
 
 }
-
 namespace Crossover {
 
     EvoIndividual cross(std::array<EvoIndividual, 2> const& parents, int, XoshiroCpp::Xoshiro256Plus&);
 
 }
-
 namespace Mutation {
 
     EvoIndividual mutate(EvoIndividual&, int, int, int, XoshiroCpp::Xoshiro256Plus&);
