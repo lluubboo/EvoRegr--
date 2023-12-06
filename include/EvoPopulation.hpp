@@ -7,7 +7,7 @@
 
 class EvoIndividual {
 public:
-    
+
     EvoIndividual() : fitness(std::numeric_limits<double>::max()), is_healthy(false) {};
 
     std::vector<std::string> merge_chromosome_to_string_vector() const;
@@ -30,10 +30,18 @@ public:
 class EvoPopulation {
 
     std::vector<EvoIndividual> _population;
-    std::shared_mutex _mutex;
+    mutable std::shared_mutex _mutex;
+    static std::array<unsigned int, 2> calculate_migration_interval(unsigned int island_id, unsigned int island_count, unsigned int generation_size_limit);
 
 public:
     EvoPopulation(unsigned int size) : _population(size) {};
-    void batch_population_move(std::vector<EvoIndividual>& subpopulation, std::vector<EvoIndividual>::iterator begin);
-    void element_pushback(EvoIndividual& individual);
+    EvoPopulation(std::vector<EvoIndividual> population) : _population(population) {};
+    size_t size() const noexcept;
+    void move_to_population(size_t index, EvoIndividual& individual) noexcept;
+    void batch_population_move(std::vector<EvoIndividual>& subpopulation, size_t inde) noexcept;
+    void element_pushback(EvoIndividual& individual) noexcept;
+    bool swap_individuals(size_t index1, size_t index2) noexcept;
+    void batch_swap_individuals(size_t island_id, size_t island_count, size_t ratio, XoshiroCpp::Xoshiro256Plus& random_engine) noexcept;
+    EvoIndividual get_individual(size_t index) noexcept;
+    EvoIndividual get_random_individual(XoshiroCpp::Xoshiro256Plus& random_engine) noexcept;
 };

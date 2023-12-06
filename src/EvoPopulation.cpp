@@ -1,6 +1,7 @@
-#include "EvoPopulation.hpp"
 #include <algorithm>
 #include <mutex>
+#include "EvoPopulation.hpp"
+#include "RandomChoices.hpp"
 
 /**
  * The function "evaluate" assigns a fitness value to an EvoIndividual object and determines if it is
@@ -109,6 +110,17 @@ std::string EvoIndividual::to_string_code() const {
 }
 
 /**
+ * Returns the size of the population.
+ *
+ * @return The number of individuals in the population.
+ *
+ * This function returns the number of individuals in the population, which is represented by the `_population` member variable.
+ */
+size_t EvoPopulation::size() const noexcept {
+    return _population.size();
+}
+
+/**
  * Moves elements from a subpopulation to the main population.
  *
  * @param subpopulation A vector of EvoIndividuals to be moved.
@@ -117,10 +129,18 @@ std::string EvoIndividual::to_string_code() const {
  * This function locks the population for thread safety, moves the elements from the subpopulation to the main population,
  * and then clears the subpopulation.
  */
-void EvoPopulation::batch_population_move(std::vector<EvoIndividual>& subpopulation, std::vector<EvoIndividual>::iterator begin) {
+void EvoPopulation::batch_population_move(std::vector<EvoIndividual>& subpopulation, size_t index) noexcept {
     std::unique_lock lock(_mutex);
-    std::move(subpopulation.begin(), subpopulation.end(), begin);
-    subpopulation.clear();
+    {
+        auto begin = _population.begin() + index;
+        size_t remaining_space = std::distance(begin, _population.end());
+        if (subpopulation.size() <= remaining_space) {
+            std::move(subpopulation.begin(), subpopulation.end(), begin);
+        }
+        else {
+            std::cerr << "Error: subpopulation size exceeds remaining space in population." << std::endl;
+        }
+    }
 }
 
 /**
@@ -128,9 +148,97 @@ void EvoPopulation::batch_population_move(std::vector<EvoIndividual>& subpopulat
  *
  * @param individual The EvoIndividual to be added.
  *
- * This function locks the population for thread safety and moves the individual to the end of the population.
+ * This function moves the individual to the end of the population. Does not lock the population for thread safety.
  */
-void EvoPopulation::element_pushback(EvoIndividual& individual) {
-    std::unique_lock lock(_mutex);
+void EvoPopulation::element_pushback(EvoIndividual& individual) noexcept {
     _population.push_back(std::move(individual));
+}
+
+/**
+ * Swaps two individuals within the population.
+ *
+ * @param index1 The index of the first individual to be swapped.
+ * @param index2 The index of the second individual to be swapped.
+ * @return true if the swap was successful, false if either index was out of range.
+ *
+ * This function locks the population for thread safety. If both indices are valid, it swaps the individuals at these indices in the population and returns true. If either index is out of range, it returns false without modifying the population.
+ */
+bool EvoPopulation::swap_individuals(size_t index1, size_t index2) noexcept {
+    std::unique_lock lock(_mutex);
+    {
+        if (index1 < _population.size() && index2 < _population.size() && index1 != index2) {
+            std::swap(_population[index1], _population[index2]);
+            return true;
+        }
+        else {
+            std::cerr << "Error: cannot swap individuals. " << std::endl;
+            return false;
+        }
+    }
+}
+
+/**
+ * Swaps a number of individuals within the population.
+ *
+ * @param island_id The ID of the island for which to perform the swaps.
+ * @param island_count The total number of islands.
+ * @param ratio The ratio of the population size that determines the number of swaps.
+ * @param random_engine A reference to a random number generator.
+ * @return true if the swaps were successful, false otherwise.
+ *
+ * This function calculates a migration interval based on the island ID, the total number of islands, and the population size. It then performs a number of swaps within this interval. The number of swaps is determined by the ratio parameter. Each swap involves two randomly chosen individuals within the migration interval.
+ */
+void EvoPopulation::batch_swap_individuals(size_t island_id, size_t island_count, size_t ratio, XoshiroCpp::Xoshiro256Plus& random_engine) noexcept {
+    std::array<unsigned int, 2> migration_interval = EvoPopulation::calculate_migration_interval(
+        island_id,
+        island_count,
+        _population.size()
+    );
+
+    for (size_t i = 0; i < ratio * _population.size(); i++) {
+        swap_individuals(RandomNumbers::rand_interval_int(migration_interval[0], migration_interval[1], random_engine),
+            RandomNumbers::rand_interval_int(migration_interval[0], migration_interval[1], random_engine));
+    }
+}
+
+/**
+ * Calculates the migration interval for a given island.
+ *
+ * @param island_id The ID of the island for which to calculate the migration interval.
+ * @param island_count The total number of islands.
+ * @param generation_size_limit The maximum size of a generation.
+ * @return An array of two unsigned integers representing the start and end of the migration interval.
+ *
+ * This function calculates the range of generations that a given island can migrate to. The start of the range is the maximum of 0 and the product of the island ID minus 1 and the generation size limit. The end of the range is the minimum of the product of the island ID plus 2 and the generation size limit, and the product of the island count and the generation size limit.
+ */
+std::array<unsigned int, 2> EvoPopulation::calculate_migration_interval(unsigned int island_id, unsigned int island_count, unsigned int generation_size_limit) {
+    return { std::max(0u, (island_id - 1) * generation_size_limit),
+    std::min((island_id + 2) * generation_size_limit, island_count * generation_size_limit) };
+}
+
+EvoIndividual EvoPopulation::get_random_individual(XoshiroCpp::Xoshiro256Plus& random_engine) noexcept {
+    return get_individual(RandomNumbers::rand_interval_int(0, _population.size() - 1, random_engine));
+}
+
+EvoIndividual EvoPopulation::get_individual(size_t index) noexcept {
+    std::shared_lock lock(_mutex);
+    {
+        if (index >= _population.size()) {
+            std::cerr << "Error: index out of range." << std::endl;
+            return EvoIndividual();
+        }
+        return _population[index];
+    }
+}
+
+void EvoPopulation::move_to_population(size_t index, EvoIndividual& individual) noexcept {
+    std::unique_lock lock(_mutex);
+    {
+        if (index < _population.size()) {
+            _population[index] = std::move(individual);
+        }
+        else {
+            std::cerr << "Error: index out of range, individual cannot be setted." << std::endl;
+        }
+    }
 }

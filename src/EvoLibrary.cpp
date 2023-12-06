@@ -4,29 +4,6 @@
 #include "RandomNumberGenerator.hpp"
 #include "RegressionSolver.hpp"
 
-void Selection::do_migration(
-    std::array<unsigned int, 2> migration_interval,
-    unsigned int ratio,
-    std::vector<EvoIndividual>& population,
-    XoshiroCpp::Xoshiro256Plus& random_engine,
-    std::mutex& population_mutex)
-{
-    unsigned int threshold = population.size() * ratio;
-    std::lock_guard<std::mutex> lock(population_mutex);
-    {
-        for (unsigned int i = 0; i < threshold; i++) {
-            std::swap(
-                population[RandomNumbers::rand_interval_int(migration_interval[0], migration_interval[1], random_engine)],
-                population[RandomNumbers::rand_interval_int(migration_interval[0], migration_interval[1], random_engine)]
-            );
-        }
-    }
-};
-
-std::array<unsigned int, 2> Selection::calculate_migration_interval(unsigned int island_id, unsigned int island_count, unsigned int generation_size_limit) {
-    return { std::max(0u, (island_id - 1) * generation_size_limit), std::min((island_id + 2) * generation_size_limit, island_count * generation_size_limit) };
-}
-
 /**
  * @brief Performs tournament selection in a genetic algorithm.
  *
@@ -73,6 +50,15 @@ std::array<EvoIndividual, 2> Selection::tournament_selection(std::span<EvoIndivi
     return std::array{ individuals[0], individuals[1] };
 };
 
+std::array<EvoIndividual, 2> Selection::tournament_selection(EvoPopulation& generation, XoshiroCpp::Xoshiro256Plus& random_engine) {
+    std::array<EvoIndividual, 4> individuals;
+    for (int i = 0; i < 4; i++) {
+        individuals[i] = generation.get_random_individual(random_engine);
+    }
+    std::sort(individuals.begin(), individuals.end(), [](const EvoIndividual& a, const EvoIndividual& b) {return a.fitness < b.fitness;});
+    return std::array{ individuals[0], individuals[1] };
+};
+
 /**
  * @brief Generates a random EvoIndividual object.
  *
@@ -98,6 +84,23 @@ EvoIndividual Factory::getRandomEvoIndividual(int predictor_row_count, int predi
     individual.y_transformer_chromosome.push_back(Factory::getRandomTransformYAllele(random_engine));
     return individual;
 }
+
+/**
+ * @brief Generates a random generation of EvoIndividuals.
+ *
+ * This function generates a vector of EvoIndividuals of a given size. Each individual is generated using the Factory::getRandomEvoIndividual function.
+ *
+ * @param size The number of individuals to generate.
+ * @param row_count The number of rows for each individual.
+ * @param column_count The number of columns for each individual.
+ * @param random_engine A reference to a random number generator.
+ * @return A vector of randomly generated EvoIndividuals.
+ */
+std::vector<EvoIndividual> Factory::generate_random_generation(int size, int row_count, int column_count, XoshiroCpp::Xoshiro256Plus& random_engine) {
+    std::vector<EvoIndividual> generation(size);
+    std::generate(generation.begin(), generation.end(), [&]() {return Factory::getRandomEvoIndividual(row_count, column_count, random_engine);});
+    return generation;
+};
 
 /**
  * @brief Generates a random MergeAllele object.

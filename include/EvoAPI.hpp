@@ -14,12 +14,14 @@
 struct EvoRegressionInput {
     Eigen::MatrixXd x;
     Eigen::VectorXd y;
-    int mutation_rate;
-    int generation_size_limit;
-    int generation_count_limit;
-    int island_id;
-    int island_count;
+    EvoPopulation& population;
+    XoshiroCpp::Xoshiro256Plus& random_engine;
     std::function<RegressionSimpleResult(Eigen::MatrixXd const&, Eigen::VectorXd const&)> solver;
+    const int mutation_rate;
+    const int generation_size_limit;
+    const int generation_count_limit;
+    const int island_id;
+    const int island_count;
 };
 
 class EvoAPI {
@@ -50,10 +52,10 @@ class EvoAPI {
 
     void create_regression_input(std::tuple<int, std::vector<double>>);
 
-    static EvoIndividual run_island(EvoRegressionInput, std::vector<EvoIndividual>&, XoshiroCpp::Xoshiro256Plus&);
+    static EvoIndividual run_island(EvoRegressionInput);
 
     // concurrent random engines
-    std::vector<XoshiroCpp::Xoshiro256Plus> create_random_engines(const std::uint64_t seed, int count);
+    std::vector<XoshiroCpp::Xoshiro256Plus> create_random_engines(int count);
 
     // fitness & generation postprocessing
     void setTitan(EvoIndividual, int);

@@ -358,8 +358,10 @@ void EvoView::get_filepath() {
 void EvoView::init_loggers() {
     // FLTK sink
     auto fltk_sink = std::make_shared<Fl_Terminal_Sink<std::mutex>>(log_terminal);
+    // File sink
+    auto file_sink = std::make_shared<spdlog::sinks::basic_file_sink_mt>("log.txt", true);
     // logger
-    logger = std::make_shared<spdlog::logger>("EvoLogger", spdlog::sinks_init_list{ fltk_sink });
+    logger = std::make_shared<spdlog::logger>("EvoLogger", spdlog::sinks_init_list{ fltk_sink, file_sink });
     // register the logger so it can be accessed using spdlog::get()
     spdlog::register_logger(logger);
     // settings

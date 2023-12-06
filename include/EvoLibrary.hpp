@@ -13,6 +13,7 @@ namespace Factory {
     TransformXAllele getRandomTransformXAllele(int column_index, XoshiroCpp::Xoshiro256Plus& random_engine);
     TransformYAllele getRandomTransformYAllele(XoshiroCpp::Xoshiro256Plus& random_engine);
     RobustAllele getRandomRobustAllele(int row_count, XoshiroCpp::Xoshiro256Plus& random_engine);
+    std::vector<EvoIndividual> generate_random_generation(int size, int row_count, int column_count, XoshiroCpp::Xoshiro256Plus& random_engine);
 
 }
 
@@ -20,8 +21,7 @@ namespace Selection {
 
     std::array<EvoIndividual, 2> tournament_selection(std::vector<EvoIndividual> const&, XoshiroCpp::Xoshiro256Plus&);
     std::array<EvoIndividual, 2> tournament_selection(std::span<EvoIndividual> const&, XoshiroCpp::Xoshiro256Plus&, std::mutex&);
-    void do_migration(std::array<unsigned int, 2>, unsigned int, std::vector<EvoIndividual>&, XoshiroCpp::Xoshiro256Plus&, std::mutex&);
-    std::array<unsigned int, 2> calculate_migration_interval(unsigned int island_id, unsigned int island_count, unsigned int generation_size_limit);
+    std::array<EvoIndividual, 2> tournament_selection(EvoPopulation&, XoshiroCpp::Xoshiro256Plus&);
 
 }
 namespace Crossover {

@@ -5,6 +5,7 @@
 #include <span>
 #include "RandomNumberGenerator.hpp"
 #include "XoshiroCpp.hpp"
+#include "EvoPopulation.hpp"
 
 namespace Random {
 
@@ -14,6 +15,13 @@ namespace Random {
         std::sample(source.begin(), source.end(), std::back_inserter(sample), sample_size, random_engine);
         return sample;
     };
+
+    template <class T>
+    std::vector<T> randomChoices(T* source, int array_size, int sample_size, XoshiroCpp::Xoshiro256Plus& random_engine) {
+        std::vector<T> sample;
+        std::sample(source, source + array_size, std::back_inserter(sample), sample_size, random_engine);
+        return sample;
+    }
 
     template <class T>
     T randomChoice(std::vector<T> const& source, XoshiroCpp::Xoshiro256Plus& random_engine) {

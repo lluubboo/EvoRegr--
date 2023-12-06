@@ -12,6 +12,7 @@
 #include <span>
 #include <mutex>
 #include <random>
+#include "RandomNumberGenerator.hpp"
 #include "EvoAPI.hpp"
 #include "IOTools.hpp"
 #include "EvoPopulation.hpp"
@@ -192,13 +193,10 @@ bool EvoAPI::is_ready_to_predict() {
  */
 void EvoAPI::predict() {
 
-    std::random_device rd;
-    uint64_t seed = (static_cast<uint64_t>(rd()) << 32) | rd();
-
     EvoAPI::logger->info("Starting prediction process...");
 
     // random engines for parallel loops
-    std::vector<XoshiroCpp::Xoshiro256Plus> random_engines = create_random_engines(seed, omp_get_max_threads());
+    std::vector<XoshiroCpp::Xoshiro256Plus> random_engines = create_random_engines(omp_get_max_threads());
 
     // individual containers for fixed generation size genetic algorithm
     std::vector<EvoIndividual> generation(0);
@@ -262,29 +260,49 @@ void EvoAPI::predict() {
 void EvoAPI::batch_predict() {
 
     int island_count = omp_get_max_threads();
-    std::random_device rd;
-    uint64_t seed = (static_cast<uint64_t>(rd()) << 32) | rd();
-    std::vector<XoshiroCpp::Xoshiro256Plus> random_engines = create_random_engines(seed, island_count);
-    std::vector<EvoIndividual> population(island_count * generation_size_limit);
 
-    // Vector of futures
-    std::vector<std::future<EvoIndividual>> futures;
-    std::vector<EvoIndividual> results;
+    // random engines
+    std::vector<XoshiroCpp::Xoshiro256Plus> random_engines = create_random_engines(island_count);
+
+    EvoPopulation population(Factory::generate_random_generation(island_count * generation_size_limit, y.rows(), x.cols(), random_engines[0]));
+
+    // Vector of threads and promises
+    std::vector<std::thread> threads;
+    std::vector<std::promise<EvoIndividual>> promises(island_count);
 
     for (int island_index = 0; island_index < island_count; island_index++) {
-        // Start a new task for each island
-        futures.push_back(std::async(
-            std::launch::async,
-            &EvoAPI::run_island,
-            EvoRegressionInput{ x, y, mutation_rate, generation_size_limit, generation_count_limit, island_index, island_count , solver },
-            std::ref(population),
-            std::ref(random_engines[island_index])
-            )
+        // Get a reference to the promise for this island
+        std::promise<EvoIndividual>& promise = promises[island_index];
+
+        // Start a new thread for each island
+        threads.emplace_back(
+            [this, &promise, &population, &random_engines, island_index, island_count]() {
+                EvoRegressionInput input{
+                    this->x,
+                    this->y,
+                    population,
+                    random_engines[island_index],
+                    this->solver,
+                    this->mutation_rate,
+                    this->generation_size_limit,
+                    this->generation_count_limit,
+                    island_index,
+                    island_count
+                };
+                promise.set_value(EvoAPI::run_island(input));
+            }
         );
     }
 
-    for (auto& future : futures) {
-        results.push_back(future.get());
+    // Wait for all threads to finish
+    for (auto& thread : threads) {
+        thread.join();
+    }
+
+    // Get the results from the futures
+    std::vector<EvoIndividual> results;
+    for (auto& promise : promises) {
+        results.push_back(promise.get_future().get());
     }
 
     for (auto& result : results) {
@@ -296,49 +314,42 @@ void EvoAPI::batch_predict() {
     EvoAPI::logger->info("Batch prediction finished");
 }
 
-EvoIndividual EvoAPI::run_island(EvoRegressionInput input, std::vector<EvoIndividual>& population, XoshiroCpp::Xoshiro256Plus& random_engine) {
+EvoIndividual EvoAPI::run_island(EvoRegressionInput input) {
 
     unsigned int start_index, end_index;
 
     start_index = input.island_id * input.generation_size_limit;
-    end_index = start_index + input.generation_size_limit;
+    end_index = start_index + input.generation_size_limit - 1;
 
-    EvoIndividual island_titan, newborn;
+    EvoIndividual island_titan;
 
-    std::span<EvoIndividual> island_population(population.begin() + start_index, population.begin() + end_index);
-
-    // generational loop
+    // **************************************generational loop********************************************
     for (int gen_index = 0; gen_index < input.generation_count_limit; gen_index++) {
 
-        if (gen_index != 0 && gen_index % 10 == 0) {
-            Selection::do_migration(
-                Selection::calculate_migration_interval(
-                    input.island_id,
-                    input.island_count, 
-                    input.generation_size_limit
-                ),
-                0.1,
-                population, 
-                random_engine,
-                EvoAPI::population_mutex
-            );
-        }
+        if (gen_index != 0 && gen_index % 5 == 0) input.population.batch_swap_individuals(input.island_id, input.island_count, 0.1, input.random_engine);
+        
+        // **************************************entity loop********************************************
+        for (unsigned int entity_index = start_index; entity_index <= end_index; entity_index++) {
 
-        // entities loop
-        for (unsigned int entity_index = start_index; entity_index < start_index + input.generation_size_limit; entity_index++) {
+            EvoIndividual newborn;
 
             if (gen_index == 0) {
                 //generate random individual if generation is 0
-                newborn = Factory::getRandomEvoIndividual(input.y.rows(), input.x.cols(), random_engine);
+                newborn = Factory::getRandomEvoIndividual(input.y.rows(), input.x.cols(), input.random_engine);
             }
             else {
+
+                int index1, index2;
+                index1 = RandomNumbers::rand_interval_int(0, input.population.size() - 1, input.random_engine);
+                index2 = RandomNumbers::rand_interval_int(0, input.population.size() - 1, input.random_engine);
+
                 //crossover & mutation [vector sex]
                 newborn = Reproduction::reproduction(
-                    Selection::tournament_selection(island_population, random_engine, population_mutex),
+                    { input.population.get_individual(index1), input.population.get_individual(index2) },
                     input.x.cols(),
                     input.x.rows(),
                     input.mutation_rate,
-                    random_engine
+                    input.random_engine
                 );
             }
 
@@ -359,12 +370,10 @@ EvoIndividual EvoAPI::run_island(EvoRegressionInput input, std::vector<EvoIndivi
                 EvoAPI::logger->info("New titan set with fitness: {} and generation index: {}", island_titan.fitness, gen_index);
             }
 
-            std::lock_guard<std::mutex> lock(EvoAPI::population_mutex);
-            {
-                population[entity_index] = std::move(newborn);
-            }
+            input.population.move_to_population(entity_index, newborn);
         }
     }
+
     EvoAPI::logger->info("Island {} with borders {} and {} finished", input.island_id, start_index, end_index);
     return island_titan;
 }
@@ -457,7 +466,10 @@ void EvoAPI::titan_evaluation(EvoIndividual participant, int generation_index) {
  *
  * @return a vector of XoshiroCpp::Xoshiro256Plus random engines.
  */
-std::vector<XoshiroCpp::Xoshiro256Plus> EvoAPI::create_random_engines(std::uint64_t seed, int count) {
+std::vector<XoshiroCpp::Xoshiro256Plus> EvoAPI::create_random_engines(int count) {
+
+    std::random_device rd;
+    uint64_t seed = (static_cast<uint64_t>(rd()) << 32) | rd();
 
     XoshiroCpp::Xoshiro256Plus master_random_engine(seed);
     std::vector<XoshiroCpp::Xoshiro256Plus> random_engines;
@@ -744,7 +756,7 @@ std::string EvoAPI::get_regression_summary_table() {
     table << get_formula_table();
 
     EvoAPI::logger->info("Regression summary table generated");
-    
+
     return table.str();
 };
 
