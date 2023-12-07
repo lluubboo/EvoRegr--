@@ -50,13 +50,18 @@ std::array<EvoIndividual, 2> Selection::tournament_selection(std::span<EvoIndivi
     return std::array{ individuals[0], individuals[1] };
 };
 
-std::array<EvoIndividual, 2> Selection::tournament_selection(EvoPopulation& generation, XoshiroCpp::Xoshiro256Plus& random_engine) {
-    std::array<EvoIndividual, 4> individuals;
-    for (int i = 0; i < 4; i++) {
-        individuals[i] = generation.get_random_individual(random_engine);
+std::array<EvoIndividual, 2> Selection::tournament_selection(EvoPopulation& population, XoshiroCpp::Xoshiro256Plus& random_engine, size_t start_index, size_t end_index) {
+    if (start_index == end_index) {
+        std::cerr << "Tournament selection: start index and end index should not be equal." << std::endl;
     }
-    std::sort(individuals.begin(), individuals.end(), [](const EvoIndividual& a, const EvoIndividual& b) {return a.fitness < b.fitness;});
-    return std::array{ individuals[0], individuals[1] };
+    std::array<EvoIndividual, 2> champions;
+    EvoIndividual first, second;
+    for (int i = 0; i < 2; i++) {
+        first = population.get_individual(RandomNumbers::rand_interval_int(start_index, end_index, random_engine));
+        second = population.get_individual(RandomNumbers::rand_interval_int(start_index, end_index, random_engine));
+        champions[i] = (first.fitness < second.fitness) ? std::move(first) : std::move(second);
+    }
+    return champions;
 };
 
 /**

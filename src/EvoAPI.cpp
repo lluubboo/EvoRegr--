@@ -316,12 +316,12 @@ void EvoAPI::batch_predict() {
 
 EvoIndividual EvoAPI::run_island(EvoRegressionInput input) {
 
+    // subpopulation borders
     unsigned int start_index, end_index;
-
     start_index = input.island_id * input.generation_size_limit;
     end_index = start_index + input.generation_size_limit - 1;
 
-    EvoIndividual island_titan;
+    EvoIndividual island_titan, newborn;
 
     // **************************************generational loop********************************************
     for (int gen_index = 0; gen_index < input.generation_count_limit; gen_index++) {
@@ -331,27 +331,21 @@ EvoIndividual EvoAPI::run_island(EvoRegressionInput input) {
         // **************************************entity loop********************************************
         for (unsigned int entity_index = start_index; entity_index <= end_index; entity_index++) {
 
-            EvoIndividual newborn;
 
-            if (gen_index == 0) {
-                //generate random individual if generation is 0
-                newborn = Factory::getRandomEvoIndividual(input.y.rows(), input.x.cols(), input.random_engine);
-            }
-            else {
-
-                int index1, index2;
-                index1 = RandomNumbers::rand_interval_int(0, input.population.size() - 1, input.random_engine);
-                index2 = RandomNumbers::rand_interval_int(0, input.population.size() - 1, input.random_engine);
-
-                //crossover & mutation [vector sex]
-                newborn = Reproduction::reproduction(
-                    { input.population.get_individual(index1), input.population.get_individual(index2) },
-                    input.x.cols(),
-                    input.x.rows(),
-                    input.mutation_rate,
-                    input.random_engine
-                );
-            }
+            //crossover & mutation [vector sex]
+            newborn = Reproduction::reproduction(
+                Selection::tournament_selection(
+                    input.population,
+                    input.random_engine,
+                    start_index,
+                    end_index
+                    ),
+                input.x.cols(),
+                input.x.rows(),
+                input.mutation_rate,
+                input.random_engine
+            );
+            
 
             // merge & transform & make robust predictors & target / solve regression problem
             newborn.evaluate(
@@ -365,11 +359,13 @@ EvoIndividual EvoAPI::run_island(EvoRegressionInput input) {
                 )
             );
 
+            // titan mark
             if (island_titan.fitness > newborn.fitness) {
                 island_titan = newborn;
                 EvoAPI::logger->info("New titan set with fitness: {} and generation index: {}", island_titan.fitness, gen_index);
             }
 
+            // newborn to population
             input.population.move_to_population(entity_index, newborn);
         }
     }
