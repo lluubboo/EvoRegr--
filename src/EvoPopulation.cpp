@@ -129,16 +129,21 @@ size_t EvoPopulation::size() const noexcept {
  * This function locks the population for thread safety, moves the elements from the subpopulation to the main population,
  * and then clears the subpopulation.
  */
-void EvoPopulation::batch_population_move(std::vector<EvoIndividual>& subpopulation, size_t index) noexcept {
+void EvoPopulation::batch_population_move(EvoPopulation& subpopulation, size_t index) noexcept {
     std::unique_lock lock(_mutex);
     {
         auto begin = _population.begin() + index;
         size_t remaining_space = std::distance(begin, _population.end());
+
         if (subpopulation.size() <= remaining_space) {
             std::move(subpopulation.begin(), subpopulation.end(), begin);
         }
         else {
             std::cerr << "Error: subpopulation size exceeds remaining space in population." << std::endl;
+            std::cerr << "Population size: " << _population.size() << std::endl;
+            std::cerr << "Subpopulation size: " << subpopulation.size() << std::endl;
+            std::cerr << "Remaining space: " << remaining_space << std::endl;
+            std::cerr << "Index: " << index << std::endl;
         }
     }
 }
@@ -241,4 +246,28 @@ void EvoPopulation::move_to_population(size_t index, EvoIndividual& individual) 
             std::cerr << "Error: index out of range, individual cannot be setted." << std::endl;
         }
     }
+}
+
+std::vector<EvoIndividual>::iterator EvoPopulation::begin() {
+    return _population.begin();
+}
+
+std::vector<EvoIndividual>::iterator EvoPopulation::end() {
+    return _population.end();
+}
+
+std::vector<EvoIndividual>::const_iterator EvoPopulation::begin() const {
+    return _population.begin();
+}
+
+std::vector<EvoIndividual>::const_iterator EvoPopulation::end() const {
+    return _population.end();
+}
+
+void EvoPopulation::clear() {
+    _population.clear();
+}
+
+void EvoPopulation::reserve(size_t size) {
+    _population.reserve(size);
 }

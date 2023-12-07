@@ -38,10 +38,16 @@ public:
     EvoPopulation(std::vector<EvoIndividual> population) : _population(population) {};
     size_t size() const noexcept;
     void move_to_population(size_t index, EvoIndividual& individual) noexcept;
-    void batch_population_move(std::vector<EvoIndividual>& subpopulation, size_t inde) noexcept;
+    void batch_population_move(EvoPopulation& subpopulation, size_t index) noexcept;
     void element_pushback(EvoIndividual& individual) noexcept;
     bool swap_individuals(size_t index1, size_t index2) noexcept;
     void batch_swap_individuals(size_t island_id, size_t island_count, size_t ratio, XoshiroCpp::Xoshiro256Plus& random_engine) noexcept;
     EvoIndividual get_individual(size_t index) noexcept;
     EvoIndividual get_random_individual(XoshiroCpp::Xoshiro256Plus& random_engine) noexcept;
+    std::vector<EvoIndividual>::iterator begin();
+    std::vector<EvoIndividual>::iterator end();
+    std::vector<EvoIndividual>::const_iterator begin() const;
+    std::vector<EvoIndividual>::const_iterator end() const;
+    void clear();
+    void reserve(size_t size);
 };
