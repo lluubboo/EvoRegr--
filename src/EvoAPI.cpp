@@ -270,6 +270,8 @@ void EvoAPI::batch_predict() {
     std::vector<std::thread> threads;
     std::vector<std::promise<EvoIndividual>> promises(island_count);
 
+
+    auto start = std::chrono::high_resolution_clock::now();
     for (int island_index = 0; island_index < island_count; island_index++) {
         // Get a reference to the promise for this island
         std::promise<EvoIndividual>& promise = promises[island_index];
@@ -298,6 +300,8 @@ void EvoAPI::batch_predict() {
     for (auto& thread : threads) {
         thread.join();
     }
+    auto stop = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double> elapsed = stop - start;
 
     // Get the results from the futures
     std::vector<EvoIndividual> results;
@@ -312,6 +316,7 @@ void EvoAPI::batch_predict() {
     }
 
     EvoAPI::logger->info("Batch prediction finished");
+    EvoAPI::logger->info("Time taken to predict islands: {} seconds", elapsed.count());
 }
 
 EvoIndividual EvoAPI::run_island(EvoRegressionInput input) {
@@ -330,7 +335,6 @@ EvoIndividual EvoAPI::run_island(EvoRegressionInput input) {
         
         // **************************************entity loop********************************************
         for (unsigned int entity_index = start_index; entity_index <= end_index; entity_index++) {
-
 
             //crossover & mutation [vector sex]
             newborn = Reproduction::reproduction(
