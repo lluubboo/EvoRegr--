@@ -225,6 +225,15 @@ EvoIndividual EvoPopulation::get_random_individual(XoshiroCpp::Xoshiro256Plus& r
     return get_individual(RandomNumbers::rand_interval_int(0, _population.size() - 1, random_engine));
 }
 
+/**
+ * @brief Get an individual from the population at a specific index.
+ *
+ * This method returns the individual at the specified index in the _population vector.
+ * If the index is out of range, an error message is printed to the standard error stream and a default-constructed EvoIndividual is returned.
+ *
+ * @param index The position in the population from where the individual should be retrieved.
+ * @return The individual at the specified index in the population.
+ */
 EvoIndividual EvoPopulation::get_individual(size_t index) noexcept {
     std::shared_lock lock(_mutex);
     {
@@ -236,6 +245,15 @@ EvoIndividual EvoPopulation::get_individual(size_t index) noexcept {
     }
 }
 
+/**
+ * @brief Move an individual to a specific position in the population.
+ *
+ * This method moves the given individual to the specified index in the _population vector.
+ * If the index is out of range, an error message is printed to the standard error stream.
+ *
+ * @param index The position in the population where the individual should be moved.
+ * @param individual The individual to be moved into the population.
+ */
 void EvoPopulation::move_to_population(size_t index, EvoIndividual& individual) noexcept {
     std::unique_lock lock(_mutex);
     {
@@ -248,26 +266,76 @@ void EvoPopulation::move_to_population(size_t index, EvoIndividual& individual) 
     }
 }
 
+/**
+ * @brief Get an iterator to the beginning of the population.
+ *
+ * This method returns an iterator pointing to the first element in the _population vector.
+ * If the vector is empty, the returned iterator will be equal to end().
+ *
+ * @return An iterator to the first element of the _population vector.
+ */
 std::vector<EvoIndividual>::iterator EvoPopulation::begin() {
     return _population.begin();
 }
 
+/**
+ * @brief Get an iterator to the end of the population.
+ *
+ * This method returns an iterator pointing to the past-the-end element in the _population vector.
+ * The past-the-end element is the theoretical element that would follow the last element in the vector.
+ * It does not point to any element, and thus shall not be dereferenced.
+ *
+ * @return An iterator to the element following the last element of the _population vector.
+ */
 std::vector<EvoIndividual>::iterator EvoPopulation::end() {
     return _population.end();
 }
 
+/**
+ * @brief Get a const iterator to the beginning of the population.
+ *
+ * This method returns a const_iterator pointing to the first element in the _population vector.
+ * If the vector is empty, the returned iterator will be equal to end().
+ *
+ * @return A const_iterator to the first element of the _population vector.
+ */
 std::vector<EvoIndividual>::const_iterator EvoPopulation::begin() const {
     return _population.begin();
 }
 
+/**
+ * @brief Get an iterator to the end of the population.
+ *
+ * This method returns a const_iterator pointing to the past-the-end element in the _population vector.
+ * The past-the-end element is the theoretical element that would follow the last element in the vector.
+ * It does not point to any element, and thus shall not be dereferenced.
+ *
+ * @return A const_iterator to the element following the last element of the _population vector.
+ */
 std::vector<EvoIndividual>::const_iterator EvoPopulation::end() const {
     return _population.end();
 }
 
+/**
+ * @brief Clears the population.
+ *
+ * This method removes all elements from the _population vector.
+ * After this call, _population.size() returns zero.
+ * Method is not thread safe.
+ */
 void EvoPopulation::clear() {
     _population.clear();
 }
 
+/**
+ * @brief Reserves storage for the population.
+ *
+ * This method increases the capacity of the _population vector to a value
+ * that's greater or equal to size. If size is greater than the current
+ * vector capacity, new storage is allocated, otherwise the method does nothing.
+ *
+ * @param size Number of elements for which to reserve storage.
+ */
 void EvoPopulation::reserve(size_t size) {
     _population.reserve(size);
 }
