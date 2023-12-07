@@ -327,6 +327,7 @@ EvoIndividual EvoAPI::run_island(EvoRegressionInput input) {
     end_index = start_index + input.generation_size_limit - 1;
 
     EvoIndividual island_titan, newborn;
+    
     EvoPopulation island_population(0);
     island_population.reserve(input.generation_size_limit);
 
@@ -376,10 +377,10 @@ EvoIndividual EvoAPI::run_island(EvoRegressionInput input) {
         }
 
         input.population.batch_population_move(island_population, start_index);
-        island_population.clear();
     }
 
     EvoAPI::logger->info("Island {} with borders {} and {} finished", input.island_id, start_index, end_index);
+
     return island_titan;
 }
 

@@ -137,13 +137,10 @@ void EvoPopulation::batch_population_move(EvoPopulation& subpopulation, size_t i
 
         if (subpopulation.size() <= remaining_space) {
             std::move(subpopulation.begin(), subpopulation.end(), begin);
+            subpopulation.clear();
         }
         else {
             std::cerr << "Error: subpopulation size exceeds remaining space in population." << std::endl;
-            std::cerr << "Population size: " << _population.size() << std::endl;
-            std::cerr << "Subpopulation size: " << subpopulation.size() << std::endl;
-            std::cerr << "Remaining space: " << remaining_space << std::endl;
-            std::cerr << "Index: " << index << std::endl;
         }
     }
 }
