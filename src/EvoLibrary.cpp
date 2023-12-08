@@ -1,4 +1,3 @@
-#include <functional>
 #include "EvoLibrary.hpp"
 #include "RandomChoices.hpp"
 #include "RandomNumberGenerator.hpp"
@@ -90,20 +89,16 @@ EvoIndividual Factory::getRandomEvoIndividual(int predictor_row_count, int predi
     return individual;
 }
 
-/**
- * @brief Generates a random generation of EvoIndividuals.
- *
- * This function generates a vector of EvoIndividuals of a given size. Each individual is generated using the Factory::getRandomEvoIndividual function.
- *
- * @param size The number of individuals to generate.
- * @param row_count The number of rows for each individual.
- * @param column_count The number of columns for each individual.
- * @param random_engine A reference to a random number generator.
- * @return A vector of randomly generated EvoIndividuals.
- */
-std::vector<EvoIndividual> Factory::generate_random_generation(int size, int row_count, int column_count, XoshiroCpp::Xoshiro256Plus& random_engine) {
+
+std::vector<EvoIndividual> Factory::generate_random_generation(
+    int size,
+    Transform::EvoDataSet const& dataset,
+    XoshiroCpp::Xoshiro256Plus& random_engine,
+    std::function<RegressionSimpleResult(Eigen::MatrixXd const&, Eigen::VectorXd const&)> solver
+) {
     std::vector<EvoIndividual> generation(size);
-    std::generate(generation.begin(), generation.end(), [&]() {return Factory::getRandomEvoIndividual(row_count, column_count, random_engine);});
+    std::generate(generation.begin(), generation.end(), [&]() {return Factory::getRandomEvoIndividual(dataset.predictor.rows(), dataset.predictor.cols(), random_engine);});
+    std::for_each(generation.begin(), generation.end(), [&](EvoIndividual& individual) {individual.evaluate(EvoMath::get_fitness(dataset, solver));});
     return generation;
 };
 

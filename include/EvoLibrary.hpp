@@ -2,20 +2,11 @@
 #include <Eigen/Dense>
 #include <vector>
 #include <span>
+#include <functional>
 #include "EvoPopulation.hpp"
 #include "EvoGene.hpp"
 #include "XoshiroCpp.hpp"
-
-namespace Factory {
-
-    EvoIndividual getRandomEvoIndividual(int row_count, int predictor_column_count, XoshiroCpp::Xoshiro256Plus& random_engine);
-    MergeAllele getRandomMergeAllele(int column_index, int predictor_column_count, XoshiroCpp::Xoshiro256Plus& random_engine);
-    TransformXAllele getRandomTransformXAllele(int column_index, XoshiroCpp::Xoshiro256Plus& random_engine);
-    TransformYAllele getRandomTransformYAllele(XoshiroCpp::Xoshiro256Plus& random_engine);
-    RobustAllele getRandomRobustAllele(int row_count, XoshiroCpp::Xoshiro256Plus& random_engine);
-    std::vector<EvoIndividual> generate_random_generation(int size, int row_count, int column_count, XoshiroCpp::Xoshiro256Plus& random_engine);
-
-}
+#include "RegressionSolver.hpp"
 
 namespace Selection {
 
@@ -65,3 +56,11 @@ namespace EvoMath {
     std::vector<T> extract_column(std::vector<T> data, unsigned int column_count, unsigned int column_index);
 }
 
+namespace Factory {
+    EvoIndividual getRandomEvoIndividual(int row_count, int predictor_column_count, XoshiroCpp::Xoshiro256Plus& random_engine);
+    MergeAllele getRandomMergeAllele(int column_index, int predictor_column_count, XoshiroCpp::Xoshiro256Plus& random_engine);
+    TransformXAllele getRandomTransformXAllele(int column_index, XoshiroCpp::Xoshiro256Plus& random_engine);
+    TransformYAllele getRandomTransformYAllele(XoshiroCpp::Xoshiro256Plus& random_engine);
+    RobustAllele getRandomRobustAllele(int row_count, XoshiroCpp::Xoshiro256Plus& random_engine);
+    std::vector<EvoIndividual> generate_random_generation(int, Transform::EvoDataSet const&, XoshiroCpp::Xoshiro256Plus&, std::function<RegressionSimpleResult(Eigen::MatrixXd const&, Eigen::VectorXd const&)>);
+}

@@ -48,7 +48,9 @@ class EvoAPI {
     std::vector<double> titan_history;
     std::vector<double> generation_fitness_metrics;
 
+    // data
     void create_regression_input(std::tuple<int, std::vector<double>>);
+    Transform::EvoDataSet get_dataset();
 
     // predictions
     static EvoIndividual run_island(EvoRegressionInput);

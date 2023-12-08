@@ -166,6 +166,18 @@ void EvoAPI::create_regression_input(std::tuple<int, std::vector<double>> input)
 }
 
 /**
+ * @brief Get the dataset used by the evolutionary algorithm.
+ *
+ * This function returns a dataset consisting of the x and y data used by the evolutionary algorithm.
+ * The dataset is returned as an instance of the `Transform::EvoDataSet` class.
+ *
+ * @return Transform::EvoDataSet The dataset used by the evolutionary algorithm.
+ */
+Transform::EvoDataSet EvoAPI::get_dataset() {
+    return Transform::EvoDataSet{ x, y };
+}
+
+/**
  * @brief Checks if the model is ready to make predictions.
  *
  * The model is considered ready if both the input (x) and output (y) data sets are not empty.
@@ -261,9 +273,10 @@ void EvoAPI::batch_predict() {
     EvoPopulation population(
         Factory::generate_random_generation(
             island_count * generation_size_limit, 
-            y.rows(),
-            x.cols(),
-            random_engines[0])
+            get_dataset(),
+            random_engines[0],
+            solver
+        )
     );
 
     // Vector of threads and promises
@@ -277,14 +290,14 @@ void EvoAPI::batch_predict() {
 
         // Prepare the input for the function
         EvoRegressionInput input{
-            this->x,
-            this->y,
+            x,
+            y,
             population,
             random_engines[island_index],
-            this->solver,
-            this->mutation_rate,
-            this->generation_size_limit,
-            this->generation_count_limit,
+            solver,
+            mutation_rate,
+            generation_size_limit,
+            generation_count_limit,
             island_index,
             island_count
         };
@@ -310,7 +323,7 @@ void EvoAPI::batch_predict() {
     }
 
     log_result();
-    EvoAPI::logger->info("Batch prediction finished");
+    EvoAPI::logger->info("Batch prediction finished with titan fitness: {}", titan.fitness);
 }
 
 void EvoAPI::run_island_thread(std::promise<EvoIndividual>& promise, EvoRegressionInput input) {
