@@ -34,14 +34,11 @@ class EvoView : public Fl_Window {
 
     //flags
 
-    std::atomic<bool> keep_redrawing{ true };
     std::string decomposition_method;
-    bool export_log_file_flag;
 
     //variables
 
     std::string filepath;
-    std::string report_file_prefix;
     int generations_count;
     int generations_size;
     int interference_size;
@@ -64,8 +61,6 @@ class EvoView : public Fl_Window {
     Fl_Input* gen_size_box;
     Fl_Box* inter_size_label;
     Fl_Input* inter_size_box;
-    Fl_Box* filename_label;
-    Fl_Input* filename_box;
     Fl_Choice* decomposition_choice_chbox;
     Fl_Check_Button* export_log_checkbutton;
 
@@ -73,12 +68,10 @@ class EvoView : public Fl_Window {
 
     static void quit_callback(Fl_Widget* /*w*/, void* /*data*/);
     static void help_callback(Fl_Widget* /*w*/, void* /*data*/);
-    static void filename_input_callback(Fl_Widget* w, void* v);
     static void gen_count_input_callback(Fl_Widget* w, void* v);
     static void gen_size_input_callback(Fl_Widget* w, void* v);
     static void gen_interference_size_callback(Fl_Widget* w, void* v);
     static void mutation_rate_callback(Fl_Widget* w, void* v);
-    static void export_file_callback(Fl_Widget* w, void* v);
     static void decomposition_choice_callback(Fl_Widget* w, void* v);
     static void load_file_button_callback(Fl_Widget* w, void* v);
     static void predict_button_callback(Fl_Widget* w, void* v);
@@ -98,16 +91,14 @@ class EvoView : public Fl_Window {
     Fl_Input* create_gen_size_box(int h);
     Fl_Input* create_inter_size_box(int h);
     Fl_Input* create_mutation_rate_box(int h);
-    Fl_Input* create_filename_box(int h);
-    Fl_Check_Button* create_export_file_box(int h);
     Fl_Box* create_label(int height, const char* label);
 
     void get_filepath();
     void set_appearance();
     void init_loggers();
     void render_main_window();
-    void call_predict(EvoAPI evo_api, bool export_log_file_flag, std::string report_file_prefix);
-    void call_batch_predict(EvoAPI evo_api, bool export_log_file_flag, std::string report_file_prefix);
+    void call_predict(EvoAPI evo_api);
+    void call_batch_predict(EvoAPI evo_api);
 
 public:
     EvoView(int width, int height, const char* title);

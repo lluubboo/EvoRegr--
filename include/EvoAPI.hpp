@@ -29,13 +29,10 @@ class EvoAPI {
     // logger
     static std::shared_ptr<spdlog::logger> logger;
 
-    // 
-    static std::mutex population_mutex;
-
     // algorithm boundary conditions
     int generation_size_limit, generation_count_limit, interaction_cols, mutation_rate;
 
-    // inputs
+    // preprocessed input data
     Eigen::MatrixXd x, y;
 
     // solver functor
@@ -58,7 +55,7 @@ class EvoAPI {
     std::vector<XoshiroCpp::Xoshiro256Plus> create_random_engines(int count);
 
     // fitness & generation postprocessing
-    void setTitan(EvoIndividual, int);
+    void setTitan(EvoIndividual);
     void titan_evaluation(EvoIndividual participant, int generation_index);
     void process_generation_fitness(std::set<double> const& generation_fitness);
 
@@ -70,7 +67,6 @@ class EvoAPI {
 
     std::string get_regression_summary_table();
     std::string get_regression_result_table();
-    std::string get_titan_history_table();
     std::string get_regression_coefficients_table();
     std::string get_genotype_table();
     std::string get_formula_table();
@@ -80,9 +76,7 @@ public:
 
     EvoAPI();
 
-    void create_report_file(std::string const& prefix);
     void set_solver(std::string const& solver_name);
-    void reset_api_for_another_calculation();
     void load_file(const std::string& filename);
     void predict();
     void batch_predict();

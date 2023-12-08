@@ -22,8 +22,6 @@
 #include "Plotter.hpp"
 #include "omp.h"
 
-std::mutex EvoAPI::population_mutex;
-
 // Define the static logger
 std::shared_ptr<spdlog::logger> EvoAPI::logger;
 
@@ -258,21 +256,29 @@ void EvoAPI::predict() {
 }
 
 void EvoAPI::batch_predict() {
+    EvoAPI::logger->info("Starting batch prediction process...");
 
     int island_count = omp_get_max_threads();
 
-    // random engines
+    // random engine for each island
     std::vector<XoshiroCpp::Xoshiro256Plus> random_engines = create_random_engines(island_count);
 
-    EvoPopulation population(Factory::generate_random_generation(island_count * generation_size_limit, y.rows(), x.cols(), random_engines[0]));
+    // generation zero genetic material
+    EvoPopulation population(
+        Factory::generate_random_generation(
+            island_count * generation_size_limit, 
+            y.rows(),
+            x.cols(),
+            random_engines[0])
+    );
 
     // Vector of threads and promises
     std::vector<std::thread> threads;
     std::vector<std::promise<EvoIndividual>> promises(island_count);
 
-
     auto start = std::chrono::high_resolution_clock::now();
     for (int island_index = 0; island_index < island_count; island_index++) {
+
         // Get a reference to the promise for this island
         std::promise<EvoIndividual>& promise = promises[island_index];
 
@@ -296,14 +302,11 @@ void EvoAPI::batch_predict() {
         );
     }
 
-    // Wait for all threads to finish
+    // wait for all threads to finish
     for (auto& thread : threads) {
         thread.join();
     }
-    auto stop = std::chrono::high_resolution_clock::now();
-    std::chrono::duration<double> elapsed = stop - start;
 
-    // Get the results from the futures
     std::vector<EvoIndividual> results;
     for (auto& promise : promises) {
         results.push_back(promise.get_future().get());
@@ -315,8 +318,8 @@ void EvoAPI::batch_predict() {
         }
     }
 
+    log_result();
     EvoAPI::logger->info("Batch prediction finished");
-    EvoAPI::logger->info("Time taken to predict islands: {} seconds", elapsed.count());
 }
 
 EvoIndividual EvoAPI::run_island(EvoRegressionInput input) {
@@ -327,7 +330,7 @@ EvoIndividual EvoAPI::run_island(EvoRegressionInput input) {
     end_index = start_index + input.generation_size_limit - 1;
 
     EvoIndividual island_titan, newborn;
-    
+
     EvoPopulation island_population(0);
     island_population.reserve(input.generation_size_limit);
 
@@ -379,8 +382,7 @@ EvoIndividual EvoAPI::run_island(EvoRegressionInput input) {
         input.population.batch_population_move(island_population, start_index);
     }
 
-    EvoAPI::logger->info("Island {} with borders {} and {} finished", input.island_id, start_index, end_index);
-
+    EvoAPI::logger->info("Island {} with borders {} and {} finished with best individual {}", input.island_id, start_index, end_index, island_titan.fitness);
     return island_titan;
 }
 
@@ -396,18 +398,6 @@ void EvoAPI::log_result() {
 }
 
 /**
- * Exports a report with the given prefix.
- *
- * @param prefix The prefix to be used in the report filename.
- */
-void EvoAPI::create_report_file(std::string const& prefix) {
-    std::ofstream report_file(get_regression_report_filename(prefix));
-    report_file << get_regression_summary_table();
-    report_file.close();
-    EvoAPI::logger->info("Report exported.");
-}
-
-/**
  * The function "generation_postprocessing" takes a vector of EvoIndividual objects and an integer
  * representing the generation index, and performs post-processing tasks on the generation data.
  *
@@ -419,12 +409,10 @@ void EvoAPI::create_report_file(std::string const& prefix) {
 void EvoAPI::generation_postprocessing(std::vector<EvoIndividual> const& generation, int generation_index) {
     // ordered set of fitnesses
     std::set<double> generation_fitness;
-
     for (auto& individual : generation) {
         titan_evaluation(individual, generation_index);
         generation_fitness.insert(individual.fitness);
     }
-
     // create fitness metrics
     process_generation_fitness(generation_fitness);
 }
@@ -439,12 +427,8 @@ void EvoAPI::generation_postprocessing(std::vector<EvoIndividual> const& generat
  * generation in the evolutionary algorithm. It is used to keep track of the progress and history of
  * the algorithm.
  */
-void EvoAPI::setTitan(EvoIndividual titan, int generation_index) {
+void EvoAPI::setTitan(EvoIndividual titan) {
     this->titan = titan;
-    this->titan_history.push_back(titan.fitness);
-    this->titan_history.push_back(generation_index);
-
-    EvoAPI::logger->info("New titan set with fitness: {} and generation index: {}", titan.fitness, generation_index);
 }
 
 /**
@@ -459,28 +443,27 @@ void EvoAPI::setTitan(EvoIndividual titan, int generation_index) {
  * and can be used for various purposes, such as logging or analysis.
  */
 void EvoAPI::titan_evaluation(EvoIndividual participant, int generation_index) {
-    if (participant.fitness < titan.fitness) setTitan(participant, generation_index);
+    if (participant.fitness < titan.fitness) setTitan(participant);
 }
 
 /**
- * The function creates a vector of random engines using the Xoshiro256Plus algorithm, with each engine
- * having a unique seed based on the master random engine.
+ * @brief Create a vector of random engines.
  *
- * @param seed The seed is a 64-bit unsigned integer used to initialize the master random engine. It
- * determines the starting point of the random number sequence.
- * @param count The parameter "count" represents the number of random engines to create.
+ * This method creates a vector of Xoshiro256Plus random engines. Each random engine is initialized with a unique seed.
+ * The seed for the first random engine is generated using a random_device, and the seeds for the remaining random engines are generated by performing a long jump on the previous random engine.
  *
- * @return a vector of XoshiroCpp::Xoshiro256Plus random engines.
+ * @param count The number of random engines to create.
+ * @return A vector of Xoshiro256Plus random engines.
  */
 std::vector<XoshiroCpp::Xoshiro256Plus> EvoAPI::create_random_engines(int count) {
 
+    //create master random engine with random seed
     std::random_device rd;
     uint64_t seed = (static_cast<uint64_t>(rd()) << 32) | rd();
-
     XoshiroCpp::Xoshiro256Plus master_random_engine(seed);
-    std::vector<XoshiroCpp::Xoshiro256Plus> random_engines;
 
-    //for each possible thread create its random engine with unique seed
+    //create n random engines with long jump from master random engine
+    std::vector<XoshiroCpp::Xoshiro256Plus> random_engines;
     for (int i = 0;i < count;i++) {
         master_random_engine.longJump();
         random_engines.emplace_back(master_random_engine.serialize());
@@ -559,23 +542,6 @@ void EvoAPI::process_generation_fitness(std::set<double> const& generation_fitne
     generation_fitness_metrics.push_back(DescriptiveStatistics::standard_deviation(generation_fitness_vector));
 }
 
-
-/**
- * @brief Resets the API for another calculation.
- *
- * This method clears the titan_history and generation_fitness_metrics vectors,
- * resets the titan object to its default state, and resizes the x and y vectors to 0.
- */
-void EvoAPI::reset_api_for_another_calculation() {
-    titan_history.clear();
-    generation_fitness_metrics.clear();
-    titan = EvoIndividual();
-    x.resize(0, 0);
-    y.resize(0, 0);
-
-    EvoAPI::logger->info("API reset for another calculation");
-};
-
 /**
  * @brief Returns the regression result table as a string.
  *
@@ -595,23 +561,6 @@ std::string EvoAPI::get_regression_result_table() {
         149,
         regression_result_matrix.size(),
         DataArrangement::ColumnMajor
-    );
-    return plt.get_table();
-};
-
-/**
- * @brief Returns the titan history table as a string.
- *
- * @return std::string The titan history table.
- */
-std::string EvoAPI::get_titan_history_table() {
-    Plotter<double> plt = Plotter(
-        titan_history.data(),
-        "Best individual history",
-        { "Fitness", "Generation" },
-        149,
-        titan_history.size(),
-        DataArrangement::RowMajor
     );
     return plt.get_table();
 };
@@ -756,7 +705,6 @@ std::string EvoAPI::get_regression_summary_table() {
     table << "\n";
     table << get_regression_result_table();
     table << get_result_metrics_table();
-    table << get_titan_history_table();
     table << get_regression_coefficients_table();
     table << get_genotype_table();
     table << get_formula_table();

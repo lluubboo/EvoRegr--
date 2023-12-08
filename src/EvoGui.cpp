@@ -47,8 +47,6 @@ static constexpr int MENU_HEIGHT = 30;
 EvoView::EvoView(int width, int height, const char* title) :
     Fl_Window(width, height, title),
     decomposition_method{ "LDLT" },
-    export_log_file_flag{ false },
-    report_file_prefix{ "Regression_report" },
     generations_count{ 100 },
     generations_size{ 100 },
     interference_size{ 0 },
@@ -92,26 +90,6 @@ void EvoView::help_callback(Fl_Widget* /*w*/, void* /*data*/) {
     disp->buffer(buff);
     window->show();
     buff->text("For help, please contact: lubomirbalazjob@gmail.com");
-}
-
-/**
- * Callback function for handling user input in the filename input field.
- * Updates the filename member variable of the EvoView class with the entered value.
- * If the input value is empty, displays an error message.
- *
- * @param w The widget that triggered the callback.
- * @param v The user data associated with the widget.
- */
-void EvoView::filename_input_callback(Fl_Widget* w, void* v) {
-    EvoView* T = (EvoView*)v;
-    std::string input_value = ((Fl_Input*)w)->value();
-    if (input_value.empty()) {
-        T->logger->error("Invalid input. Please enter a valid filename prefix.");
-        //filename will be let as default
-        return;
-    }
-    T->report_file_prefix = input_value;
-    T->logger->info("Report file prefix set to: " + T->report_file_prefix);
 }
 
 /**
@@ -202,19 +180,6 @@ void EvoView::mutation_rate_callback(Fl_Widget* w, void* v) {
 }
 
 /**
- * Callback function for exporting a file.
- * Updates the export_log_file flag in the EvoView object and logs the new value.
- *
- * @param w The Fl_Widget triggering the callback.
- * @param v A pointer to the EvoView object.
- */
-void EvoView::export_file_callback(Fl_Widget* w, void* v) {
-    EvoView* T = (EvoView*)v;
-    T->export_log_file_flag = ((Fl_Check_Button*)w)->value();
-    T->logger->info("Export log file flag set to: " + std::to_string(T->export_log_file_flag));
-}
-
-/**
  * Callback function for the decomposition method choice box.
  * Updates the decomposition_method field in the EvoView object and logs the new value.
  *
@@ -262,9 +227,7 @@ void EvoView::predict_button_callback(Fl_Widget* /*w*/, void* v) {
     std::thread predict_thread(
         &EvoView::call_predict,
         T,
-        T->evo_api,
-        T->export_log_file_flag,
-        T->report_file_prefix
+        T->evo_api
     );
 
     predict_thread.detach();
@@ -281,9 +244,7 @@ void EvoView::batch_predict_button_callback(Fl_Widget* /*w*/, void* v) {
     std::thread predict_thread(
         &EvoView::call_batch_predict,
         T,
-        T->evo_api,
-        T->export_log_file_flag,
-        T->report_file_prefix
+        T->evo_api
     );
 
     predict_thread.detach();
@@ -300,16 +261,10 @@ void EvoView::batch_predict_button_callback(Fl_Widget* /*w*/, void* v) {
  * @param export_log_file_flag A flag indicating whether to export the log file.
  * @param report_file_prefix The prefix for the report file.
  */
-void EvoView::call_predict(EvoAPI evo_api, bool export_log_file_flag, std::string report_file_prefix) {
+void EvoView::call_predict(EvoAPI evo_api) {
     try {
         evo_api.predict();
-        if (export_log_file_flag) {
-            evo_api.log_result();
-            evo_api.create_report_file(report_file_prefix);
-        }
-        else {
-            evo_api.log_result();
-        }
+        evo_api.log_result();
     }
     catch (const std::exception& e) {
         logger->error("Standard exception caught in predict method call: " + std::string(e.what()));
@@ -319,7 +274,7 @@ void EvoView::call_predict(EvoAPI evo_api, bool export_log_file_flag, std::strin
     }
 };
 
-void EvoView::call_batch_predict(EvoAPI evo_api, bool export_log_file_flag, std::string report_file_prefix) {
+void EvoView::call_batch_predict(EvoAPI evo_api) {
     try {
         evo_api.batch_predict();
     }
@@ -492,15 +447,6 @@ Fl_Choice* EvoView::create_combo_box(int h) {
     return combo_box;
 }
 
-Fl_Input* EvoView::create_filename_box(int h) {
-    Fl_Input* inputBox = new Fl_Input(0, 0, 0, h);
-    inputBox->value(report_file_prefix.c_str());
-    inputBox->tooltip("Enter the filename prefix");
-    inputBox->callback(filename_input_callback, (void*)(this));
-    return inputBox;
-}
-
-
 /**
  * @brief Creates a new input box.
  *
@@ -567,22 +513,6 @@ Fl_Input* EvoView::create_mutation_rate_box(int h) {
 }
 
 /**
- * @brief Creates a new check button.
- *
- * This function creates a new check button.
- *
- * @param h The height of the check button in pixels.
- * @return Fl_Check_Button* A pointer to the newly created check button.
- */
-Fl_Check_Button* EvoView::create_export_file_box(int h) {
-    Fl_Check_Button* checkbox = new Fl_Check_Button(0, 0, 0, h, "export log file");
-    checkbox->align(FL_ALIGN_INSIDE);
-    checkbox->tooltip("Check this box to enable log file export before running the prediction.");
-    checkbox->callback(export_file_callback, (void*)this);
-    return checkbox;
-}
-
-/**
  * @brief Creates an invisible Fl_Box to be used as a spacer.
  *
  * This function creates a new Fl_Box with a specified height and makes it invisible. This can be used to create space between widgets in a layout.
@@ -618,8 +548,6 @@ void EvoView::render_main_window() {
         );
         main_widget_pack->begin();
         {
-            filename_label = create_label(LABEL_HEIGHT, "Report prefix:");
-            filename_box = create_filename_box(BUTTON_HEIGHT);
             gen_count_label = create_label(LABEL_HEIGHT, "Generations count:");
             gen_count_box = create_gen_count_box(BUTTON_HEIGHT);
             gen_size_label = create_label(LABEL_HEIGHT, "Generation size:");
@@ -632,7 +560,6 @@ void EvoView::render_main_window() {
             decomposition_choice_chbox = create_combo_box(BUTTON_HEIGHT);
             predict_button = create_predict_button(BUTTON_HEIGHT);
             batch_predict_button = create_batch_predict_button(BUTTON_HEIGHT);
-            export_log_checkbutton = create_export_file_box(BUTTON_HEIGHT);
         }
         main_widget_pack->end();
     }

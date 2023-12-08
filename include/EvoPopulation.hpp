@@ -16,6 +16,7 @@ public:
     std::vector<std::string> transform_target_chromosome_to_string_vector() const;
     std::string to_string_code() const;
     std::string to_math_formula() const;
+
     void evaluate(double);
 
     std::vector<MergeAllele> merger_chromosome;
@@ -34,20 +35,25 @@ class EvoPopulation {
     static std::array<unsigned int, 2> calculate_migration_interval(unsigned int island_id, unsigned int island_count, unsigned int generation_size_limit);
 
 public:
+    
     EvoPopulation(unsigned int size) : _population(size) {};
     EvoPopulation(std::vector<EvoIndividual> population) : _population(population) {};
-    size_t size() const noexcept;
+
     void move_to_population(size_t index, EvoIndividual& individual) noexcept;
     void batch_population_move(EvoPopulation& subpopulation, size_t index) noexcept;
-    void element_pushback(EvoIndividual& individual) noexcept;
-    bool swap_individuals(size_t index1, size_t index2) noexcept;
     void batch_swap_individuals(size_t island_id, size_t island_count, size_t ratio, XoshiroCpp::Xoshiro256Plus& random_engine) noexcept;
+    void element_pushback(EvoIndividual& individual) noexcept;
+    void clear();
+    void reserve(size_t size);
+
+    bool swap_individuals(size_t index1, size_t index2) noexcept;
+
     EvoIndividual get_individual(size_t index) noexcept;
     EvoIndividual get_random_individual(XoshiroCpp::Xoshiro256Plus& random_engine) noexcept;
     std::vector<EvoIndividual>::iterator begin();
     std::vector<EvoIndividual>::iterator end();
     std::vector<EvoIndividual>::const_iterator begin() const;
     std::vector<EvoIndividual>::const_iterator end() const;
-    void clear();
-    void reserve(size_t size);
+    size_t size() const noexcept;
+
 };
