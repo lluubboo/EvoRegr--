@@ -261,6 +261,17 @@ void EvoAPI::predict() {
     EvoAPI::logger->info("Prediction process finished in /s: {}", elapsed.count());
 }
 
+/**
+ * @brief Runs the evolutionary algorithm on multiple islands in parallel.
+ *
+ * This function runs the evolutionary algorithm on multiple islands in parallel using multithreading.
+ * It creates a separate thread for each island and runs the `run_island_thread` function in each thread.
+ * The results from each island are collected and the best individual is selected as the titan.
+ *
+ * The number of islands is determined by the maximum number of threads available on the system.
+ *
+ * This function logs the start and end of the batch prediction process and the fitness of the titan.
+ */
 void EvoAPI::batch_predict() {
     EvoAPI::logger->info("Starting batch prediction process...");
 
@@ -269,7 +280,7 @@ void EvoAPI::batch_predict() {
     // random engine for each island
     std::vector<XoshiroCpp::Xoshiro256Plus> random_engines = create_random_engines(island_count);
 
-    // generation zero genetic material
+    // create generation zero
     EvoPopulation population(
         Factory::generate_random_generation(
             island_count * generation_size_limit, 
@@ -279,7 +290,6 @@ void EvoAPI::batch_predict() {
         )
     );
 
-    // Vector of threads and promises
     std::vector<std::thread> threads;
     std::vector<std::promise<EvoIndividual>> promises(island_count);
 
@@ -326,10 +336,29 @@ void EvoAPI::batch_predict() {
     EvoAPI::logger->info("Batch prediction finished with titan fitness: {}", titan.fitness);
 }
 
+/**
+ * @brief Runs the evolutionary algorithm on an island in a separate thread.
+ *
+ * This function is designed to be run in a separate thread. It takes a promise and an `EvoRegressionInput` object as parameters.
+ * It runs the evolutionary algorithm on an island by calling the `run_island` function and sets the result as the value of the promise.
+ *
+ * @param promise A `std::promise` object that will hold the result of the evolutionary algorithm.
+ * @param input An `EvoRegressionInput` object containing the parameters for the evolutionary algorithm.
+ */
 void EvoAPI::run_island_thread(std::promise<EvoIndividual>& promise, EvoRegressionInput input) {
     promise.set_value(EvoAPI::run_island(input));
 }
 
+/**
+ * @brief Runs the evolutionary algorithm on an island.
+ *
+ * This function runs the evolutionary algorithm on a single island. It performs the generational loop and entity loop,
+ * handles crossover and mutation, evaluates the fitness of individuals, and manages the population of the island.
+ *
+ * @param input An `EvoRegressionInput` object containing the parameters for the evolutionary algorithm.
+ *
+ * @return EvoIndividual The best individual found on the island, i.e., the one with the highest fitness.
+ */
 EvoIndividual EvoAPI::run_island(EvoRegressionInput input) {
 
     // subpopulation borders
