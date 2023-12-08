@@ -6,6 +6,7 @@
 #include <set>
 #include <spdlog/spdlog.h>
 #include <functional>
+#include <future>
 #include "EvoIndividual.hpp"
 #include "RegressionSolver.hpp"
 #include "EvoLibrary.hpp"
@@ -49,19 +50,21 @@ class EvoAPI {
 
     void create_regression_input(std::tuple<int, std::vector<double>>);
 
+    // predictions
     static EvoIndividual run_island(EvoRegressionInput);
+    static void run_island_thread(std::promise<EvoIndividual>& promise, EvoRegressionInput input);
 
     // concurrent random engines
     std::vector<XoshiroCpp::Xoshiro256Plus> create_random_engines(int count);
 
     // fitness & generation postprocessing
     void setTitan(EvoIndividual);
-    void titan_evaluation(EvoIndividual participant, int generation_index);
+    void titan_evaluation(EvoIndividual participant);
     void process_generation_fitness(std::set<double> const& generation_fitness);
 
     // final postprocessing 
     void titan_postprocessing();
-    void generation_postprocessing(std::vector<EvoIndividual> const& generation, int generation_index);
+    void generation_postprocessing(std::vector<EvoIndividual> const& generation);
 
     Eigen::MatrixXd get_regression_summary_matrix(RegressionDetailedResult const& result, Eigen::MatrixXd const& original_x, Eigen::VectorXd original_y);
 
@@ -83,6 +86,5 @@ public:
     void log_result();
     void init_logger();
     void set_boundary_conditions(unsigned int generation_size_limit, unsigned int generation_count_limit, unsigned int interaction_cols, unsigned int mutation_rate);
-
     bool is_ready_to_predict();
 };

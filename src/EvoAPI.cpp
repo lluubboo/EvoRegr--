@@ -1,14 +1,8 @@
-#include <Eigen/Dense>
-#include <iostream>
-#include <vector>
-#include <set>
 #include <chrono>
 #include <numeric>
-#include <spdlog/spdlog.h>
 #include <spdlog/sinks/basic_file_sink.h>
 #include <spdlog/sinks/stdout_color_sinks.h>
 #include <fstream>
-#include <future>
 #include <span>
 #include <mutex>
 #include <random>
@@ -247,7 +241,7 @@ void EvoAPI::predict() {
         // new generation become old generation after generation loop
         past_generation = std::move(generation);
         // save/process some data after generation loop
-        generation_postprocessing(past_generation, gen_index);
+        generation_postprocessing(past_generation);
     }
 
     auto stop = std::chrono::high_resolution_clock::now();
@@ -276,30 +270,27 @@ void EvoAPI::batch_predict() {
     std::vector<std::thread> threads;
     std::vector<std::promise<EvoIndividual>> promises(island_count);
 
-    auto start = std::chrono::high_resolution_clock::now();
     for (int island_index = 0; island_index < island_count; island_index++) {
 
         // Get a reference to the promise for this island
         std::promise<EvoIndividual>& promise = promises[island_index];
 
+        // Prepare the input for the function
+        EvoRegressionInput input{
+            this->x,
+            this->y,
+            population,
+            random_engines[island_index],
+            this->solver,
+            this->mutation_rate,
+            this->generation_size_limit,
+            this->generation_count_limit,
+            island_index,
+            island_count
+        };
+
         // Start a new thread for each island
-        threads.emplace_back(
-            [this, &promise, &population, &random_engines, island_index, island_count]() {
-                EvoRegressionInput input{
-                    this->x,
-                    this->y,
-                    population,
-                    random_engines[island_index],
-                    this->solver,
-                    this->mutation_rate,
-                    this->generation_size_limit,
-                    this->generation_count_limit,
-                    island_index,
-                    island_count
-                };
-                promise.set_value(EvoAPI::run_island(input));
-            }
-        );
+        threads.emplace_back(&EvoAPI::run_island_thread, std::ref(promise), input);
     }
 
     // wait for all threads to finish
@@ -314,12 +305,16 @@ void EvoAPI::batch_predict() {
 
     for (auto& result : results) {
         if (titan.fitness > result.fitness) {
-            titan_evaluation(result, 0);
+            titan_evaluation(result);
         }
     }
 
     log_result();
     EvoAPI::logger->info("Batch prediction finished");
+}
+
+void EvoAPI::run_island_thread(std::promise<EvoIndividual>& promise, EvoRegressionInput input) {
+    promise.set_value(EvoAPI::run_island(input));
 }
 
 EvoIndividual EvoAPI::run_island(EvoRegressionInput input) {
@@ -406,11 +401,11 @@ void EvoAPI::log_result() {
  * of the current generation being processed. It is used to keep track of the progress of the
  * evolutionary algorithm.
  */
-void EvoAPI::generation_postprocessing(std::vector<EvoIndividual> const& generation, int generation_index) {
+void EvoAPI::generation_postprocessing(std::vector<EvoIndividual> const& generation) {
     // ordered set of fitnesses
     std::set<double> generation_fitness;
     for (auto& individual : generation) {
-        titan_evaluation(individual, generation_index);
+        titan_evaluation(individual);
         generation_fitness.insert(individual.fitness);
     }
     // create fitness metrics
@@ -442,7 +437,7 @@ void EvoAPI::setTitan(EvoIndividual titan) {
  * generation of the evolutionary algorithm. It is used to keep track of the progress of the algorithm
  * and can be used for various purposes, such as logging or analysis.
  */
-void EvoAPI::titan_evaluation(EvoIndividual participant, int generation_index) {
+void EvoAPI::titan_evaluation(EvoIndividual participant) {
     if (participant.fitness < titan.fitness) setTitan(participant);
 }
 
