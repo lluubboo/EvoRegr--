@@ -374,7 +374,7 @@ EvoIndividual EvoAPI::run_island(EvoRegressionInput input) {
     // **************************************generational loop********************************************
     for (int gen_index = 0; gen_index < input.generation_count_limit; gen_index++) {
 
-        if (gen_index != 0 && gen_index % 5 == 0) input.population.batch_swap_individuals(input.island_id, input.island_count, 0.1, input.random_engine);
+        if (gen_index != 0 && gen_index % 10 == 0) input.population.batch_swap_individuals(input.island_id, input.island_count, 0.05, input.random_engine);
         
         // **************************************entity loop********************************************
         for (unsigned int entity_index = start_index; entity_index <= end_index; entity_index++) {

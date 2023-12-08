@@ -35,6 +35,18 @@ std::array<EvoIndividual, 2> Selection::tournament_selection(std::vector<EvoIndi
     return std::array{ std::move(first), std::move(second) };
 };
 
+/**
+ * @brief Gets a random individual from the population.
+ *
+ * This function selects a random individual from the population using a random number generator.
+ * The random number generator is passed as a parameter and is used to generate a random index into the population vector.
+ *
+ * @param random_engine A reference to a `XoshiroCpp::Xoshiro256Plus` random number generator.
+ *
+ * @return EvoIndividual The randomly selected individual from the population.
+ *
+ * @note This function is marked `noexcept`, meaning it does not throw exceptions.
+ */
 std::array<EvoIndividual, 2> Selection::tournament_selection(std::span<EvoIndividual> const& generation, XoshiroCpp::Xoshiro256Plus& random_engine, std::mutex& population_mutex) {
     std::array<EvoIndividual, 4> individuals;
     {
@@ -49,6 +61,22 @@ std::array<EvoIndividual, 2> Selection::tournament_selection(std::span<EvoIndivi
     return std::array{ individuals[0], individuals[1] };
 };
 
+/**
+ * @brief Performs tournament selection on a subset of a population.
+ *
+ * This function performs tournament selection, a method of selecting individuals from a population based on their fitness.
+ * It randomly selects two individuals from a specified range within the population and chooses the one with the lower fitness.
+ * This process is repeated twice to select two individuals.
+ *
+ * If the start and end indices of the range are equal, an error message is printed to `std::cerr`.
+ *
+ * @param population A reference to the `EvoPopulation` from which individuals are selected.
+ * @param random_engine A reference to a `XoshiroCpp::Xoshiro256Plus` random number generator.
+ * @param start_index The start index of the range within the population from which individuals are selected.
+ * @param end_index The end index of the range within the population from which individuals are selected.
+ *
+ * @return std::array<EvoIndividual, 2> The two selected individuals with the lower fitness.
+ */
 std::array<EvoIndividual, 2> Selection::tournament_selection(EvoPopulation& population, XoshiroCpp::Xoshiro256Plus& random_engine, size_t start_index, size_t end_index) {
     if (start_index == end_index) {
         std::cerr << "Tournament selection: start index and end index should not be equal." << std::endl;
@@ -89,7 +117,20 @@ EvoIndividual Factory::getRandomEvoIndividual(int predictor_row_count, int predi
     return individual;
 }
 
-
+/**
+ * @brief Generates a random generation of individuals.
+ *
+ * This function generates a random generation of `EvoIndividual` objects and evaluates their fitness.
+ * The size of the generation is determined by the `size` parameter.
+ * Each individual is generated using the `getRandomEvoIndividual` function and its fitness is evaluated using the `get_fitness` function.
+ *
+ * @param size The number of individuals in the generation.
+ * @param dataset A `Transform::EvoDataSet` object containing the dataset used to evaluate the fitness of the individuals.
+ * @param random_engine A `XoshiroCpp::Xoshiro256Plus` random number generator used to generate random individuals.
+ * @param solver A function that calculates the regression result for a given predictor and response matrix.
+ *
+ * @return std::vector<EvoIndividual> The generated generation of individuals.
+ */
 std::vector<EvoIndividual> Factory::generate_random_generation(
     int size,
     Transform::EvoDataSet const& dataset,

@@ -196,8 +196,8 @@ void EvoPopulation::batch_swap_individuals(size_t island_id, size_t island_count
         island_count,
         _population.size()
     );
-
-    for (size_t i = 0; i < ratio * _population.size(); i++) {
+    size_t migrants_count = ratio * (_population.size() / island_count);
+    for (size_t i = 0; i < migrants_count; i++) {
         swap_individuals(RandomNumbers::rand_interval_int(migration_interval[0], migration_interval[1], random_engine),
             RandomNumbers::rand_interval_int(migration_interval[0], migration_interval[1], random_engine));
     }
@@ -218,6 +218,18 @@ std::array<unsigned int, 2> EvoPopulation::calculate_migration_interval(unsigned
     std::min((island_id + 2) * generation_size_limit, island_count * generation_size_limit) };
 }
 
+/**
+ * @brief Gets a random individual from the population.
+ *
+ * This function selects a random individual from the population using a random number generator.
+ * The random number generator is passed as a parameter and is used to generate a random index into the population vector.
+ *
+ * @param random_engine A reference to a `XoshiroCpp::Xoshiro256Plus` random number generator.
+ *
+ * @return EvoIndividual The randomly selected individual from the population.
+ *
+ * @note This function is marked `noexcept`, meaning it does not throw exceptions.
+ */
 EvoIndividual EvoPopulation::get_random_individual(XoshiroCpp::Xoshiro256Plus& random_engine) noexcept {
     return get_individual(RandomNumbers::rand_interval_int(0, _population.size() - 1, random_engine));
 }
