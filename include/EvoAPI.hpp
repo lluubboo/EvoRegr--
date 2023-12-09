@@ -55,6 +55,7 @@ class EvoAPI {
     // predictions
     static EvoIndividual run_island(EvoRegressionInput);
     static void run_island_thread(std::promise<EvoIndividual>& promise, EvoRegressionInput input);
+    static std::array<unsigned int, 2> get_island_borders(unsigned int island_id, unsigned int generation_size_limit) noexcept;
 
     // concurrent random engines
     std::vector<XoshiroCpp::Xoshiro256Plus> create_random_engines(int count);
@@ -62,11 +63,9 @@ class EvoAPI {
     // fitness & generation postprocessing
     void setTitan(EvoIndividual);
     void titan_evaluation(EvoIndividual participant);
-    void process_generation_fitness(std::set<double> const& generation_fitness);
 
     // final postprocessing 
     void titan_postprocessing();
-    void generation_postprocessing(std::vector<EvoIndividual> const& generation);
 
     Eigen::MatrixXd get_regression_summary_matrix(RegressionDetailedResult const& result, Eigen::MatrixXd const& original_x, Eigen::VectorXd original_y);
 

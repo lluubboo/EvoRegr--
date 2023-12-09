@@ -252,8 +252,6 @@ void EvoAPI::predict() {
         }
         // new generation become old generation after generation loop
         past_generation = std::move(generation);
-        // save/process some data after generation loop
-        generation_postprocessing(past_generation);
     }
 
     auto stop = std::chrono::high_resolution_clock::now();
@@ -350,6 +348,22 @@ void EvoAPI::run_island_thread(std::promise<EvoIndividual>& promise, EvoRegressi
 }
 
 /**
+ * @brief Calculates the borders for a given island in a generation.
+ *
+ * This function calculates the start and end indices for a given island in a generation.
+ * The start index is calculated as the island ID multiplied by the generation size limit.
+ * The end index is calculated as the start index plus the generation size limit minus one.
+ *
+ * @param island_id The ID of the island for which to calculate the borders.
+ * @param island_count The total number of islands. (Currently unused in the function)
+ * @param generation_size_limit The maximum size of a generation.
+ * @return A std::array<unsigned int, 2> containing the start and end indices for the island in the generation.
+ */
+std::array<unsigned int, 2> EvoAPI::get_island_borders(unsigned int island_id,  unsigned int generation_size_limit) noexcept {
+    return { island_id * generation_size_limit , island_id * generation_size_limit + generation_size_limit - 1 };
+};
+
+/**
  * @brief Runs the evolutionary algorithm on an island.
  *
  * This function runs the evolutionary algorithm on a single island. It performs the generational loop and entity loop,
@@ -363,30 +377,26 @@ EvoIndividual EvoAPI::run_island(EvoRegressionInput input) {
     auto start_time = std::chrono::high_resolution_clock::now();
 
     // subpopulation borders
-    unsigned int start_index, end_index;
-    start_index = input.island_id * input.generation_size_limit;
-    end_index = start_index + input.generation_size_limit - 1;
+    auto island_borders = EvoAPI::get_island_borders(input.island_id, input.generation_size_limit);
 
     EvoIndividual island_titan, newborn;
 
     EvoPopulation island_population(0);
     island_population.reserve(input.generation_size_limit);
 
-    // **************************************generational loop********************************************
     for (int gen_index = 0; gen_index < input.generation_count_limit; gen_index++) {
 
         if (gen_index != 0 && gen_index % 10 == 0) input.population.batch_swap_individuals(input.island_id, input.island_count, 0.05, input.random_engine);
         
-        // **************************************entity loop********************************************
-        for (unsigned int entity_index = start_index; entity_index <= end_index; entity_index++) {
+        for (unsigned int entity_index = island_borders[0]; entity_index <= island_borders[1]; entity_index++) {
 
             //crossover & mutation [vector sex]
             newborn = Reproduction::reproduction(
                 Selection::tournament_selection(
                     input.population,
                     input.random_engine,
-                    start_index,
-                    end_index
+                    island_borders[0],
+                    island_borders[1]
                     ),
                 input.x.cols(),
                 input.x.rows(),
@@ -407,24 +417,26 @@ EvoIndividual EvoAPI::run_island(EvoRegressionInput input) {
                 )
             );
 
-            // titan mark
-            if (island_titan.fitness > newborn.fitness) {
-                island_titan = newborn;
-                EvoAPI::logger->info("New titan set with fitness: {} and generation index: {}", island_titan.fitness, gen_index);
-            }
-
             // newborn to population
             island_population.element_pushback(newborn);
         }
 
-        input.population.batch_population_move(island_population, start_index);
+        for (const auto& individual : island_population) {
+            if (individual.fitness < island_titan.fitness) {
+                island_titan = individual;
+                EvoAPI::logger->info("Island {} new titan with fitness {}", input.island_id, island_titan.fitness);
+            }
+        }
+
+        input.population.batch_population_move(island_population, island_borders[0]);
     }
 
     auto end_time = std::chrono::high_resolution_clock::now();
+
     EvoAPI::logger->info("Island {} with borders {} and {} finished with best individual {} in {} ms",
         input.island_id,
-        start_index, 
-        end_index,
+        island_borders[0],
+        island_borders[1],
         island_titan.fitness,
         std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time).count()
     );
@@ -441,26 +453,6 @@ void EvoAPI::log_result() {
     titan_postprocessing();
     EvoAPI::logger->info(get_regression_summary_table());
     EvoAPI::logger->info("Regression results showing...");
-}
-
-/**
- * The function "generation_postprocessing" takes a vector of EvoIndividual objects and an integer
- * representing the generation index, and performs post-processing tasks on the generation data.
- *
- * @param generation A vector of EvoIndividual objects representing a generation of individuals.
- * @param generation_index The generation index is an integer value that represents the index or number
- * of the current generation being processed. It is used to keep track of the progress of the
- * evolutionary algorithm.
- */
-void EvoAPI::generation_postprocessing(std::vector<EvoIndividual> const& generation) {
-    // ordered set of fitnesses
-    std::set<double> generation_fitness;
-    for (auto& individual : generation) {
-        titan_evaluation(individual);
-        generation_fitness.insert(individual.fitness);
-    }
-    // create fitness metrics
-    process_generation_fitness(generation_fitness);
 }
 
 /**
@@ -566,26 +558,6 @@ Eigen::MatrixXd EvoAPI::get_regression_summary_matrix(RegressionDetailedResult c
     regression_result_matrix.col(3) = 100. - ((regression_result_matrix.col(1).array() / regression_result_matrix.col(0).array()) * 100);
 
     return regression_result_matrix;
-}
-
-/**
- * The function takes a set of fitness values for a generation, converts it to a vector, and calculates
- * various metrics such as the mean, median, and standard deviation.
- *
- * @param generation_fitness The parameter `generation_fitness` is a set of double values representing
- * the fitness values of a generation.
- */
-void EvoAPI::process_generation_fitness(std::set<double> const& generation_fitness) {
-    // get vector from set
-    std::vector<double> generation_fitness_vector;
-    generation_fitness_vector.reserve(generation_fitness.size());
-    std::copy(generation_fitness.begin(), generation_fitness.end(), std::back_inserter(generation_fitness_vector));
-    // calculate metrics
-    generation_fitness_metrics.push_back(*generation_fitness.begin());
-    generation_fitness_metrics.push_back(DescriptiveStatistics::geometric_mean(generation_fitness_vector));
-    generation_fitness_metrics.push_back(DescriptiveStatistics::mean(generation_fitness_vector));
-    generation_fitness_metrics.push_back(DescriptiveStatistics::median(generation_fitness_vector));
-    generation_fitness_metrics.push_back(DescriptiveStatistics::standard_deviation(generation_fitness_vector));
 }
 
 /**
