@@ -35,6 +35,8 @@ class EvoPopulation {
 public:
 
     EvoPopulation(unsigned int size) : _population(size) {};
+    EvoPopulation(unsigned int size, unsigned int capacity) : _population(size) {_population.reserve(capacity);};
+
     EvoPopulation(std::vector<EvoIndividual> population) : _population(population) {};
 
     void move_to_population(size_t index, EvoIndividual& individual) noexcept;

@@ -316,6 +316,22 @@ void EvoAPI::batch_predict() {
     EvoAPI::logger->info("Batch prediction finished with titan fitness: {}", titan.fitness);
 }
 
+/**
+ * @brief Runs the evolutionary algorithm on a single island (subpopulation) and logs the execution time.
+ *
+ * @param input An EvoRegressionInput object containing the parameters for the evolutionary algorithm.
+ *
+ * @return An IslandOutput object containing the best individual found on the island and the island's ID.
+ *
+ * This function performs the following steps:
+ * 1. Records the start time.
+ * 2. Calls the run_island function to run the evolutionary algorithm on the island.
+ * 3. Records the end time.
+ * 4. Logs the execution time and the island's ID.
+ * 5. Returns the output from the run_island function.
+ *
+ * The function is designed to be run asynchronously, so it can be used with std::async or similar functions to run the evolutionary algorithm on multiple islands concurrently.
+ */
 IslandOutput EvoAPI::run_island_async(EvoRegressionInput input) {
 
     auto start_time = std::chrono::high_resolution_clock::now();
@@ -327,14 +343,19 @@ IslandOutput EvoAPI::run_island_async(EvoRegressionInput input) {
 }
 
 /**
- * @brief Runs the evolutionary algorithm on an island.
+ * @brief Runs the evolutionary algorithm on a single island (subpopulation).
  *
- * This function runs the evolutionary algorithm on a single island. It performs the generational loop and entity loop,
- * handles crossover and mutation, evaluates the fitness of individuals, and manages the population of the island.
+ * @param input An EvoRegressionInput object containing the parameters for the evolutionary algorithm.
  *
- * @param input An `EvoRegressionInput` object containing the parameters for the evolutionary algorithm.
+ * @return An IslandOutput object containing the best individual found on the island and the island's ID.
  *
- * @return EvoIndividual The best individual found on the island, i.e., the one with the highest fitness.
+ * This function performs the following steps for a specified number of generations:
+ * 1. If the current generation is a multiple of 10 and not the first, it performs a migration operation, swapping a portion of the island's population with individuals from other islands.
+ * 2. For each individual in the island's subpopulation, it performs crossover and mutation to produce a new individual, evaluates the new individual's fitness, and adds the new individual to the island's population.
+ * 3. It checks each individual in the island's population and updates the island's best individual (the "titan") if it finds an individual with a lower fitness.
+ * 4. It moves the island's population to the shared population.
+ *
+ * The function returns the island's titan and the island's ID.
  */
 IslandOutput EvoAPI::run_island(EvoRegressionInput input) {
 
@@ -343,10 +364,9 @@ IslandOutput EvoAPI::run_island(EvoRegressionInput input) {
 
     EvoIndividual island_titan, newborn;
 
-    // create island population subpopulation
+    // create island population and reserve it to generation size limit
     // its more efficient to move to shared population after each generation only
-    EvoPopulation island_population(0);
-    island_population.reserve(input.generation_size_limit);
+    EvoPopulation island_population(0, input.generation_size_limit);
 
     for (int gen_index = 0; gen_index < input.generation_count_limit; gen_index++) {
 
