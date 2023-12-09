@@ -172,16 +172,14 @@ void EvoPopulation::move_to_end(EvoIndividual&& individual) noexcept {
  *
  * This function locks the population for thread safety. If both indices are valid, it swaps the individuals at these indices in the population and returns true. If either index is out of range, it returns false without modifying the population.
  */
-bool EvoPopulation::swap_individuals(size_t index1, size_t index2) noexcept {
+void EvoPopulation::swap_individuals(size_t index1, size_t index2) noexcept {
     std::unique_lock lock(_mutex);
     {
         if (index1 < _population.size() && index2 < _population.size() && index1 != index2) {
             std::swap(_population[index1], _population[index2]);
-            return true;
         }
         else {
             std::cerr << "Error: cannot swap individuals. " << std::endl;
-            return false;
         }
     }
 }
@@ -201,9 +199,9 @@ void EvoPopulation::batch_swap_individuals(size_t island_id, size_t island_count
     std::array<unsigned int, 2> migration_interval = EvoPopulation::calculate_migration_interval(
         island_id,
         island_count,
-        _population.size()
+        _population.size() / island_count
     );
-    size_t migrants_count = ratio * (_population.size() / island_count);
+    size_t migrants_count = static_cast<size_t>(((_population.size() / island_count) * ratio) / 100);
     for (size_t i = 0; i < migrants_count; i++) {
         swap_individuals(RandomNumbers::rand_interval_int(migration_interval[0], migration_interval[1], random_engine),
             RandomNumbers::rand_interval_int(migration_interval[0], migration_interval[1], random_engine));
@@ -221,8 +219,8 @@ void EvoPopulation::batch_swap_individuals(size_t island_id, size_t island_count
  * This function calculates the range of generations that a given island can migrate to. The start of the range is the maximum of 0 and the product of the island ID minus 1 and the generation size limit. The end of the range is the minimum of the product of the island ID plus 2 and the generation size limit, and the product of the island count and the generation size limit.
  */
 std::array<unsigned int, 2> EvoPopulation::calculate_migration_interval(unsigned int island_id, unsigned int island_count, unsigned int generation_size_limit) {
-    return { std::max(0u, (island_id - 1) * generation_size_limit),
-    std::min((island_id + 2) * generation_size_limit, island_count * generation_size_limit) };
+    return { island_id == 0 ? 0 : std::max(0u, (island_id - 1) * generation_size_limit),
+    std::min((island_id + 2) * generation_size_limit, island_count * generation_size_limit - 1) };
 }
 
 /**

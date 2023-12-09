@@ -44,7 +44,7 @@ public:
     void clear();
     void reserve(size_t size);
 
-    bool swap_individuals(size_t index1, size_t index2) noexcept;
+    void swap_individuals(size_t index1, size_t index2) noexcept;
 
     EvoIndividual get_individual(size_t index) noexcept;
     EvoIndividual get_random_individual(XoshiroCpp::Xoshiro256Plus& random_engine) noexcept;

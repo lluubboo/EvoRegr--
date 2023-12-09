@@ -25,6 +25,11 @@ struct EvoRegressionInput {
     const int island_count;
 };
 
+struct IslandOutput {
+    EvoIndividual best_individual;
+    int island_id;
+};
+
 class EvoAPI {
 
     // logger
@@ -53,8 +58,8 @@ class EvoAPI {
     Transform::EvoDataSet get_dataset();
 
     // predictions
-    static EvoIndividual run_island(EvoRegressionInput);
-    static void run_island_thread(std::promise<EvoIndividual>& promise, EvoRegressionInput input);
+    static IslandOutput run_island(EvoRegressionInput);
+    static IslandOutput run_island_async(EvoRegressionInput);
     static std::array<unsigned int, 2> get_island_borders(unsigned int island_id, unsigned int generation_size_limit) noexcept;
 
     // concurrent random engines

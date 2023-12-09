@@ -6,6 +6,7 @@
 #include <span>
 #include <mutex>
 #include <random>
+#include <future>
 #include "RandomNumberGenerator.hpp"
 #include "EvoAPI.hpp"
 #include "IOTools.hpp"
@@ -259,18 +260,9 @@ void EvoAPI::predict() {
     EvoAPI::logger->info("Prediction process finished in /s: {}", elapsed.count());
 }
 
-/**
- * @brief Runs the evolutionary algorithm on multiple islands in parallel.
- *
- * This function runs the evolutionary algorithm on multiple islands in parallel using multithreading.
- * It creates a separate thread for each island and runs the `run_island_thread` function in each thread.
- * The results from each island are collected and the best individual is selected as the titan.
- *
- * The number of islands is determined by the maximum number of threads available on the system.
- *
- * This function logs the start and end of the batch prediction process and the fitness of the titan.
- */
+
 void EvoAPI::batch_predict() {
+
     EvoAPI::logger->info("Starting batch prediction process...");
 
     int island_count = omp_get_max_threads();
@@ -288,13 +280,9 @@ void EvoAPI::batch_predict() {
         )
     );
 
-    std::vector<std::thread> threads;
-    std::vector<std::promise<EvoIndividual>> promises(island_count);
+    std::vector<std::future<IslandOutput>> futures;
 
     for (int island_index = 0; island_index < island_count; island_index++) {
-
-        // Get a reference to the promise for this island
-        std::promise<EvoIndividual>& promise = promises[island_index];
 
         // Prepare the input for the function
         EvoRegressionInput input{
@@ -310,58 +298,33 @@ void EvoAPI::batch_predict() {
             island_count
         };
 
-        // Start a new thread for each island
-        threads.emplace_back(&EvoAPI::run_island_thread, std::ref(promise), input);
+        // Start a new task for each island
+        futures.push_back(std::async(std::launch::async, &EvoAPI::run_island_async, input));
     }
 
-    // wait for all threads to finish
-    for (auto& thread : threads) {
-        thread.join();
+    std::vector<IslandOutput> results;
+    for (auto& future : futures) {
+        results.push_back(future.get());
     }
 
-    std::vector<EvoIndividual> results;
-    for (auto& promise : promises) {
-        results.push_back(promise.get_future().get());
-    }
-
-    for (auto& result : results) {
-        if (titan.fitness > result.fitness) {
-            titan_evaluation(result);
-        }
+    for (const auto& result : results) {
+        EvoAPI::logger->info("Island {} finished with titan fitness: {}", result.island_id, result.best_individual.fitness);
+        titan_evaluation(result.best_individual);
     }
 
     log_result();
     EvoAPI::logger->info("Batch prediction finished with titan fitness: {}", titan.fitness);
 }
 
-/**
- * @brief Runs the evolutionary algorithm on an island in a separate thread.
- *
- * This function is designed to be run in a separate thread. It takes a promise and an `EvoRegressionInput` object as parameters.
- * It runs the evolutionary algorithm on an island by calling the `run_island` function and sets the result as the value of the promise.
- *
- * @param promise A `std::promise` object that will hold the result of the evolutionary algorithm.
- * @param input An `EvoRegressionInput` object containing the parameters for the evolutionary algorithm.
- */
-void EvoAPI::run_island_thread(std::promise<EvoIndividual>& promise, EvoRegressionInput input) {
-    promise.set_value(EvoAPI::run_island(input));
-}
+IslandOutput EvoAPI::run_island_async(EvoRegressionInput input) {
 
-/**
- * @brief Calculates the borders for a given island in a generation.
- *
- * This function calculates the start and end indices for a given island in a generation.
- * The start index is calculated as the island ID multiplied by the generation size limit.
- * The end index is calculated as the start index plus the generation size limit minus one.
- *
- * @param island_id The ID of the island for which to calculate the borders.
- * @param island_count The total number of islands. (Currently unused in the function)
- * @param generation_size_limit The maximum size of a generation.
- * @return A std::array<unsigned int, 2> containing the start and end indices for the island in the generation.
- */
-std::array<unsigned int, 2> EvoAPI::get_island_borders(unsigned int island_id, unsigned int generation_size_limit) noexcept {
-    return { island_id * generation_size_limit , island_id * generation_size_limit + generation_size_limit - 1 };
-};
+    auto start_time = std::chrono::high_resolution_clock::now();
+    IslandOutput output = run_island(input);
+    auto end_time = std::chrono::high_resolution_clock::now();
+
+    EvoAPI::logger->info("Island {} finished in /s: {}", input.island_id, std::chrono::duration<double>(end_time - start_time).count());
+    return output;
+}
 
 /**
  * @brief Runs the evolutionary algorithm on an island.
@@ -373,20 +336,24 @@ std::array<unsigned int, 2> EvoAPI::get_island_borders(unsigned int island_id, u
  *
  * @return EvoIndividual The best individual found on the island, i.e., the one with the highest fitness.
  */
-EvoIndividual EvoAPI::run_island(EvoRegressionInput input) {
-    auto start_time = std::chrono::high_resolution_clock::now();
+IslandOutput EvoAPI::run_island(EvoRegressionInput input) {
 
     // subpopulation borders
     auto island_borders = EvoAPI::get_island_borders(input.island_id, input.generation_size_limit);
 
     EvoIndividual island_titan, newborn;
 
+    // create island population subpopulation
+    // its more efficient to move to shared population after each generation only
     EvoPopulation island_population(0);
     island_population.reserve(input.generation_size_limit);
 
     for (int gen_index = 0; gen_index < input.generation_count_limit; gen_index++) {
 
-        if (gen_index != 0 && gen_index % 10 == 0) input.population.batch_swap_individuals(input.island_id, input.island_count, 0.05, input.random_engine);
+        if (gen_index != 0 && gen_index % 10 == 0) {
+            input.population.batch_swap_individuals(input.island_id, input.island_count, 2, input.random_engine);
+            EvoAPI::logger->info("Island {} migration in generation {}", input.island_id, gen_index);
+        }
 
         for (unsigned int entity_index = island_borders[0]; entity_index <= island_borders[1]; entity_index++) {
 
@@ -424,25 +391,31 @@ EvoIndividual EvoAPI::run_island(EvoRegressionInput input) {
         for (const auto& individual : island_population) {
             if (individual.fitness < island_titan.fitness) {
                 island_titan = individual;
-                EvoAPI::logger->info("Island {} new titan with fitness {}", input.island_id, island_titan.fitness);
+                EvoAPI::logger->info("Island {} new titan with fitness {} in generation {}", input.island_id, island_titan.fitness, gen_index);
             }
         }
 
         input.population.batch_population_move(std::move(island_population), island_borders[0]);
     }
 
-    auto end_time = std::chrono::high_resolution_clock::now();
-
-    EvoAPI::logger->info("Island {} with borders {} and {} finished with best individual {} in {} ms",
-        input.island_id,
-        island_borders[0],
-        island_borders[1],
-        island_titan.fitness,
-        std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time).count()
-    );
-
-    return island_titan;
+    return { island_titan, input.island_id };
 }
+
+/**
+ * @brief Calculates the borders for a given island in a generation.
+ *
+ * This function calculates the start and end indices for a given island in a generation.
+ * The start index is calculated as the island ID multiplied by the generation size limit.
+ * The end index is calculated as the start index plus the generation size limit minus one.
+ *
+ * @param island_id The ID of the island for which to calculate the borders.
+ * @param island_count The total number of islands. (Currently unused in the function)
+ * @param generation_size_limit The maximum size of a generation.
+ * @return A std::array<unsigned int, 2> containing the start and end indices for the island in the generation.
+ */
+std::array<unsigned int, 2> EvoAPI::get_island_borders(unsigned int island_id, unsigned int generation_size_limit) noexcept {
+    return { island_id * generation_size_limit , island_id * generation_size_limit + generation_size_limit - 1 };
+};
 
 /**
  * Displays the result of the evolutionary regression analysis.
