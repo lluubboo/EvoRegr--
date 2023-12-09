@@ -33,14 +33,14 @@ class EvoPopulation {
     static std::array<unsigned int, 2> calculate_migration_interval(unsigned int island_id, unsigned int island_count, unsigned int generation_size_limit);
 
 public:
-    
+
     EvoPopulation(unsigned int size) : _population(size) {};
     EvoPopulation(std::vector<EvoIndividual> population) : _population(population) {};
 
     void move_to_population(size_t index, EvoIndividual& individual) noexcept;
-    void batch_population_move(EvoPopulation& subpopulation, size_t index) noexcept;
+    void batch_population_move(EvoPopulation&& subpopulation, size_t index) noexcept;
     void batch_swap_individuals(size_t island_id, size_t island_count, size_t ratio, XoshiroCpp::Xoshiro256Plus& random_engine) noexcept;
-    void element_pushback(EvoIndividual& individual) noexcept;
+    void move_to_end(EvoIndividual&& individual) noexcept;
     void clear();
     void reserve(size_t size);
 

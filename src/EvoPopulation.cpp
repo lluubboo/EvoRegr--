@@ -121,15 +121,22 @@ size_t EvoPopulation::size() const noexcept {
 }
 
 /**
- * Moves elements from a subpopulation to the main population.
+ * @brief Moves elements from a subpopulation into the main population at a specified index.
  *
- * @param subpopulation A vector of EvoIndividuals to be moved.
- * @param begin An iterator pointing to the position in the main population where the elements should be moved.
+ * This function uses move semantics to efficiently transfer elements from the subpopulation
+ * to the main population without making copies. It also uses a mutex to ensure thread safety.
  *
- * This function locks the population for thread safety, moves the elements from the subpopulation to the main population,
- * and then clears the subpopulation.
+ * @param subpopulation An rvalue reference to the subpopulation to move elements from.
+ *                      This allows the function to accept temporary EvoPopulation objects.
+ *                      The subpopulation is cleared after its elements are moved.
+ * @param index The index in the main population where the elements should be moved to.
+ *              The elements are inserted at this position, moving existing elements back.
+ *
+ * @throws No exceptions are thrown, as the function is marked noexcept. However, if the size
+ *         of the subpopulation exceeds the remaining space in the main population, an error
+ *         message is printed to std::cerr and the function returns without modifying the main population.
  */
-void EvoPopulation::batch_population_move(EvoPopulation& subpopulation, size_t index) noexcept {
+void EvoPopulation::batch_population_move(EvoPopulation&& subpopulation, size_t index) noexcept {
     std::unique_lock lock(_mutex);
     {
         auto begin = _population.begin() + index;
@@ -152,8 +159,8 @@ void EvoPopulation::batch_population_move(EvoPopulation& subpopulation, size_t i
  *
  * This function moves the individual to the end of the population. Does not lock the population for thread safety.
  */
-void EvoPopulation::element_pushback(EvoIndividual& individual) noexcept {
-    _population.push_back(std::move(individual));
+void EvoPopulation::move_to_end(EvoIndividual&& individual) noexcept {
+    _population.emplace_back(std::move(individual));
 }
 
 /**

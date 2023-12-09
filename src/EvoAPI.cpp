@@ -281,7 +281,7 @@ void EvoAPI::batch_predict() {
     // create generation zero
     EvoPopulation population(
         Factory::generate_random_generation(
-            island_count * generation_size_limit, 
+            island_count * generation_size_limit,
             get_dataset(),
             random_engines[0],
             solver
@@ -359,7 +359,7 @@ void EvoAPI::run_island_thread(std::promise<EvoIndividual>& promise, EvoRegressi
  * @param generation_size_limit The maximum size of a generation.
  * @return A std::array<unsigned int, 2> containing the start and end indices for the island in the generation.
  */
-std::array<unsigned int, 2> EvoAPI::get_island_borders(unsigned int island_id,  unsigned int generation_size_limit) noexcept {
+std::array<unsigned int, 2> EvoAPI::get_island_borders(unsigned int island_id, unsigned int generation_size_limit) noexcept {
     return { island_id * generation_size_limit , island_id * generation_size_limit + generation_size_limit - 1 };
 };
 
@@ -387,7 +387,7 @@ EvoIndividual EvoAPI::run_island(EvoRegressionInput input) {
     for (int gen_index = 0; gen_index < input.generation_count_limit; gen_index++) {
 
         if (gen_index != 0 && gen_index % 10 == 0) input.population.batch_swap_individuals(input.island_id, input.island_count, 0.05, input.random_engine);
-        
+
         for (unsigned int entity_index = island_borders[0]; entity_index <= island_borders[1]; entity_index++) {
 
             //crossover & mutation [vector sex]
@@ -397,13 +397,13 @@ EvoIndividual EvoAPI::run_island(EvoRegressionInput input) {
                     input.random_engine,
                     island_borders[0],
                     island_borders[1]
-                    ),
+                ),
                 input.x.cols(),
                 input.x.rows(),
                 input.mutation_rate,
                 input.random_engine
             );
-            
+
 
             // merge & transform & make robust predictors & target / solve regression problem
             newborn.evaluate(
@@ -418,7 +418,7 @@ EvoIndividual EvoAPI::run_island(EvoRegressionInput input) {
             );
 
             // newborn to population
-            island_population.element_pushback(newborn);
+            island_population.move_to_end(std::move(newborn));
         }
 
         for (const auto& individual : island_population) {
@@ -428,7 +428,7 @@ EvoIndividual EvoAPI::run_island(EvoRegressionInput input) {
             }
         }
 
-        input.population.batch_population_move(island_population, island_borders[0]);
+        input.population.batch_population_move(std::move(island_population), island_borders[0]);
     }
 
     auto end_time = std::chrono::high_resolution_clock::now();
@@ -440,7 +440,7 @@ EvoIndividual EvoAPI::run_island(EvoRegressionInput input) {
         island_titan.fitness,
         std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time).count()
     );
-    
+
     return island_titan;
 }
 
