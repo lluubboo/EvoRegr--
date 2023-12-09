@@ -360,6 +360,7 @@ void EvoAPI::run_island_thread(std::promise<EvoIndividual>& promise, EvoRegressi
  * @return EvoIndividual The best individual found on the island, i.e., the one with the highest fitness.
  */
 EvoIndividual EvoAPI::run_island(EvoRegressionInput input) {
+    auto start_time = std::chrono::high_resolution_clock::now();
 
     // subpopulation borders
     unsigned int start_index, end_index;
@@ -419,7 +420,15 @@ EvoIndividual EvoAPI::run_island(EvoRegressionInput input) {
         input.population.batch_population_move(island_population, start_index);
     }
 
-    EvoAPI::logger->info("Island {} with borders {} and {} finished with best individual {}", input.island_id, start_index, end_index, island_titan.fitness);
+    auto end_time = std::chrono::high_resolution_clock::now();
+    EvoAPI::logger->info("Island {} with borders {} and {} finished with best individual {} in {} ms",
+        input.island_id,
+        start_index, 
+        end_index,
+        island_titan.fitness,
+        std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time).count()
+    );
+    
     return island_titan;
 }
 
