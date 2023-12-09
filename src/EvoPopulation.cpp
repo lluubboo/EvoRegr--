@@ -195,13 +195,12 @@ void EvoPopulation::swap_individuals(size_t index1, size_t index2) noexcept {
  *
  * This function calculates a migration interval based on the island ID, the total number of islands, and the population size. It then performs a number of swaps within this interval. The number of swaps is determined by the ratio parameter. Each swap involves two randomly chosen individuals within the migration interval.
  */
-void EvoPopulation::batch_swap_individuals(size_t island_id, size_t island_count, size_t ratio, XoshiroCpp::Xoshiro256Plus& random_engine) noexcept {
+void EvoPopulation::batch_swap_individuals(size_t island_id, size_t island_count, size_t migrants_count, XoshiroCpp::Xoshiro256Plus& random_engine) noexcept {
     std::array<unsigned int, 2> migration_interval = EvoPopulation::calculate_migration_interval(
         island_id,
         island_count,
         _population.size() / island_count
     );
-    size_t migrants_count = static_cast<size_t>(((_population.size() / island_count) * ratio) / 100);
     for (size_t i = 0; i < migrants_count; i++) {
         swap_individuals(RandomNumbers::rand_interval_int(migration_interval[0], migration_interval[1], random_engine),
             RandomNumbers::rand_interval_int(migration_interval[0], migration_interval[1], random_engine));

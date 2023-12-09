@@ -351,7 +351,7 @@ IslandOutput EvoAPI::run_island(EvoRegressionInput input) {
     for (int gen_index = 0; gen_index < input.generation_count_limit; gen_index++) {
 
         if (gen_index != 0 && gen_index % 10 == 0) {
-            input.population.batch_swap_individuals(input.island_id, input.island_count, 2, input.random_engine);
+            input.population.batch_swap_individuals(input.island_id, input.island_count, island_population.size() * 0.05, input.random_engine);
             EvoAPI::logger->info("Island {} migration in generation {}", input.island_id, gen_index);
         }
 
