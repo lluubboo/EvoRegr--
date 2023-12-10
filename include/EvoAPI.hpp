@@ -76,6 +76,7 @@ class EvoAPI {
 
     std::string get_regression_summary_table();
     std::string get_regression_result_table();
+    std::string get_regression_robust_result_table();
     std::string get_regression_coefficients_table();
     std::string get_genotype_table();
     std::string get_formula_table();

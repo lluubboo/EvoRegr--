@@ -335,7 +335,9 @@ void EvoAPI::batch_predict() {
 IslandOutput EvoAPI::run_island_async(EvoRegressionInput input) {
 
     auto start_time = std::chrono::high_resolution_clock::now();
+
     IslandOutput output = run_island(input);
+
     auto end_time = std::chrono::high_resolution_clock::now();
 
     EvoAPI::logger->info("Island {} finished in /s: {}", input.island_id, std::chrono::duration<double>(end_time - start_time).count());
@@ -567,7 +569,30 @@ std::string EvoAPI::get_regression_result_table() {
     );
     Plotter<double> plt = Plotter(
         regression_result_matrix.data(),
-        "Regression result summary",
+        "Regression result summary with outliers",
+        { "Target", "Prediction", "Difference", "Percentage difference" },
+        149,
+        regression_result_matrix.size(),
+        DataArrangement::ColumnMajor
+    );
+    return plt.get_table();
+};
+
+/**
+ * @brief Returns the regression result table as a string.
+ *
+ * This function generates a regression result table using the provided data and returns it as a string.
+ * The table includes columns for the target, prediction, difference, and percentage difference.
+ *
+ * @return The regression result table as a string.
+ */
+std::string EvoAPI::get_regression_robust_result_table() {
+    Eigen::MatrixXd regression_result_matrix = get_regression_summary_matrix(
+        titan_result, titan_robust_dataset.predictor, titan_robust_dataset.target
+    );
+    Plotter<double> plt = Plotter(
+        regression_result_matrix.data(),
+        "Regression result summary without outliers",
         { "Target", "Prediction", "Difference", "Percentage difference" },
         149,
         regression_result_matrix.size(),
@@ -713,15 +738,14 @@ std::string EvoAPI::get_result_metrics_table() {
  */
 std::string EvoAPI::get_regression_summary_table() {
     std::stringstream table;
-    table << "\n";
+
     table << get_regression_result_table();
+    table << get_regression_robust_result_table();
     table << get_result_metrics_table();
     table << get_regression_coefficients_table();
     table << get_genotype_table();
     table << get_formula_table();
-
     EvoAPI::logger->info("Regression summary table generated");
-
     return table.str();
 };
 

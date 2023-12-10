@@ -91,6 +91,7 @@ void Plotter<T>::print_table_header() {
     int left_padding = (_table_width - _name.length() - 2) / 2;
     int right_padding = _table_width - _name.length() - 2 - left_padding;
 
+    _table << "\n";
     _table << "+" << std::string(_table_width - 2, '-') << "+" << "\n"
         << "|" << std::string(left_padding, ' ') << _name << std::string(right_padding, ' ') << "|" << "\n"
         << "+" << std::string(_table_width - 2, '-') << "+" << "\n";
