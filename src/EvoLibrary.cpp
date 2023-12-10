@@ -135,7 +135,11 @@ std::vector<EvoIndividual> Factory::generate_random_generation(
 ) {
     std::vector<EvoIndividual> generation(size);
     std::generate(generation.begin(), generation.end(), [&]() {return Factory::getRandomEvoIndividual(dataset.predictor.rows(), dataset.predictor.cols(), random_engine);});
-    std::for_each(generation.begin(), generation.end(), [&](EvoIndividual& individual) {individual.evaluate(EvoMath::get_fitness(dataset, solver));});
+    std::for_each(generation.begin(), generation.end(),
+        [&](EvoIndividual& individual) {
+            individual.evaluate(EvoMath::get_fitness(Transform::data_transformation_robust(dataset.predictor, dataset.target, individual), solver));
+        }
+    );
     return generation;
 };
 
@@ -329,7 +333,7 @@ EvoIndividual Reproduction::reproduction(
     EvoIndividual individual = Crossover::cross(parents, chromosomes_size, random_engine);
     // mutation
     Mutation::mutate(individual, chromosomes_size, predictor_row_count, mutation_rate, random_engine);
-    return individual;
+return individual;
 };
 
 /**
