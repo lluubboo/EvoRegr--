@@ -81,14 +81,10 @@ std::array<EvoIndividual, 2> Selection::tournament_selection(EvoPopulation& popu
     if (start_index == end_index) {
         std::cerr << "Tournament selection: start index and end index should not be equal." << std::endl;
     }
-    std::array<EvoIndividual, 2> champions;
-    EvoIndividual first, second;
-    for (int i = 0; i < 2; i++) {
-        first = population.get_individual(RandomNumbers::rand_interval_int(start_index, end_index, random_engine));
-        second = population.get_individual(RandomNumbers::rand_interval_int(start_index, end_index, random_engine));
-        champions[i] = (first.fitness < second.fitness) ? std::move(first) : std::move(second);
-    }
-    return champions;
+    std::array<EvoIndividual, 4> contestants;
+    std::sample(population.begin() + start_index, population.begin() + end_index, contestants.begin(), 4, random_engine);
+    std::sort(contestants.begin(), contestants.end(), [](const EvoIndividual& a, const EvoIndividual& b) {return a.fitness < b.fitness;});
+    return { contestants[0], contestants[1] };
 };
 
 /**
