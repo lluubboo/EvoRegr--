@@ -281,7 +281,7 @@ void EvoAPI::batch_predict() {
     for (int island_index = 0; island_index < island_count; island_index++) {
 
         // Prepare the input for the function
-        EvoRegressionInput input{
+        IslandInput input{
             x,
             y,
             population,
@@ -315,7 +315,7 @@ void EvoAPI::batch_predict() {
 /**
  * @brief Runs the evolutionary algorithm on a single island (subpopulation) and logs the execution time.
  *
- * @param input An EvoRegressionInput object containing the parameters for the evolutionary algorithm.
+ * @param input An IslandInput object containing the parameters for the evolutionary algorithm.
  *
  * @return An IslandOutput object containing the best individual found on the island and the island's ID.
  *
@@ -328,7 +328,7 @@ void EvoAPI::batch_predict() {
  *
  * The function is designed to be run asynchronously, so it can be used with std::async or similar functions to run the evolutionary algorithm on multiple islands concurrently.
  */
-IslandOutput EvoAPI::run_island_async(EvoRegressionInput input) {
+IslandOutput EvoAPI::run_island_async(IslandInput input) {
 
     auto start_time = std::chrono::high_resolution_clock::now();
 
@@ -343,7 +343,7 @@ IslandOutput EvoAPI::run_island_async(EvoRegressionInput input) {
 /**
  * @brief Runs the evolutionary algorithm on a single island (subpopulation).
  *
- * @param input An EvoRegressionInput object containing the parameters for the evolutionary algorithm.
+ * @param input An IslandInput object containing the parameters for the evolutionary algorithm.
  *
  * @return An IslandOutput object containing the best individual found on the island and the island's ID.
  *
@@ -355,7 +355,7 @@ IslandOutput EvoAPI::run_island_async(EvoRegressionInput input) {
  *
  * The function returns the island's titan and the island's ID.
  */
-IslandOutput EvoAPI::run_island(EvoRegressionInput input) {
+IslandOutput EvoAPI::run_island(IslandInput input) {
 
     // subpopulation borders
     auto island_borders = EvoAPI::get_island_borders(input.island_id, input.generation_size_limit);
