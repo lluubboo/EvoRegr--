@@ -52,117 +52,63 @@ RegressionDetailedResult solve_system_detailed(Eigen::MatrixXd const& predictors
     return result;
 }
 
-/**
- * @brief Overloads the function call operator to perform a regression analysis using the LLT decomposition method.
- *
- * @param predictors An Eigen::MatrixXd object where each row is a different observation and each column is a different predictor variable.
- * @param target An Eigen::VectorXd object where each element is the target variable for a different observation.
- *
- * @return A RegressionSimpleResult object that contains the results of the regression analysis. This includes the coefficients of the regression,
- * a boolean indicating whether the coefficients are usable (i.e., they are not NaN or infinite), the predicted values of the target variable,
- * the residuals of the regression, and the sum of squares of the residuals.
- *
- * @throws std::invalid_argument If the dimensions of the predictors and target do not match.
- */
-RegressionSimpleResult LLTSolver::operator()(Eigen::MatrixXd const& predictors, Eigen::VectorXd const& target) const {
-
+double LLTSolver::operator()(Eigen::MatrixXd const& predictors, Eigen::VectorXd const& target) const {
     // Check if predictors and target have matching dimensions
     if (predictors.rows() != target.size()) {
         throw std::invalid_argument("Dimensions of predictors and target do not match");
     }
 
-    RegressionSimpleResult result;
-
-    result.coefficients = (predictors.transpose() * predictors).llt().solve(predictors.transpose() * target);
-
+    // calc to save one transpose operation
+    Eigen::MatrixXd predictors_transposed = predictors.transpose();
+    Eigen::VectorXd coefficients = (predictors_transposed * predictors).llt().solve(predictors_transposed * target);
+    
     // Check if the result is usable (no NaN or infinite values)
-    result.isUsable = !result.coefficients.hasNaN() && result.coefficients.allFinite();
-
-    if (result.isUsable) {
-        result.prediction = predictors * result.coefficients;
-        result.residuals = target - result.prediction;
-        result.sum_squares_errors = result.residuals.array().square().sum();
+    if (!coefficients.hasNaN() && coefficients.allFinite()) {
+        return (target - (predictors * coefficients)).squaredNorm();
     }
     else {
         // Set sum of squares errors to maximum value
-        result.sum_squares_errors = std::numeric_limits<double>::max();
+        return std::numeric_limits<double>::max();
     }
-    return result;
 }
 
-/**
- * @brief Overloads the function call operator to perform a regression analysis using the LDLT decomposition method.
- *
- * @param predictors An Eigen::MatrixXd object where each row is a different observation and each column is a different predictor variable.
- * @param target An Eigen::VectorXd object where each element is the target variable for a different observation.
- *
- * @return A RegressionSimpleResult object that contains the results of the regression analysis. This includes the coefficients of the regression,
- * a boolean indicating whether the coefficients are usable (i.e., they are not NaN or infinite), the predicted values of the target variable,
- * the residuals of the regression, and the sum of squares of the residuals.
- *
- * @throws std::invalid_argument If the dimensions of the predictors and target do not match.
- */
-RegressionSimpleResult LDLTSolver::operator()(Eigen::MatrixXd const& predictors, Eigen::VectorXd const& target) const {
-
+double LDLTSolver::operator()(Eigen::MatrixXd const& predictors, Eigen::VectorXd const& target) const {
     // Check if predictors and target have matching dimensions
     if (predictors.rows() != target.size()) {
         throw std::invalid_argument("Dimensions of predictors and target do not match");
     }
 
-    RegressionSimpleResult result;
-
-    result.coefficients = (predictors.transpose() * predictors).ldlt().solve(predictors.transpose() * target);
+    // calc to save one transpose operation
+    Eigen::MatrixXd predictors_transposed = predictors.transpose();
+    Eigen::VectorXd coefficients = (predictors_transposed * predictors).ldlt().solve(predictors_transposed * target);
 
     // Check if the result is usable (no NaN or infinite values)
-    result.isUsable = !result.coefficients.hasNaN() && result.coefficients.allFinite();
-
-    if (result.isUsable) {
-        result.prediction = predictors * result.coefficients;
-        result.residuals = target - result.prediction;
-        result.sum_squares_errors = result.residuals.array().square().sum();
+    if (!coefficients.hasNaN() && coefficients.allFinite()) {
+        return (target - (predictors * coefficients)).squaredNorm();
     }
     else {
         // Set sum of squares errors to maximum value
-        result.sum_squares_errors = std::numeric_limits<double>::max();
+        return std::numeric_limits<double>::max();
     }
-    return result;
 }
 
-/**
- * @brief Overloads the function call operator to perform a regression analysis using the column-pivoting Householder QR decomposition method.
- *
- * @param predictors An Eigen::MatrixXd object where each row is a different observation and each column is a different predictor variable.
- * @param target An Eigen::VectorXd object where each element is the target variable for a different observation.
- *
- * @return A RegressionSimpleResult object that contains the results of the regression analysis. This includes the coefficients of the regression,
- * a boolean indicating whether the coefficients are usable (i.e., they are not NaN or infinite), the predicted values of the target variable,
- * the residuals of the regression, and the sum of squares of the residuals.
- *
- * @throws std::invalid_argument If the dimensions of the predictors and target do not match.
- */
-RegressionSimpleResult ColPivHouseholderQrSolver::operator()(Eigen::MatrixXd const& predictors, Eigen::VectorXd const& target) const {
-
+double ColPivHouseholderQrSolver::operator()(Eigen::MatrixXd const& predictors, Eigen::VectorXd const& target) const {
     // Check if predictors and target have matching dimensions
     if (predictors.rows() != target.size()) {
         throw std::invalid_argument("Dimensions of predictors and target do not match");
     }
 
-    RegressionSimpleResult result;
-
-    result.coefficients = (predictors.transpose() * predictors).colPivHouseholderQr().solve(predictors.transpose() * target);
+    // calc to save one transpose operation
+    Eigen::MatrixXd predictors_transposed = predictors.transpose();
+    Eigen::VectorXd coefficients = (predictors_transposed * predictors).colPivHouseholderQr().solve(predictors_transposed * target);
 
     // Check if the result is usable (no NaN or infinite values)
-    result.isUsable = !result.coefficients.hasNaN() && result.coefficients.allFinite();
-
-    if (result.isUsable) {
-        result.prediction = predictors * result.coefficients;
-        result.residuals = target - result.prediction;
-        result.sum_squares_errors = result.residuals.array().square().sum();
+    if (!coefficients.hasNaN() && coefficients.allFinite()) {
+        return (target - (predictors * coefficients)).squaredNorm();
     }
     else {
         // Set sum of squares errors to maximum value
-        result.sum_squares_errors = std::numeric_limits<double>::max();
+        return std::numeric_limits<double>::max();
     }
-    return result;
 }
 

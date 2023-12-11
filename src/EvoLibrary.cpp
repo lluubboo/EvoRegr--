@@ -51,7 +51,7 @@ std::array<EvoIndividual, 2> Selection::tournament_selection(std::vector<EvoIndi
  *
  * @return std::array<EvoIndividual, 2> The two selected individuals with the lower fitness.
  */
-std::array<EvoIndividual, 2> Selection::tournament_selection(EvoPopulation& population, XoshiroCpp::Xoshiro256Plus& random_engine, size_t start_index, size_t end_index) {
+std::array<EvoIndividual, 2> Selection::tournament_selection(EvoPopulation const& population, XoshiroCpp::Xoshiro256Plus& random_engine, size_t start_index, size_t end_index) {
     if (start_index == end_index) {
         std::cerr << "Tournament selection: start index and end index should not be equal." << std::endl;
     }
@@ -107,7 +107,7 @@ std::vector<EvoIndividual> Factory::generate_random_generation(
     int size,
     Transform::EvoDataSet const& dataset,
     XoshiroCpp::Xoshiro256Plus& random_engine,
-    std::function<RegressionSimpleResult(Eigen::MatrixXd const&, Eigen::VectorXd const&)> solver
+    std::function<double(Eigen::MatrixXd const&, Eigen::VectorXd const&)> solver
 ) {
     std::vector<EvoIndividual> generation(size);
     std::generate(generation.begin(), generation.end(), [&]() {return Factory::getRandomEvoIndividual(dataset.predictor.rows(), dataset.predictor.cols(), random_engine);});
@@ -228,7 +228,7 @@ RobustAllele Factory::getRandomRobustAllele(int row_count, XoshiroCpp::Xoshiro25
  * It works by selecting a random crossover point in the chromosomes of the parents, and then creating a new individual
  * that inherits the genes from the first parent up to the crossover point, and the genes from the second parent after the crossover point.
  */
-EvoIndividual Crossover::cross(std::array<EvoIndividual, 2> const& parents, int chromosome_size, XoshiroCpp::Xoshiro256Plus& random_engine) {
+EvoIndividual Crossover::cross(std::array<EvoIndividual, 2> && parents, int chromosome_size, XoshiroCpp::Xoshiro256Plus& random_engine) {
     EvoIndividual youngling{};
     // indexes which points to place of chromosome cut & recombination
     int m_crossover_twist_index = RandomNumbers::rand_interval_int(0, chromosome_size, random_engine);
@@ -298,14 +298,14 @@ void Mutation::mutate(EvoIndividual& individual, int chromosome_size, int predic
  * and then performing a mutation operation on the new individual.
  */
 EvoIndividual Reproduction::reproduction(
-    std::array<EvoIndividual, 2> const& parents,
+    std::array<EvoIndividual, 2> && parents,
     int chromosomes_size,
     int predictor_row_count,
     int mutation_rate,
     XoshiroCpp::Xoshiro256Plus& random_engine
 ) {
     // crossover
-    EvoIndividual individual = Crossover::cross(parents, chromosomes_size, random_engine);
+    EvoIndividual individual = Crossover::cross(std::move(parents), chromosomes_size, random_engine);
     // mutation
     Mutation::mutate(individual, chromosomes_size, predictor_row_count, mutation_rate, random_engine);
     return individual;
@@ -324,7 +324,7 @@ EvoIndividual Reproduction::reproduction(
  * Then, it merges predictors based on the merger_chromosome of the EvoIndividual.
  * Finally, it transforms predictors based on the x_transformer_chromosome of the EvoIndividual.
  */
-Eigen::MatrixXd Transform::full_predictor_transform(Eigen::MatrixXd& matrix, EvoIndividual const& individual) {
+void Transform::full_predictor_transform(Eigen::MatrixXd& matrix, EvoIndividual const& individual) {
 
     // erase some rows
     individual.robuster_chromosome.at(0).transform(matrix);
@@ -340,8 +340,6 @@ Eigen::MatrixXd Transform::full_predictor_transform(Eigen::MatrixXd& matrix, Evo
     {
         individual.x_transformer_chromosome.at(i).transform(matrix);
     }
-
-    return matrix;
 };
 
 /**
@@ -399,10 +397,9 @@ Eigen::MatrixXd Transform::robust_predictor_transform(Eigen::MatrixXd& matrix, E
  * It first applies a robust transformation on the vector based on the robuster_chromosome of the EvoIndividual.
  * Then, it applies a transformation on the vector based on the y_transformer_chromosome of the EvoIndividual.
  */
-Eigen::VectorXd Transform::full_target_transform(Eigen::VectorXd& vector, EvoIndividual const& individual) {
+void Transform::full_target_transform(Eigen::VectorXd& vector, EvoIndividual const& individual) {
     individual.robuster_chromosome.at(0).transformVector(vector);
     individual.y_transformer_chromosome.at(0).transformVector(vector);
-    return vector;
 };
 
 /**
@@ -468,12 +465,11 @@ Transform::EvoDataSet Transform::data_transformation_nonrobust(Eigen::MatrixXd p
  */
 template <typename T>
 double EvoMath::get_fitness(Transform::EvoDataSet const& dataset, T solver) {
-    RegressionSimpleResult result = solver(dataset.predictor, dataset.target);
-    return result.sum_squares_errors;
+    return solver(dataset.predictor, dataset.target);
 }
 
 // Explicit instantiation
-template double EvoMath::get_fitness(Transform::EvoDataSet const& dataset, std::function<RegressionSimpleResult(Eigen::MatrixXd const&, Eigen::VectorXd const&)> solver);
+template double EvoMath::get_fitness(Transform::EvoDataSet const& dataset, std::function<double(Eigen::MatrixXd const&, Eigen::VectorXd const&)> solver);
 
 /**
  * @brief Extracts a column from a 1D vector representing a 2D matrix.

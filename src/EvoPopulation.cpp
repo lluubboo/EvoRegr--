@@ -255,7 +255,7 @@ EvoIndividual EvoPopulation::get_random_individual(XoshiroCpp::Xoshiro256Plus& r
  *
  * @exception This function does not throw exceptions. If the sample size is greater than the size of the population, the entire population will be returned.
  */
-std::array<EvoIndividual, 2> EvoPopulation::get_random_couple_individuals(XoshiroCpp::Xoshiro256Plus& random_engine, unsigned int begin_index, unsigned int end_index) noexcept {
+std::array<EvoIndividual, 2> EvoPopulation::get_random_couple_individuals(XoshiroCpp::Xoshiro256Plus& random_engine, unsigned int begin_index, unsigned int end_index) const noexcept {
     std::array<EvoIndividual, 2> couple;
     std::shared_lock lock(_mutex);
     {

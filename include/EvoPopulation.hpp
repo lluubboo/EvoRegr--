@@ -48,7 +48,7 @@ public:
 
     EvoIndividual get_individual(size_t index) noexcept;
     EvoIndividual get_random_individual(XoshiroCpp::Xoshiro256Plus& random_engine) noexcept;
-    std::array<EvoIndividual, 2> get_random_couple_individuals(XoshiroCpp::Xoshiro256Plus& random_engine, unsigned int begin_index, unsigned int end_index) noexcept;
+    std::array<EvoIndividual, 2> get_random_couple_individuals(XoshiroCpp::Xoshiro256Plus& random_engine, unsigned int begin_index, unsigned int end_index) const noexcept;
 
     std::vector<EvoIndividual>::iterator begin();
     std::vector<EvoIndividual>::iterator end();

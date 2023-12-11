@@ -17,7 +17,7 @@ struct EvoRegressionInput {
     Eigen::VectorXd y;
     EvoPopulation& population;
     XoshiroCpp::Xoshiro256Plus& random_engine;
-    std::function<RegressionSimpleResult(Eigen::MatrixXd const&, Eigen::VectorXd const&)> solver;
+    std::function<double(Eigen::MatrixXd const&, Eigen::VectorXd const&)> solver;
     const int mutation_rate;
     const int generation_size_limit;
     const int generation_count_limit;
@@ -42,7 +42,7 @@ class EvoAPI {
     Eigen::MatrixXd x, y;
 
     // solver functor
-    std::function<RegressionSimpleResult(Eigen::MatrixXd const&, Eigen::VectorXd const&)> solver;
+    std::function<double(Eigen::MatrixXd const&, Eigen::VectorXd const&)> solver;
 
     // titan 
     EvoIndividual titan;

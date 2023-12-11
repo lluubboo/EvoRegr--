@@ -225,7 +225,7 @@ void EvoAPI::predict() {
             else {
                 //crossover & mutation [vector sex]
                 newborn = Reproduction::reproduction(
-                    Selection::tournament_selection(past_generation, random_engines[omp_get_thread_num()]),
+                    std::move(Selection::tournament_selection(past_generation, random_engines[omp_get_thread_num()])),
                     x.cols(),
                     x.rows(),
                     mutation_rate,
@@ -235,7 +235,7 @@ void EvoAPI::predict() {
 
             // merge & transform & make robust predictors & target / solve regression problem
             newborn.evaluate(
-                EvoMath::get_fitness<std::function<RegressionSimpleResult(Eigen::MatrixXd const&, Eigen::VectorXd const&)>>(
+                EvoMath::get_fitness<std::function<double(Eigen::MatrixXd const&, Eigen::VectorXd const&)>>(
                     Transform::data_transformation_robust(
                         x,
                         y,
@@ -373,12 +373,7 @@ IslandOutput EvoAPI::run_island(EvoRegressionInput input) {
 
             //crossover & mutation [vector sex]
             newborn = Reproduction::reproduction(
-                Selection::tournament_selection(
-                    input.population,
-                    input.random_engine,
-                    island_borders[0],
-                    island_borders[1]
-                ),
+                std::move(Selection::tournament_selection(input.population,input.random_engine,island_borders[0],island_borders[1])),
                 input.x.cols(),
                 input.x.rows(),
                 input.mutation_rate,
@@ -388,7 +383,7 @@ IslandOutput EvoAPI::run_island(EvoRegressionInput input) {
 
             // merge & transform & make robust predictors & target / solve regression problem
             newborn.evaluate(
-                EvoMath::get_fitness<std::function<RegressionSimpleResult(Eigen::MatrixXd const&, Eigen::VectorXd const&)>>(
+                EvoMath::get_fitness<std::function<double(Eigen::MatrixXd const&, Eigen::VectorXd const&)>>(
                     Transform::data_transformation_robust(
                         input.x,
                         input.y,

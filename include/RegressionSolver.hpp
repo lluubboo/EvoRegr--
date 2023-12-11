@@ -35,13 +35,13 @@ RegressionDetailedResult solve_system_detailed(Eigen::MatrixXd const&, Eigen::Ve
 RegressionSimpleResult solve_system_by_ldlt_simple(Eigen::MatrixXd const&, Eigen::VectorXd const&);
 
 struct LLTSolver {
-    RegressionSimpleResult operator()(Eigen::MatrixXd const&, Eigen::VectorXd const&) const;
+    double operator()(Eigen::MatrixXd const&, Eigen::VectorXd const&) const;
 };
 
 struct LDLTSolver {
-    RegressionSimpleResult operator()(Eigen::MatrixXd const&, Eigen::VectorXd const&) const;
+    double operator()(Eigen::MatrixXd const&, Eigen::VectorXd const&) const;
 };
 
 struct ColPivHouseholderQrSolver {
-    RegressionSimpleResult operator()(Eigen::MatrixXd const&, Eigen::VectorXd const&) const;
+    double operator()(Eigen::MatrixXd const&, Eigen::VectorXd const&) const;
 };
