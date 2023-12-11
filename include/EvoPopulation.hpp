@@ -35,7 +35,7 @@ class EvoPopulation {
 public:
 
     EvoPopulation(unsigned int size) : _population(size) {};
-    EvoPopulation(unsigned int size, unsigned int capacity) : _population(size) {_population.reserve(capacity);};
+    EvoPopulation(unsigned int size, unsigned int capacity) : _population(size) { _population.reserve(capacity); };
     EvoPopulation(std::vector<EvoIndividual> population) : _population(population) {};
 
     void move_to_population(size_t index, EvoIndividual& individual) noexcept;
@@ -48,7 +48,7 @@ public:
 
     EvoIndividual get_individual(size_t index) noexcept;
     EvoIndividual get_random_individual(XoshiroCpp::Xoshiro256Plus& random_engine) noexcept;
-    std::vector<EvoIndividual> get_random_batch_individuals(XoshiroCpp::Xoshiro256Plus& random_engine, unsigned int size, unsigned int begin_index, unsigned int end_index) noexcept;
+    std::array<EvoIndividual, 2> get_random_couple_individuals(XoshiroCpp::Xoshiro256Plus& random_engine, unsigned int begin_index, unsigned int end_index) noexcept;
 
     std::vector<EvoIndividual>::iterator begin();
     std::vector<EvoIndividual>::iterator end();

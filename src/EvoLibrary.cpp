@@ -55,9 +55,9 @@ std::array<EvoIndividual, 2> Selection::tournament_selection(EvoPopulation& popu
     if (start_index == end_index) {
         std::cerr << "Tournament selection: start index and end index should not be equal." << std::endl;
     }
-    std::array<EvoIndividual, 2> parents;
+    std::array<EvoIndividual, 2> parents, couple;
     for (int i = 0; i < 2; i++) {
-        auto couple = population.get_random_batch_individuals(random_engine, 2, start_index, end_index);
+        couple = population.get_random_couple_individuals(random_engine, start_index, end_index);
         parents[i] = (couple[0].fitness < couple[1].fitness) ? couple[0] : couple[1];
     }
     return parents;
@@ -303,7 +303,7 @@ EvoIndividual Reproduction::reproduction(
     int predictor_row_count,
     int mutation_rate,
     XoshiroCpp::Xoshiro256Plus& random_engine
-    ) {
+) {
     // crossover
     EvoIndividual individual = Crossover::cross(parents, chromosomes_size, random_engine);
     // mutation
