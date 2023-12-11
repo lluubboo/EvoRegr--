@@ -380,7 +380,6 @@ IslandOutput EvoAPI::run_island(EvoRegressionInput input) {
                 input.random_engine
             );
 
-
             // merge & transform & make robust predictors & target / solve regression problem
             newborn.evaluate(
                 EvoMath::get_fitness<std::function<double(Eigen::MatrixXd const&, Eigen::VectorXd const&)>>(

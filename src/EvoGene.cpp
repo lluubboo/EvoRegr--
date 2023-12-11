@@ -1,13 +1,9 @@
-#include <vector>
-#include <stack>
 #include <numeric>
-#include <Eigen/Dense>
 #include <iostream>
 #include <cmath>
 #include "RandomChoices.hpp"
 #include "RandomNumberGenerator.hpp"
 #include "EvoGene.hpp"
-#include "XoshiroCpp.hpp"
 
 /*****************************************EvoGene**********************************************/
 
@@ -51,6 +47,7 @@ MergeAllele::~MergeAllele() {}
  * @param matrix The matrix to be transformed.
  */
 void MergeAllele::transform(Eigen::MatrixXd& matrix) const {
+    //create copy of matrix
     Eigen::MatrixXd original_matrix = matrix;
     for (auto const& twin : allele) {
         modifyMatrixAccordingToTwin(twin, matrix, original_matrix);
@@ -371,10 +368,7 @@ RobustAllele::~RobustAllele() {};
  * @param matrix The matrix to be transformed.
  */
 void RobustAllele::transform(Eigen::MatrixXd& matrix) const {
-    int size = allele.size();
-    std::vector<int> data(allele);
-    Eigen::VectorXi indices = Eigen::Map<Eigen::VectorXi>(data.data(), size);
-    Eigen::MatrixXd transformedMatrix = matrix(indices, Eigen::all);
+    Eigen::MatrixXd transformedMatrix = matrix(Eigen::Map<const Eigen::VectorXi>(allele.data(), allele.size()), Eigen::all);
     matrix.swap(transformedMatrix);
 }
 
@@ -386,10 +380,7 @@ void RobustAllele::transform(Eigen::MatrixXd& matrix) const {
  * @param vector The vector to be transformed.
  */
 void RobustAllele::transformVector(Eigen::VectorXd& vector) const {
-    int size = allele.size();
-    std::vector<int> data(allele);
-    Eigen::VectorXi indices = Eigen::Map<Eigen::VectorXi>(data.data(), size);
-    Eigen::VectorXd transformeVector = vector(indices);
+    Eigen::VectorXd transformeVector = vector(Eigen::Map<const Eigen::VectorXi>(allele.data(), allele.size()));
     vector.swap(transformeVector);
 }
 
