@@ -3,16 +3,12 @@
 #include <spdlog/sinks/basic_file_sink.h>
 #include <spdlog/sinks/stdout_color_sinks.h>
 #include <fstream>
-#include <span>
 #include <mutex>
 #include <random>
-#include <future>
 #include "RandomNumberGenerator.hpp"
 #include "EvoAPI.hpp"
 #include "IOTools.hpp"
 #include "EvoPopulation.hpp"
-#include "EvoLibrary.hpp"
-#include "XoshiroCpp.hpp"
 #include "Stats.hpp"
 #include "Plotter.hpp"
 #include "omp.h"

@@ -11,7 +11,6 @@
 namespace Selection {
 
     std::array<EvoIndividual, 2> tournament_selection(std::vector<EvoIndividual> const&, XoshiroCpp::Xoshiro256Plus&);
-    std::array<EvoIndividual, 2> tournament_selection(std::span<EvoIndividual> const&, XoshiroCpp::Xoshiro256Plus&, std::mutex&);
     std::array<EvoIndividual, 2> tournament_selection(EvoPopulation&, XoshiroCpp::Xoshiro256Plus&, size_t, size_t);
 
 }

@@ -239,6 +239,32 @@ EvoIndividual EvoPopulation::get_random_individual(XoshiroCpp::Xoshiro256Plus& r
 }
 
 /**
+ * @brief Get a random batch of individuals from the population.
+ *
+ * This function uses the std::sample algorithm to randomly select a specified number of individuals from a range within the population.
+ * The selected individuals are returned in a new vector. The original population is not modified.
+ *
+ * @param random_engine A random number generator that is used by std::sample to select the individuals.
+ * @param size The number of individuals to select. This must be less than or equal to the size of the population.
+ * @param begin_index The starting index of the range within the population from which to select individuals.
+ * @param end_index The ending index of the range within the population from which to select individuals.
+ *
+ * @return A vector containing the selected individuals. If the population is empty or the sample size is 0, this vector will be empty.
+ *
+ * @note This function is thread-safe. It locks the population with a shared_lock while it is selecting the individuals.
+ *
+ * @exception This function does not throw exceptions. If the sample size is greater than the size of the population, the entire population will be returned.
+ */
+std::vector<EvoIndividual> EvoPopulation::get_random_batch_individuals(XoshiroCpp::Xoshiro256Plus& random_engine, unsigned int size, unsigned int begin_index, unsigned int end_index) noexcept {
+    std::vector<EvoIndividual> batch(size);
+    std::shared_lock lock(_mutex);
+    {
+        std::sample(_population.begin() + begin_index, _population.begin() + end_index, batch.begin(), size, random_engine);
+    }
+    return batch;
+};
+
+/**
  * @brief Get an individual from the population at a specific index.
  *
  * This method returns the individual at the specified index in the _population vector.

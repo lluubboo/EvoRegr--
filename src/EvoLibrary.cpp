@@ -36,32 +36,6 @@ std::array<EvoIndividual, 2> Selection::tournament_selection(std::vector<EvoIndi
 };
 
 /**
- * @brief Gets a random individual from the population.
- *
- * This function selects a random individual from the population using a random number generator.
- * The random number generator is passed as a parameter and is used to generate a random index into the population vector.
- *
- * @param random_engine A reference to a `XoshiroCpp::Xoshiro256Plus` random number generator.
- *
- * @return EvoIndividual The randomly selected individual from the population.
- *
- * @note This function is marked `noexcept`, meaning it does not throw exceptions.
- */
-std::array<EvoIndividual, 2> Selection::tournament_selection(std::span<EvoIndividual> const& generation, XoshiroCpp::Xoshiro256Plus& random_engine, std::mutex& population_mutex) {
-    std::array<EvoIndividual, 4> individuals;
-    {
-        std::lock_guard<std::mutex> lock(population_mutex);
-        for (int i = 0; i < 4; i++) {
-            individuals[i] = Random::randomChoice(generation, random_engine);
-        }
-    }
-    std::sort(individuals.begin(), individuals.end(), [](const EvoIndividual& a, const EvoIndividual& b) {
-        return a.fitness < b.fitness;
-        });
-    return std::array{ individuals[0], individuals[1] };
-};
-
-/**
  * @brief Performs tournament selection on a subset of a population.
  *
  * This function performs tournament selection, a method of selecting individuals from a population based on their fitness.
@@ -81,10 +55,12 @@ std::array<EvoIndividual, 2> Selection::tournament_selection(EvoPopulation& popu
     if (start_index == end_index) {
         std::cerr << "Tournament selection: start index and end index should not be equal." << std::endl;
     }
-    std::array<EvoIndividual, 4> contestants;
-    std::sample(population.begin() + start_index, population.begin() + end_index, contestants.begin(), 4, random_engine);
-    std::sort(contestants.begin(), contestants.end(), [](const EvoIndividual& a, const EvoIndividual& b) {return a.fitness < b.fitness;});
-    return { contestants[0], contestants[1] };
+    std::array<EvoIndividual, 2> parents;
+    for (int i = 0; i < 2; i++) {
+        auto couple = population.get_random_batch_individuals(random_engine, 2, start_index, end_index);
+        parents[i] = (couple[0].fitness < couple[1].fitness) ? couple[0] : couple[1];
+    }
+    return parents;
 };
 
 /**
@@ -476,6 +452,8 @@ Transform::EvoDataSet Transform::data_transformation_robust(Eigen::MatrixXd pred
 Transform::EvoDataSet Transform::data_transformation_nonrobust(Eigen::MatrixXd predictor, Eigen::VectorXd target, EvoIndividual const& individual) {
     Transform::half_predictor_transform(predictor, individual);
     Transform::half_target_transform(target, individual);
+    std::cerr << predictor << std::endl;
+    std::cerr << target << std::endl;
     return { predictor, target };
 };
 
