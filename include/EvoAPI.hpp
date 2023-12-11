@@ -12,7 +12,7 @@
 #include "EvoLibrary.hpp"
 #include "XoshiroCpp.hpp"
 
-struct IslandInput {
+struct EvoRegressionInput {
     Eigen::MatrixXd x;
     Eigen::VectorXd y;
     EvoPopulation& population;
@@ -58,8 +58,8 @@ class EvoAPI {
     Transform::EvoDataSet get_dataset();
 
     // predictions
-    static IslandOutput run_island(IslandInput);
-    static IslandOutput run_island_async(IslandInput);
+    static IslandOutput run_island(EvoRegressionInput);
+    static IslandOutput run_island_async(EvoRegressionInput);
     static std::array<unsigned int, 2> get_island_borders(unsigned int island_id, unsigned int generation_size_limit) noexcept;
 
     // concurrent random engines
