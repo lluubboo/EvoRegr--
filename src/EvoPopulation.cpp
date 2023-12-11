@@ -259,7 +259,7 @@ std::array<EvoIndividual, 2> EvoPopulation::get_random_couple_individuals(Xoshir
     std::array<EvoIndividual, 2> couple;
     std::shared_lock lock(_mutex);
     {
-        std::sample(_population.begin() + begin_index, _population.begin() + end_index, couple.begin(), size, random_engine);
+        std::sample(_population.begin() + begin_index, _population.begin() + end_index, couple.begin(), 2, random_engine);
     }
     return couple;
 };
