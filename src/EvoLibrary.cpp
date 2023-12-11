@@ -451,8 +451,6 @@ Transform::EvoDataSet Transform::data_transformation_robust(Eigen::MatrixXd pred
 Transform::EvoDataSet Transform::data_transformation_nonrobust(Eigen::MatrixXd predictor, Eigen::VectorXd target, EvoIndividual const& individual) {
     Transform::half_predictor_transform(predictor, individual);
     Transform::half_target_transform(target, individual);
-    std::cerr << predictor << std::endl;
-    std::cerr << target << std::endl;
     return { predictor, target };
 };
 
