@@ -7,7 +7,6 @@
 #include <spdlog/spdlog.h>
 #include <functional>
 #include <future>
-#include "EvoIndividual.hpp"
 #include "RegressionSolver.hpp"
 #include "EvoLibrary.hpp"
 #include "XoshiroCpp.hpp"

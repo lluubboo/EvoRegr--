@@ -14,12 +14,7 @@
 #include <FL/Fl_Text_Display.H>
 #include <FL/Fl_Text_Buffer.H>
 #include <FL/Fl_File_Chooser.H>
-#include <cstdlib>
 #include <future>
-#include <spdlog/spdlog.h>
-#include <spdlog/sinks/base_sink.h>
-#include <spdlog/sinks/basic_file_sink.h>
-#include <spdlog/sinks/stdout_color_sinks.h>
 #include <string>
 #include "EvoGui.hpp"
 

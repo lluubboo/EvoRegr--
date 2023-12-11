@@ -1,7 +1,6 @@
 #include "EvoLibrary.hpp"
 #include "RandomChoices.hpp"
 #include "RandomNumberGenerator.hpp"
-#include "RegressionSolver.hpp"
 
 /**
  * @brief Performs tournament selection in a genetic algorithm.

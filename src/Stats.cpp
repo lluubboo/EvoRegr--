@@ -1,5 +1,4 @@
 #include <algorithm>
-#include <vector>
 #include <numeric>
 #include <tgmath.h>
 #include "Stats.hpp"
