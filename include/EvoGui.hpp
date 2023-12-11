@@ -50,7 +50,6 @@ class EvoView : public Fl_Window {
     Fl_Terminal* log_terminal;
     Fl_Pack* main_widget_pack;
     Fl_Button* load_button;
-    Fl_Button* predict_button;
     Fl_Button* batch_predict_button;
     Fl_Box* mutation_rate_label;
     Fl_Input* mutation_rate_box;
@@ -73,7 +72,6 @@ class EvoView : public Fl_Window {
     static void mutation_rate_callback(Fl_Widget* w, void* v);
     static void decomposition_choice_callback(Fl_Widget* w, void* v);
     static void load_file_button_callback(Fl_Widget* w, void* v);
-    static void predict_button_callback(Fl_Widget* w, void* v);
     static void batch_predict_button_callback(Fl_Widget* /*w*/, void* v);
 
     //methods
@@ -83,7 +81,6 @@ class EvoView : public Fl_Window {
     Fl_Terminal* create_terminal(int x, int y, int w, int h);
     Fl_Pack* create_main_widget_pack(int x, int y, int w, int h);
     Fl_Button* create_load_button(int h);
-    Fl_Button* create_predict_button(int h);
     Fl_Button* create_batch_predict_button(int h);
     Fl_Choice* create_combo_box(int h);
     Fl_Input* create_gen_count_box(int h);
@@ -96,7 +93,6 @@ class EvoView : public Fl_Window {
     void set_appearance();
     void init_loggers();
     void render_main_window();
-    void call_predict(EvoAPI evo_api);
     void call_batch_predict(EvoAPI evo_api);
 
 public:

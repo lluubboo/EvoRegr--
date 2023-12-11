@@ -20,7 +20,18 @@ std::shared_ptr<spdlog::logger> EvoAPI::logger;
  *
  * This constructor initializes the EvoAPI class with default solver functor.
  */
-EvoAPI::EvoAPI() : solver(LDLTSolver()) {}
+EvoAPI::EvoAPI() :
+    generation_size_limit{ 100 },
+    generation_count_limit{ 100 },
+    interaction_cols{ 0 },
+    mutation_rate{ 15 },
+    x{ Eigen::MatrixXd::Zero(0, 0) },
+    y{ Eigen::VectorXd::Zero(0) },
+    solver{ LDLTSolver() },
+    titan{ EvoIndividual() },
+    titan_robust_dataset{ Transform::EvoDataSet() },
+    titan_nonrobust_dataset{ Transform::EvoDataSet() },
+    titan_result{RegressionDetailedResult()} {}
 
 /**
  * @brief Sets the boundary conditions for the evolutionary algorithm.
@@ -183,78 +194,6 @@ Transform::EvoDataSet EvoAPI::get_dataset() {
 bool EvoAPI::is_ready_to_predict() {
     return x.size() > 0 && y.size() > 0;
 };
-
-/**
- * Performs the prediction process using a fixed generation size genetic algorithm.
- * This function generates a new generation of EvoIndividuals for a specified number of generations.
- * Each EvoIndividual is evaluated, transformed, and used to solve a regression problem.
- * The process includes crossover, mutation, selection, and fitness evaluation.
- * The resulting generation is saved and processed after each generation loop.
- */
-void EvoAPI::predict() {
-
-    EvoAPI::logger->info("Starting prediction process...");
-
-    // random engines for parallel loops
-    std::vector<XoshiroCpp::Xoshiro256Plus> random_engines = create_random_engines(omp_get_max_threads());
-
-    // individual containers for fixed generation size genetic algorithm
-    std::vector<EvoIndividual> generation(0);
-    std::vector<EvoIndividual> past_generation(0);
-
-    auto start = std::chrono::high_resolution_clock::now();
-
-#pragma omp declare reduction(merge_individuals : std::vector<EvoIndividual> : omp_out.insert(omp_out.end(), omp_in.begin(), omp_in.end())) initializer(omp_priv = omp_orig)
-
-    for (int gen_index = 0; gen_index < generation_count_limit; gen_index++) {
-
-        if (gen_index % 10 == 0) EvoAPI::logger->info("Generation {} of {}", gen_index, generation_count_limit);
-
-#pragma omp parallel for reduction (merge_individuals : generation) schedule(dynamic)
-        for (int entity_index = 0; entity_index < generation_size_limit; entity_index++) {
-
-            generation.reserve(generation_size_limit);
-
-            EvoIndividual newborn;
-
-            if (gen_index == 0) {
-                //generate random individual if generation is 0
-                newborn = Factory::getRandomEvoIndividual(y.rows(), x.cols(), random_engines[omp_get_thread_num()]);
-            }
-            else {
-                //crossover & mutation [vector sex]
-                newborn = Reproduction::reproduction(
-                    std::move(Selection::tournament_selection(past_generation, random_engines[omp_get_thread_num()])),
-                    x.cols(),
-                    x.rows(),
-                    mutation_rate,
-                    random_engines[omp_get_thread_num()]
-                );
-            }
-
-            // merge & transform & make robust predictors & target / solve regression problem
-            newborn.evaluate(
-                EvoMath::get_fitness<std::function<double(Eigen::MatrixXd const&, Eigen::VectorXd const&)>>(
-                    Transform::data_transformation_robust(
-                        x,
-                        y,
-                        newborn
-                    ),
-                    solver
-                )
-            );
-
-            generation.push_back(std::move(newborn));
-        }
-        // new generation become old generation after generation loop
-        past_generation = std::move(generation);
-    }
-
-    auto stop = std::chrono::high_resolution_clock::now();
-    std::chrono::duration<double> elapsed = stop - start;
-    EvoAPI::logger->info("Prediction process finished in /s: {}", elapsed.count());
-}
-
 
 void EvoAPI::batch_predict() {
 

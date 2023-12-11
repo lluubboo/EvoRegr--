@@ -28,6 +28,8 @@ namespace Mutation {
 namespace Transform {
 
     struct EvoDataSet {
+        EvoDataSet(Eigen::MatrixXd predictor, Eigen::VectorXd target) : predictor(predictor), target(target) {}
+        EvoDataSet() : predictor(Eigen::MatrixXd()), target(Eigen::VectorXd()) {}
         Eigen::MatrixXd predictor;
         Eigen::MatrixXd target;
     };

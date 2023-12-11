@@ -203,31 +203,6 @@ void EvoView::load_file_button_callback(Fl_Widget* /*w*/, void* v) {
     T->evo_api.load_file(T->filepath);
 }
 
-/**
- * Callback function for the predict button in EvoView.
- * This function is triggered when the predict button is clicked.
- * It checks if the Evo API is ready to predict. If it is, it creates a new thread and calls the Evo API predict method.
- *
- * @param w The Fl_Widget object representing the predict button.
- * @param v A pointer to the EvoView instance.
- */
-void EvoView::predict_button_callback(Fl_Widget* /*w*/, void* v) {
-    EvoView* T = (EvoView*)v;
-
-    if (!T->evo_api.is_ready_to_predict()) {
-        T->logger->error("Cannot start prediction. Please load a file first.");
-        return;
-    }
-
-    std::thread predict_thread(
-        &EvoView::call_predict,
-        T,
-        T->evo_api
-    );
-
-    predict_thread.detach();
-}
-
 void EvoView::batch_predict_button_callback(Fl_Widget* /*w*/, void* v) {
     EvoView* T = (EvoView*)v;
 
@@ -246,28 +221,6 @@ void EvoView::batch_predict_button_callback(Fl_Widget* /*w*/, void* v) {
 }
 
 //*************************************************************************************************methods
-
-/**
- * @brief Calls the Evo API predict method.
- *
- * This function calls the Evo API predict method and logs the result.
- *
- * @param evo_api The Evo API instance.
- * @param export_log_file_flag A flag indicating whether to export the log file.
- * @param report_file_prefix The prefix for the report file.
- */
-void EvoView::call_predict(EvoAPI evo_api) {
-    try {
-        evo_api.predict();
-        evo_api.log_result();
-    }
-    catch (const std::exception& e) {
-        logger->error("Standard exception caught in predict method call: " + std::string(e.what()));
-    }
-    catch (...) {
-        logger->error("Unknown exception caught in predict method call.");
-    }
-};
 
 void EvoView::call_batch_predict(EvoAPI evo_api) {
     try {
@@ -398,21 +351,6 @@ Fl_Button* EvoView::create_load_button(int h) {
     Fl_Button* button = new Fl_Button(0, 0, 0, h, "Create data");
     button->callback(load_file_button_callback, (void*)this);
     button->tooltip("Loads data from a file and adds interference columns according to boundary conditions to dataset. The file must be in the CSV format.");
-    return button;
-}
-
-/**
- * @brief Creates a new button.
- *
- * This function creates a new button.
- *
- * @param h The height of the button in pixels.
- * @return Fl_Button* A pointer to the newly created button.
- */
-Fl_Button* EvoView::create_predict_button(int h) {
-    Fl_Button* button = new Fl_Button(0, 0, 0, h, "Start prediction");
-    button->callback(predict_button_callback, (void*)this);
-    button->tooltip("Starts the prediction process.");
     return button;
 }
 
@@ -553,7 +491,6 @@ void EvoView::render_main_window() {
             mutation_rate_box = create_mutation_rate_box(BUTTON_HEIGHT);
             load_button = create_load_button(BUTTON_HEIGHT);
             decomposition_choice_chbox = create_combo_box(BUTTON_HEIGHT);
-            predict_button = create_predict_button(BUTTON_HEIGHT);
             batch_predict_button = create_batch_predict_button(BUTTON_HEIGHT);
         }
         main_widget_pack->end();

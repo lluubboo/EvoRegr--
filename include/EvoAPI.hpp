@@ -48,10 +48,6 @@ class EvoAPI {
     Transform::EvoDataSet titan_robust_dataset, titan_nonrobust_dataset;
     RegressionDetailedResult titan_result;
 
-    // algorithm metrics
-    std::vector<double> titan_history;
-    std::vector<double> generation_fitness_metrics;
-
     // data
     void create_regression_input(std::tuple<int, std::vector<double>>);
     Transform::EvoDataSet get_dataset();

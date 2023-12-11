@@ -11,7 +11,7 @@ set(CMAKE_BUILD_TYPE Debug)
 
 if (CMAKE_BUILD_TYPE STREQUAL "Debug") 
     #-Weffc++
-    add_compile_options(-Wall -Wpedantic -Wextra -fexceptions)
+    add_compile_options(-Wall -Wpedantic -Wextra -fexceptions -Weffc++)
 elseif (CMAKE_BUILD_TYPE STREQUAL "Release")
     if(WIN32)
         set(CMAKE_EXE_LINKER_FLAGS "-mwindows")
