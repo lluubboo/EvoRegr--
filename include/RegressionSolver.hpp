@@ -23,16 +23,7 @@ struct RegressionDetailedResult {
     bool isUsable;
 };
 
-struct RegressionSimpleResult {
-    Eigen::VectorXd coefficients;
-    Eigen::VectorXd residuals;
-    Eigen::VectorXd prediction;
-    double sum_squares_errors;
-    bool isUsable;
-};
-
 RegressionDetailedResult solve_system_detailed(Eigen::MatrixXd const&, Eigen::VectorXd const&);
-RegressionSimpleResult solve_system_by_ldlt_simple(Eigen::MatrixXd const&, Eigen::VectorXd const&);
 
 struct LLTSolver {
     double operator()(Eigen::MatrixXd const&, Eigen::VectorXd const&) const;

@@ -38,6 +38,7 @@ class Plotter {
 public:
         
     Plotter(T* data, std::string name, std::vector<std::string> column_names, unsigned int table_width, unsigned int size, DataArrangement data_arrangement);
+
     void print_table();
     std::string get_table();
 };

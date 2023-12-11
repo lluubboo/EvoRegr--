@@ -8,7 +8,13 @@
 class EvoIndividual {
 public:
 
-    EvoIndividual() : fitness(std::numeric_limits<double>::max()), is_healthy(false) {};
+    EvoIndividual() :
+        merger_chromosome(),
+        x_transformer_chromosome(),
+        y_transformer_chromosome(),
+        robuster_chromosome(),
+        fitness(std::numeric_limits<double>::max()),
+        is_healthy(false) {};
 
     std::vector<std::string> merge_chromosome_to_string_vector() const;
     std::vector<std::string> robust_chromosome_to_string_vector() const;
@@ -22,6 +28,7 @@ public:
     std::vector<TransformXAllele> x_transformer_chromosome;
     std::vector<TransformYAllele> y_transformer_chromosome;
     std::vector<RobustAllele> robuster_chromosome;
+
     double fitness;
     bool is_healthy;
 };
@@ -34,9 +41,21 @@ class EvoPopulation {
 
 public:
 
-    EvoPopulation(unsigned int size) : _population(size) {};
-    EvoPopulation(unsigned int size, unsigned int capacity) : _population(size) { _population.reserve(capacity); };
-    EvoPopulation(std::vector<EvoIndividual> population) : _population(population) {};
+    EvoPopulation(unsigned int size) :
+        _population(size),
+        _mutex() {};
+    
+    EvoPopulation(unsigned int size, unsigned int capacity) :
+        _population(size),
+        _mutex()
+    {
+        _population.reserve(capacity);
+    };
+
+    EvoPopulation(std::vector<EvoIndividual> population) :
+        _population(population),
+        _mutex()
+    {};
 
     void move_to_population(size_t index, EvoIndividual& individual) noexcept;
     void batch_population_move(EvoPopulation&& subpopulation, size_t index) noexcept;
