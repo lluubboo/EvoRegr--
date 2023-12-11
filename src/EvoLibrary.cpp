@@ -262,7 +262,7 @@ EvoIndividual Crossover::cross(std::array<EvoIndividual, 2> const& parents, int 
  * The function first selects a random mutation point in the chromosomes of the individual.
  * Then, it selects a random chromosome to mutate, and finally mutates the allele at the selected mutation point.
  */
-EvoIndividual Mutation::mutate(EvoIndividual& individual, int chromosome_size, int predictor_row_count, int mutation_rate, XoshiroCpp::Xoshiro256Plus& random_engine) {
+void Mutation::mutate(EvoIndividual& individual, int chromosome_size, int predictor_row_count, int mutation_rate, XoshiroCpp::Xoshiro256Plus& random_engine) {
     int rand_num = RandomNumbers::rand_interval_int(0, 100, random_engine);
     if (rand_num <= mutation_rate) {
         int mutation_index = RandomNumbers::rand_interval_int(0, 3, random_engine);
@@ -281,7 +281,6 @@ EvoIndividual Mutation::mutate(EvoIndividual& individual, int chromosome_size, i
             individual.y_transformer_chromosome.at(0) = Factory::getRandomTransformYAllele(random_engine);
         }
     }
-    return individual;
 }
 
 /**
@@ -309,7 +308,7 @@ EvoIndividual Reproduction::reproduction(
     EvoIndividual individual = Crossover::cross(parents, chromosomes_size, random_engine);
     // mutation
     Mutation::mutate(individual, chromosomes_size, predictor_row_count, mutation_rate, random_engine);
-return individual;
+    return individual;
 };
 
 /**
