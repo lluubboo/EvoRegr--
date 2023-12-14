@@ -3,7 +3,7 @@
 
 template<typename KeyType, typename ValueType>
 void EvoCache<KeyType, ValueType>::put(const KeyType key, const ValueType value) noexcept {
-    std::unique_lock lock(_mutex);
+    //std::unique_lock lock(_mutex);
     {
         auto it = _cache.find(key);
 
@@ -25,7 +25,7 @@ void EvoCache<KeyType, ValueType>::put(const KeyType key, const ValueType value)
 
 template<typename KeyType, typename ValueType>
 std::optional<ValueType> EvoCache<KeyType, ValueType>::get(const KeyType key) const noexcept {
-    std::shared_lock lock(_mutex);
+    //std::shared_lock lock(_mutex);
     {
         auto it = _cache.find(key);
         if (it != _cache.end()) {
