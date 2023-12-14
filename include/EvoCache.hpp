@@ -27,7 +27,8 @@ public:
         if (size == 0) {
             throw std::invalid_argument("Cache size must be greater than 0");
         }
-        _cache.reserve(size);
+        
+        _cache.reserve(limit_size);
     }
 
     void put(const KeyType key, const ValueType value) noexcept;
