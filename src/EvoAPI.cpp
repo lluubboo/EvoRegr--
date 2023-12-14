@@ -8,6 +8,7 @@
 #include "EvoAPI.hpp"
 #include "IOTools.hpp"
 #include "EvoPopulation.hpp"
+#include "EvoCache.hpp"
 #include "Stats.hpp"
 #include "Plotter.hpp"
 #include "omp.h"
@@ -294,6 +295,9 @@ IslandOutput EvoAPI::run_island(EvoRegressionInput input) {
     // subpopulation borders
     auto island_borders = EvoAPI::get_island_borders(input.island_id, input.generation_size_limit);
 
+    // island cache
+    auto island_cache = EvoCache<std::string, double>(input.population.size() * 100);
+
     EvoIndividual island_titan, newborn;
 
     // create island population and reserve it to generation size limit
@@ -319,17 +323,25 @@ IslandOutput EvoAPI::run_island(EvoRegressionInput input) {
                 input.random_engine
             );
 
-            // merge & transform & make robust predictors & target / solve regression problem
-            newborn.evaluate(
-                EvoMath::get_fitness<std::function<double(Eigen::MatrixXd const&, Eigen::VectorXd const&)>>(
-                    Transform::data_transformation_robust(
-                        input.x,
-                        input.y,
-                        newborn
-                    ),
-                    input.solver
-                )
-            );
+            auto it = island_cache.get(newborn.to_string_code());
+            if (it) {
+                newborn.fitness = *it;
+            }
+            else {
+                // merge & transform & make robust predictors & target / solve regression problem
+                newborn.evaluate(
+                    EvoMath::get_fitness<std::function<double(Eigen::MatrixXd const&, Eigen::VectorXd const&)>>(
+                        Transform::data_transformation_robust(
+                            input.x,
+                            input.y,
+                            newborn
+                        ),
+                        input.solver
+                    )
+                );
+
+                island_cache.put(newborn.to_string_code(), newborn.fitness);
+            }
 
             // newborn to population
             island_population.move_to_end(std::move(newborn));
