@@ -1,6 +1,5 @@
 #include <algorithm>
 #include <mutex>
-#include <Cereal.h>
 #include "EvoPopulation.hpp"
 #include "RandomChoices.hpp"
 
