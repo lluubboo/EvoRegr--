@@ -1,5 +1,6 @@
 #include <algorithm>
 #include <mutex>
+#include <Cereal.h>
 #include "EvoPopulation.hpp"
 #include "RandomChoices.hpp"
 
@@ -88,7 +89,7 @@ std::string EvoIndividual::to_math_formula() const {
 
 /**
  * The function `to_string_code()` returns a string representation of the genome of an EvoIndividual
- * object for cache purposes. This code is key to the cache of fitness values.
+ * object for caching. This code is key to the cache of fitness values.
  *
  * @return a string representation of the code of an EvoIndividual object.
  */

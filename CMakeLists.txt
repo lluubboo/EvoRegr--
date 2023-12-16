@@ -37,8 +37,11 @@ find_package(OpenMP)
 # spdlog
 find_package(spdlog REQUIRED)
 
-#
+# fltk
 find_package(FLTK REQUIRED NO_MODULE)
+
+# SparseHash
+include_directories("C:/Users/lubomir.balaz/SWLibraries/sparsehash-sparsehash-2.0.4-install/include")
 
 add_subdirectory(external)
 add_subdirectory(include)
