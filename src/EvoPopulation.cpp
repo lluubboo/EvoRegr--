@@ -96,16 +96,16 @@ std::string EvoIndividual::to_string_code() const {
     std::string string_genome;
     // merger chromosome
     for (auto const& allele : merger_chromosome) {
-        string_genome += allele.to_string_code();
+        string_genome.append(allele.to_string_code());
     }
     // transform X chromosome
     for (auto const& allele : x_transformer_chromosome) {
-        string_genome += allele.to_string_code();
+        string_genome.append(allele.to_string_code());
     }
     // transform Y chromosome
-    string_genome += y_transformer_chromosome.at(0).to_string_code();
+    string_genome.append(y_transformer_chromosome.at(0).to_string_code());
     // robuster chromosome
-    string_genome += robuster_chromosome.at(0).to_string_code();
+    string_genome.append(robuster_chromosome.at(0).to_string_code());
     return string_genome;
 }
 

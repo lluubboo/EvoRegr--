@@ -1,6 +1,7 @@
 #include <numeric>
 #include <iostream>
 #include <cmath>
+#include <sstream>
 #include "RandomChoices.hpp"
 #include "RandomNumberGenerator.hpp"
 #include "EvoGene.hpp"
@@ -107,12 +108,12 @@ std::string MergeAllele::to_string() const {
  * @return The string representation of the MergeAllele object.
  */
 std::string MergeAllele::to_string_code() const {
-    std::string sallele;
-    sallele = "MA" + std::to_string(column_index);
+    std::string sallele("MA");
+    sallele += std::to_string(column_index);
     for (auto const& twin : allele) {
-        sallele += merge_operator_names.at(twin.merge_operator) + std::to_string(twin.merge_column);
+        sallele += merge_operator_names.at(twin.merge_operator);
+        sallele += std::to_string(twin.merge_column);
     }
-    sallele += "E";
     return sallele;
 }
 
@@ -193,8 +194,10 @@ std::string TransformXAllele::to_string() const {
  * @return The string representation of the TransformXAllele object.
  */
 std::string TransformXAllele::to_string_code() const {
-    std::string sallele;
-    sallele = "TX" + std::to_string(column_index) + std::to_string(characteristic_number) + transform_operator_names.at(allele);
+    std::string sallele("TX");
+    sallele += std::to_string(column_index);
+    sallele += std::to_string(characteristic_number);
+    sallele += transform_operator_names.at(allele);
     return sallele;
 }
 
@@ -342,8 +345,9 @@ std::string TransformYAllele::to_string() const {
  * @return The string representation of the TransformYAllele object.
  */
 std::string TransformYAllele::to_string_code() const {
-    std::string sallele;
-    sallele += "TY" + std::to_string(characteristic_number) + transform_operator_names.at(allele);
+    std::string sallele("TY");
+    sallele += std::to_string(characteristic_number);
+    sallele += transform_operator_names.at(allele);
     return sallele;
 }
 
@@ -406,9 +410,10 @@ std::string RobustAllele::to_string() const {
  * @return The string representation of the RobustAllele object.
  */
 std::string RobustAllele::to_string_code() const {
-    std::string sallele;
-    sallele = "RA" + std::string(allele.begin(), allele.end());
-    return sallele;
+    std::string result("RA");
+    result.reserve(2 + allele.size()); // 2 for "RA"
+    result.insert(result.end(), allele.begin(), allele.end());
+    return result;
 }
 
 

@@ -94,6 +94,7 @@ public:
     std::string to_string() const override;
     std::string to_string_code() const override;
     void resetCharacteristicNumber(float);
+
     Transform_operator allele;
 };
 
@@ -107,6 +108,7 @@ public:
     void transformVector(Eigen::VectorXd&) const;
     void transformBack(Eigen::VectorXd&) const;
     void resetCharacteristicNumber(float);
+
     Transform_operator allele;
 };
 
@@ -118,6 +120,7 @@ public:
     std::string to_string() const override;
     std::string to_string_code() const override;
     void transformVector(Eigen::VectorXd&) const;
+
     std::vector<int> allele;
 };
 
