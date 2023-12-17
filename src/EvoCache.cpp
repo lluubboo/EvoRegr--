@@ -2,7 +2,7 @@
 #include "EvoCache.hpp"
 
 template<typename KeyType, typename ValueType>
-void EvoCache<KeyType, ValueType>::put(const KeyType& key, const ValueType& value) noexcept {
+void LRUCache<KeyType, ValueType>::put(const KeyType& key, const ValueType& value) noexcept {
     auto it = _map.find(key);
 
     //put if item is not in the cache
@@ -22,7 +22,7 @@ void EvoCache<KeyType, ValueType>::put(const KeyType& key, const ValueType& valu
 }
 
 template<typename KeyType, typename ValueType>
-std::optional<ValueType> EvoCache<KeyType, ValueType>::get(const KeyType& key) noexcept {
+std::optional<ValueType> LRUCache<KeyType, ValueType>::get(const KeyType& key) noexcept {
 
     auto it = _map.find(key);
 
@@ -57,5 +57,5 @@ std::optional<ValueType> EvoCache<KeyType, ValueType>::get(const KeyType& key) n
     }
 }
 
-template void EvoCache<std::string, double>::put(const std::string& key, const double& value) noexcept;
-template std::optional<double> EvoCache<std::string, double>::get(const std::string& key) noexcept;
+template void LRUCache<std::string, double>::put(const std::string& key, const double& value) noexcept;
+template std::optional<double> LRUCache<std::string, double>::get(const std::string& key) noexcept;

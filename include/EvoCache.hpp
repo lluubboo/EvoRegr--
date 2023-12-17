@@ -7,15 +7,15 @@
 #include <sparsehash/dense_hash_map>
 
 template<typename KeyType, typename ValueType>
-class EvoCache {
+class LRUCache {
 
     std::list<KeyType> _list;
     google::dense_hash_map<KeyType, std::pair<ValueType, typename std::list<KeyType>::iterator>> _map;
-    size_t limit_size; 
+    size_t limit_size;
 
 public:
-    
-    EvoCache(size_t size) :
+
+    LRUCache(size_t size) :
         _list(),
         _map(),
         limit_size(size)
@@ -32,8 +32,9 @@ public:
         _map.resize(size);
     }
 
-    ~EvoCache(){};	
+    ~LRUCache() {};
 
     void put(const KeyType& key, const ValueType& value) noexcept;
+
     std::optional<ValueType> get(const KeyType& key) noexcept;
 };

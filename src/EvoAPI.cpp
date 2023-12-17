@@ -296,7 +296,7 @@ IslandOutput EvoAPI::run_island(EvoRegressionInput input) {
     auto island_borders = EvoAPI::get_island_borders(input.island_id, input.generation_size_limit);
 
     // island cache
-    auto island_cache = EvoCache<std::string, double>(input.generation_size_limit * 10);
+    auto island_cache = LRUCache<std::string, double>(input.generation_size_limit * 10);
 
     EvoIndividual island_titan, newborn;
 
