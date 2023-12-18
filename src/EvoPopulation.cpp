@@ -143,7 +143,7 @@ void EvoPopulation::batch_population_move(EvoPopulation&& subpopulation, size_t 
         size_t remaining_space = std::distance(begin, _population.end());
 
         if (subpopulation.size() <= remaining_space) {
-            std::move(subpopulation.begin(), subpopulation.end(), begin);
+            std::move(subpopulation._population.begin(), subpopulation._population.end(), begin);
             subpopulation.clear();
         }
         else {
