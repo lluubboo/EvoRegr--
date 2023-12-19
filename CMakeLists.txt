@@ -23,7 +23,7 @@ endif()
 
 add_executable(EVOREGR++ main.cpp)
 
-# list cmake_prefix_path append eigen custom install directory cmake files
+# append user paths 
 list(APPEND CMAKE_PREFIX_PATH "C:/Users/lubomir.balaz/SWLibraries/eigen-3.4.0-install/share/eigen3/cmake")
 list(APPEND CMAKE_PREFIX_PATH "C:/.local/lib/cmake/Matplot++")
 list(APPEND CMAKE_PREFIX_PATH "C:/Users/lubomir.balaz/SWLibraries/fltk/build")

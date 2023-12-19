@@ -28,6 +28,8 @@ public:
         // key-value that is never used for legitimate hash-map entries
         _map.set_empty_key("empty");
 
+        _map.set_deleted_key("deleted");
+
         //  Increases the bucket count to hold at least n items.
         _map.resize(size);
     }
