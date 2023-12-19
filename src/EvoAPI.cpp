@@ -323,7 +323,9 @@ IslandOutput EvoAPI::run_island(EvoRegressionInput input) {
                 input.random_engine
             );
 
-            auto it = island_cache.get(newborn.to_string_code());
+            auto newborn_string_code = newborn.to_string_code();
+            auto it = island_cache.get(newborn_string_code);
+
             if (it) {
                 newborn.fitness = *it;
             }
@@ -340,7 +342,7 @@ IslandOutput EvoAPI::run_island(EvoRegressionInput input) {
                     )
                 );
 
-                island_cache.put(newborn.to_string_code(), newborn.fitness);
+                island_cache.put(newborn_string_code, newborn.fitness);
             }
 
             // newborn to population
