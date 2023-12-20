@@ -229,7 +229,9 @@ void EvoAPI::batch_predict() {
     );
 
     // create population of newborns
-    std::vector<EvoIndividual> newborns_population(global_generation_size_limit);
+    std::vector<EvoIndividual> newborns_population(
+        global_generation_size_limit
+    );
 
     for (int gen_index = 0; gen_index < generation_count_limit; gen_index++) {
 
