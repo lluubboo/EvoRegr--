@@ -214,10 +214,6 @@ void EvoAPI::batch_predict() {
 
     EvoAPI::logger->info("Starting batch prediction process...");
 
-
-    size_t global_generation_size_limit = generation_size_limit * island_count;
-    size_t migrants_count = static_cast<size_t>((global_generation_size_limit * migration_ratio) / 100);
-    
     auto random_engines = create_random_engines(omp_get_max_threads());
 
     auto start_time = std::chrono::high_resolution_clock::now();
