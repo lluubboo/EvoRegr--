@@ -45,7 +45,10 @@ EvoView::EvoView(int width, int height, const char* title) :
     generations_count{ 100 },
     generations_size{ 100 },
     interference_size{ 0 },
-    mutation_rate{ 15 }
+    mutation_rate{ 15 },
+    island_count{ 12 },
+    migration_ratio{ 5 },
+    migration_interval{ 5 }
 {
     set_appearance();
     render_main_window();
@@ -174,6 +177,45 @@ void EvoView::mutation_rate_callback(Fl_Widget* w, void* v) {
     }
 }
 
+void EvoView::island_count_callback(Fl_Widget* w, void* v) {
+    EvoView* T = (EvoView*)v;
+    std::istringstream iss(((Fl_Input*)w)->value());
+    int value;
+    if (!(iss >> value) || !iss.eof() || value < 0 ) {
+        T->logger->error("Invalid input. Please enter an integer number.");
+    }
+    else {
+        T->island_count = value;
+        T->logger->info("Island count set to: " + std::to_string(T->island_count));
+    }
+}
+
+void EvoView::migration_ratio_callback(Fl_Widget* w, void* v) {
+    EvoView* T = (EvoView*)v;
+    std::istringstream iss(((Fl_Input*)w)->value());
+    int value;
+    if (!(iss >> value) || !iss.eof() || value < 0) {
+        T->logger->error("Invalid input. Please enter an integer number.");
+    }
+    else {
+        T->migration_ratio = value;
+        T->logger->info("Migration ratio set to: " + std::to_string(T->migration_ratio));
+    }
+}
+
+void EvoView::migration_interval_callback(Fl_Widget* w, void* v) {
+    EvoView* T = (EvoView*)v;
+    std::istringstream iss(((Fl_Input*)w)->value());
+    int value;
+    if (!(iss >> value) || !iss.eof() || value < 0) {
+        T->logger->error("Invalid input. Please enter an integer number.");
+    }
+    else {
+        T->migration_interval = value;
+        T->logger->info("Migration interval set to: " + std::to_string(T->migration_interval));
+    }
+}
+
 /**
  * Callback function for the decomposition method choice box.
  * Updates the decomposition_method field in the EvoView object and logs the new value.
@@ -199,7 +241,7 @@ void EvoView::decomposition_choice_callback(Fl_Widget* w, void* v) {
 void EvoView::load_file_button_callback(Fl_Widget* /*w*/, void* v) {
     EvoView* T = (EvoView*)v;
     T->get_filepath();
-    T->evo_api.set_boundary_conditions(T->generations_size, T->generations_count, T->interference_size, T->mutation_rate);
+    T->evo_api.set_boundary_conditions(T->generations_size, T->generations_count, T->interference_size, T->mutation_rate, T->island_count, T->migration_ratio, T->migration_interval);
     T->evo_api.load_file(T->filepath);
 }
 
@@ -445,6 +487,30 @@ Fl_Input* EvoView::create_mutation_rate_box(int h) {
     return inputBox;
 }
 
+Fl_Input* EvoView::create_island_count_box(int h) {
+    Fl_Input* inputBox = new Fl_Input(0, 0, 0, h);
+    inputBox->value(island_count);
+    inputBox->tooltip("Enter the island count here [integer]");
+    inputBox->callback(mutation_rate_callback, (void*)(this));
+    return inputBox;
+}
+
+Fl_Input* EvoView::create_migration_ratio_box(int h) {
+    Fl_Input* inputBox = new Fl_Input(0, 0, 0, h);
+    inputBox->value(migration_ratio);
+    inputBox->tooltip("Enter the migration_ratio here [integer]");
+    inputBox->callback(migration_ratio_callback, (void*)(this));
+    return inputBox;
+}
+
+Fl_Input* EvoView::create_migration_interval_box(int h) {
+    Fl_Input* inputBox = new Fl_Input(0, 0, 0, h);
+    inputBox->value(migration_interval);
+    inputBox->tooltip("Enter the migration_interval here [integer]");
+    inputBox->callback(migration_interval_callback, (void*)(this));
+    return inputBox;
+}
+
 /**
  * @brief Creates an invisible Fl_Box to be used as a spacer.
  *
@@ -489,6 +555,12 @@ void EvoView::render_main_window() {
             inter_size_box = create_inter_size_box(BUTTON_HEIGHT);
             mutation_rate_label = create_label(LABEL_HEIGHT, "Mutation rate:");
             mutation_rate_box = create_mutation_rate_box(BUTTON_HEIGHT);
+            island_count_label = create_label(LABEL_HEIGHT, "Island count:");
+            island_count_box = create_island_count_box(BUTTON_HEIGHT);
+            migration_ratio_label = create_label(LABEL_HEIGHT, "Migration ratio:");
+            migration_ratio_box = create_migration_ratio_box(BUTTON_HEIGHT);
+            migration_interval_label = create_label(LABEL_HEIGHT, "Migration interval:");
+            migration_interval_box = create_migration_interval_box(BUTTON_HEIGHT);
             load_button = create_load_button(BUTTON_HEIGHT);
             decomposition_choice_chbox = create_combo_box(BUTTON_HEIGHT);
             batch_predict_button = create_batch_predict_button(BUTTON_HEIGHT);

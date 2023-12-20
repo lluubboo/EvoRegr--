@@ -11,31 +11,14 @@
 #include "EvoLibrary.hpp"
 #include "XoshiroCpp.hpp"
 
-struct EvoRegressionInput {
-    Eigen::MatrixXd x;
-    Eigen::VectorXd y;
-    EvoPopulation& population;
-    XoshiroCpp::Xoshiro256Plus& random_engine;
-    std::function<double(Eigen::MatrixXd const&, Eigen::VectorXd const&)> solver;
-    const int mutation_rate;
-    const int generation_size_limit;
-    const int generation_count_limit;
-    const int island_id;
-    const int island_count;
-};
-
-struct IslandOutput {
-    EvoIndividual best_individual;
-    int island_id;
-};
-
 class EvoAPI {
 
     // logger
     static std::shared_ptr<spdlog::logger> logger;
 
     // algorithm boundary conditions
-    int generation_size_limit, generation_count_limit, interaction_cols, mutation_rate;
+    int generation_size_limit, generation_count_limit, interaction_cols, mutation_rate, island_count, migration_ratio, migration_interval;
+    int global_generation_size_limit, migrants_count;
 
     // preprocessed input data
     Eigen::MatrixXd x, y;
@@ -51,11 +34,6 @@ class EvoAPI {
     // data
     void create_regression_input(std::tuple<int, std::vector<double>>);
     Transform::EvoDataSet get_dataset();
-
-    // predictions
-    static IslandOutput run_island(EvoRegressionInput);
-    static IslandOutput run_island_async(EvoRegressionInput);
-    static std::array<unsigned int, 2> get_island_borders(unsigned int island_id, unsigned int generation_size_limit) noexcept;
 
     // concurrent random engines
     std::vector<XoshiroCpp::Xoshiro256Plus> create_random_engines(int count);
@@ -83,10 +61,9 @@ public:
 
     void set_solver(std::string const& solver_name);
     void load_file(const std::string& filename);
-    void predict();
     void batch_predict();
     void log_result();
     void init_logger();
-    void set_boundary_conditions(unsigned int generation_size_limit, unsigned int generation_count_limit, unsigned int interaction_cols, unsigned int mutation_rate);
+    void set_boundary_conditions(unsigned int generation_size_limit, unsigned int generation_count_limit, unsigned int interaction_cols, unsigned int mutation_rate, unsigned int island_count, unsigned int migration_ratio, unsigned int migration_interval);
     bool is_ready_to_predict();
 };

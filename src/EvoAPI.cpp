@@ -26,6 +26,11 @@ EvoAPI::EvoAPI() :
     generation_count_limit{ 100 },
     interaction_cols{ 0 },
     mutation_rate{ 15 },
+    island_count{ 12 },
+    migration_ratio{ 10 },
+    migration_interval{ 5 },
+    global_generation_size_limit{ generation_size_limit * island_count },
+    migrants_count{ static_cast<size_t>((global_generation_size_limit * migration_ratio) / 100) },
     x{ Eigen::MatrixXd::Zero(0, 0) },
     y{ Eigen::VectorXd::Zero(0) },
     solver{ LDLTSolver() },
@@ -45,15 +50,24 @@ void EvoAPI::set_boundary_conditions(
     unsigned int generation_size_limit,
     unsigned int generation_count_limit,
     unsigned int interaction_cols,
-    unsigned int mutation_rate
-) {
+    unsigned int mutation_rate,
+    unsigned int island_count,
+    unsigned int migration_ratio,
+    unsigned int migration_interval
+    ) {
     this->generation_size_limit = generation_size_limit;
     this->generation_count_limit = generation_count_limit;
     this->interaction_cols = interaction_cols;
     this->mutation_rate = mutation_rate;
+    this->island_count = island_count;
+    this->migration_ratio = migration_ratio;
+    this->migration_interval = migration_interval;
+    this->global_generation_size_limit = generation_size_limit * island_count;
+    this->migrants_count = static_cast<size_t>((global_generation_size_limit * migration_ratio) / 100);
 
-    EvoAPI::logger->info("Boundary conditions set generation size limit: {}, generation count limit: {}, interaction cols: {}, mutation rate: {}",
-        generation_size_limit, generation_count_limit, interaction_cols, mutation_rate);
+    EvoAPI::logger->info("Boundary conditions set to generation_size_limit: {}, generation_count_limit: {}, interaction_cols: {}, mutation_rate: {}, island_count: {}, migration_ratio: {}, migration_interval: {}",
+        generation_size_limit, generation_count_limit, interaction_cols, mutation_rate, island_count, migration_ratio, migration_interval);
+    EvoAPI::logger->info("global_generation_size_limit: {}, migrants_count: {}", global_generation_size_limit, migrants_count);
 }
 
 /**
@@ -200,10 +214,9 @@ void EvoAPI::batch_predict() {
 
     EvoAPI::logger->info("Starting batch prediction process...");
 
-    size_t island_count = 12;
-    size_t migration_interval = 5;
+
     size_t global_generation_size_limit = generation_size_limit * island_count;
-    size_t migration_size = global_generation_size_limit / 30;
+    size_t migrants_count = static_cast<size_t>((global_generation_size_limit * migration_ratio) / 100);
     
     auto random_engines = create_random_engines(omp_get_max_threads());
 
@@ -229,7 +242,7 @@ void EvoAPI::batch_predict() {
             EvoAPI::logger->info("Migration in gen {} started...", gen_index);
 
             // migration
-            for (size_t i = 0; i < migration_size; i++) {
+            for (size_t i = 0; i < migrants_count; i++) {
                 std::swap(
                     old_population[RandomNumbers::rand_interval_int(0, global_generation_size_limit - 1, random_engines[omp_get_thread_num()])],
                     old_population[RandomNumbers::rand_interval_int(0, global_generation_size_limit - 1, random_engines[omp_get_thread_num()])]
@@ -294,22 +307,6 @@ void EvoAPI::batch_predict() {
 
     log_result();
 }
-
-/**
- * @brief Calculates the borders for a given island in a generation.
- *
- * This function calculates the start and end indices for a given island in a generation.
- * The start index is calculated as the island ID multiplied by the generation size limit.
- * The end index is calculated as the start index plus the generation size limit minus one.
- *
- * @param island_id The ID of the island for which to calculate the borders.
- * @param island_count The total number of islands. (Currently unused in the function)
- * @param generation_size_limit The maximum size of a generation.
- * @return A std::array<unsigned int, 2> containing the start and end indices for the island in the generation.
- */
-std::array<unsigned int, 2> EvoAPI::get_island_borders(unsigned int island_id, unsigned int generation_size_limit) noexcept {
-    return { island_id * generation_size_limit , island_id * generation_size_limit + generation_size_limit - 1 };
-};
 
 /**
  * Displays the result of the evolutionary regression analysis.

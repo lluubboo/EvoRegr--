@@ -42,6 +42,9 @@ class EvoView : public Fl_Window {
     int generations_size;
     int interference_size;
     int mutation_rate;
+    int island_count;
+    int migration_ratio;
+    int migration_interval;
 
     //widgets
 
@@ -59,6 +62,12 @@ class EvoView : public Fl_Window {
     Fl_Input* gen_size_box;
     Fl_Box* inter_size_label;
     Fl_Input* inter_size_box;
+    Fl_Box* island_count_label;
+    Fl_Input* island_count_box;
+    Fl_Box* migration_ratio_label;
+    Fl_Input* migration_ratio_box;
+    Fl_Box* migration_interval_label;
+    Fl_Input* migration_interval_box;
     Fl_Choice* decomposition_choice_chbox;
     Fl_Check_Button* export_log_checkbutton;
 
@@ -70,6 +79,9 @@ class EvoView : public Fl_Window {
     static void gen_size_input_callback(Fl_Widget* w, void* v);
     static void gen_interference_size_callback(Fl_Widget* w, void* v);
     static void mutation_rate_callback(Fl_Widget* w, void* v);
+    static void island_count_callback(Fl_Widget* w, void* v);
+    static void migration_ratio_callback(Fl_Widget* w, void* v);
+    static void migration_interval_callback(Fl_Widget* w, void* v);
     static void decomposition_choice_callback(Fl_Widget* w, void* v);
     static void load_file_button_callback(Fl_Widget* w, void* v);
     static void batch_predict_button_callback(Fl_Widget* /*w*/, void* v);
@@ -87,6 +99,9 @@ class EvoView : public Fl_Window {
     Fl_Input* create_gen_size_box(int h);
     Fl_Input* create_inter_size_box(int h);
     Fl_Input* create_mutation_rate_box(int h);
+    Fl_Input* create_island_count_box(int h);
+    Fl_Input* create_migration_ratio_box(int h);
+    Fl_Input* create_migration_interval_box(int h);
     Fl_Box* create_label(int height, const char* label);
 
     void get_filepath();
@@ -107,7 +122,6 @@ class Fl_Terminal_Sink : public spdlog::sinks::base_sink<T> {
 protected:
 
     void sink_it_(const spdlog::details::log_msg& msg) override;
-
     void flush_() override;
 
 public:
