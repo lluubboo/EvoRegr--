@@ -14,7 +14,8 @@ public:
         y_transformer_chromosome(),
         robuster_chromosome(),
         fitness(std::numeric_limits<double>::max()),
-        is_healthy(false) {};
+        is_healthy(false)
+    {};
 
     std::vector<std::string> merge_chromosome_to_string_vector() const;
     std::vector<std::string> robust_chromosome_to_string_vector() const;

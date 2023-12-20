@@ -10,13 +10,12 @@
 
 namespace Selection {
 
-    std::array<EvoIndividual, 2> tournament_selection(std::vector<EvoIndividual> const&, XoshiroCpp::Xoshiro256Plus&);
-    std::array<EvoIndividual, 2> tournament_selection(EvoPopulation const&, XoshiroCpp::Xoshiro256Plus&, size_t, size_t);
+    EvoIndividual const& tournament_selection(std::vector<EvoIndividual>::iterator begin, size_t size, XoshiroCpp::Xoshiro256Plus& random_engine);
 
 }
 namespace Crossover {
 
-    EvoIndividual cross(std::array<EvoIndividual, 2> && parents, int, XoshiroCpp::Xoshiro256Plus&);
+    EvoIndividual cross(EvoIndividual const&, EvoIndividual const&, int, XoshiroCpp::Xoshiro256Plus&);
 
 }
 namespace Mutation {
@@ -42,10 +41,6 @@ namespace Transform {
     EvoDataSet data_transformation_robust(Eigen::MatrixXd, Eigen::VectorXd, EvoIndividual const&);
     EvoDataSet data_transformation_nonrobust(Eigen::MatrixXd, Eigen::VectorXd, EvoIndividual const&);
 
-}
-
-namespace Reproduction {
-    EvoIndividual reproduction(std::array<EvoIndividual, 2> && parents, int chromosome_size, int predictor_row_count, int mutation_rate, XoshiroCpp::Xoshiro256Plus&);
 }
 
 namespace EvoMath {

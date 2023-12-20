@@ -2,64 +2,10 @@
 #include "RandomChoices.hpp"
 #include "RandomNumberGenerator.hpp"
 
-/**
- * @brief Performs tournament selection in a genetic algorithm.
- *
- * @param generation A vector of EvoIndividual objects representing the current generation.
- * @param random_engine A random engine to be used for generating random numbers.
- *
- * @return An array of two EvoIndividual objects that have been selected as parents for the next generation.
- *
- * This function performs tournament selection, a method of selecting individuals in a genetic algorithm.
- * It works by choosing a number of individuals at random from the population, and then selecting the best individual
- * out of that group to become a parent. This process is repeated to select the second parent.
- */
-std::array<EvoIndividual, 2> Selection::tournament_selection(std::vector<EvoIndividual> const& generation, XoshiroCpp::Xoshiro256Plus& random_engine) {
-
-    EvoIndividual first = Random::randomChoice(generation, random_engine);
-    EvoIndividual second = Random::randomChoice(generation, random_engine);
-
-    if (second.fitness < first.fitness) std::swap(first, second);
-
-    for (int i = 0; i < 2; i++) {
-        EvoIndividual entity = Random::randomChoice(generation, random_engine);
-        if (entity.fitness < first.fitness) {
-            std::swap(first, entity);
-            second = std::move(entity);
-        }
-        else if (entity.fitness < second.fitness) {
-            second = std::move(entity);
-        }
-    }
-    return std::array{ std::move(first), std::move(second) };
-};
-
-/**
- * @brief Performs tournament selection on a subset of a population.
- *
- * This function performs tournament selection, a method of selecting individuals from a population based on their fitness.
- * It randomly selects two individuals from a specified range within the population and chooses the one with the lower fitness.
- * This process is repeated twice to select two individuals.
- *
- * If the start and end indices of the range are equal, an error message is printed to `std::cerr`.
- *
- * @param population A reference to the `EvoPopulation` from which individuals are selected.
- * @param random_engine A reference to a `XoshiroCpp::Xoshiro256Plus` random number generator.
- * @param start_index The start index of the range within the population from which individuals are selected.
- * @param end_index The end index of the range within the population from which individuals are selected.
- *
- * @return std::array<EvoIndividual, 2> The two selected individuals with the lower fitness.
- */
-std::array<EvoIndividual, 2> Selection::tournament_selection(EvoPopulation const& population, XoshiroCpp::Xoshiro256Plus& random_engine, size_t start_index, size_t end_index) {
-    if (start_index == end_index) {
-        std::cerr << "Tournament selection: start index and end index should not be equal." << std::endl;
-    }
-    std::array<EvoIndividual, 2> parents, couple;
-    for (int i = 0; i < 2; i++) {
-        couple = population.get_random_couple_individuals(random_engine, start_index, end_index);
-        parents[i] = (couple[0].fitness < couple[1].fitness) ? couple[0] : couple[1];
-    }
-    return parents;
+EvoIndividual const& Selection::tournament_selection(std::vector<EvoIndividual>::iterator begin, size_t size, XoshiroCpp::Xoshiro256Plus& random_engine) {
+    const auto& individual1 = *(begin + RandomNumbers::rand_interval_int(0, size - 1, random_engine));
+    const auto& individual2 = *(begin + RandomNumbers::rand_interval_int(0, size - 1, random_engine));
+    return (individual1.fitness < individual2.fitness) ? individual1 : individual2;
 };
 
 /**
@@ -214,34 +160,25 @@ RobustAllele Factory::getRandomRobustAllele(int row_count, XoshiroCpp::Xoshiro25
     return robust_allele;
 };
 
-/**
- * @brief Performs crossover operation on two parent EvoIndividuals to generate a new EvoIndividual.
- *
- * @param parents An array of two EvoIndividual objects that are the parents.
- * @param chromosome_size The size of the chromosomes in the EvoIndividual objects.
- * @param random_engine A random engine to be used for generating random numbers.
- *
- * @return An EvoIndividual object that is the result of the crossover operation.
- *
- * This function performs a crossover operation, a method of generating new individuals in a genetic algorithm.
- * It works by selecting a random crossover point in the chromosomes of the parents, and then creating a new individual
- * that inherits the genes from the first parent up to the crossover point, and the genes from the second parent after the crossover point.
- */
-EvoIndividual Crossover::cross(std::array<EvoIndividual, 2> && parents, int chromosome_size, XoshiroCpp::Xoshiro256Plus& random_engine) {
+EvoIndividual Crossover::cross(const EvoIndividual& parent1, const EvoIndividual& parent2, int chromosome_size, XoshiroCpp::Xoshiro256Plus& random_engine) {
     EvoIndividual youngling{};
+
     // indexes which points to place of chromosome cut & recombination
     int m_crossover_twist_index = RandomNumbers::rand_interval_int(0, chromosome_size, random_engine);
     int t_crossover_twist_index = RandomNumbers::rand_interval_int(0, chromosome_size, random_engine);
     int r_crossover_twist_index = RandomNumbers::rand_interval_int(0, 1, random_engine);
     int y_crossover_twist_index = RandomNumbers::rand_interval_int(0, 1, random_engine);
+
     // cross single gene chromosomes robuster & ytransformer
-    youngling.robuster_chromosome = (r_crossover_twist_index == 0) ? parents[0].robuster_chromosome : parents[1].robuster_chromosome;
-    youngling.y_transformer_chromosome = (y_crossover_twist_index == 0) ? parents[0].y_transformer_chromosome : parents[1].y_transformer_chromosome;
+    youngling.robuster_chromosome = (r_crossover_twist_index == 0) ? parent1.robuster_chromosome : parent2.robuster_chromosome;
+    youngling.y_transformer_chromosome = (y_crossover_twist_index == 0) ? parent1.y_transformer_chromosome : parent2.y_transformer_chromosome;
+
     // cross multi gene chromosomes merger & xtransformer
-    youngling.merger_chromosome = parents[0].merger_chromosome;
-    youngling.x_transformer_chromosome = parents[0].x_transformer_chromosome;
-    std::copy(parents[1].merger_chromosome.begin() + m_crossover_twist_index, parents[1].merger_chromosome.end(), youngling.merger_chromosome.begin() + m_crossover_twist_index);
-    std::copy(parents[1].x_transformer_chromosome.begin() + t_crossover_twist_index, parents[1].x_transformer_chromosome.end(), youngling.x_transformer_chromosome.begin() + t_crossover_twist_index);
+    youngling.merger_chromosome = parent1.merger_chromosome;
+    youngling.x_transformer_chromosome = parent1.x_transformer_chromosome;
+    
+    std::copy(parent2.merger_chromosome.begin() + m_crossover_twist_index, parent2.merger_chromosome.end(), youngling.merger_chromosome.begin() + m_crossover_twist_index);
+    std::copy(parent2.x_transformer_chromosome.begin() + t_crossover_twist_index, parent2.x_transformer_chromosome.end(), youngling.x_transformer_chromosome.begin() + t_crossover_twist_index);
     return youngling;
 }
 
@@ -281,34 +218,6 @@ void Mutation::mutate(EvoIndividual& individual, int chromosome_size, int predic
         }
     }
 }
-
-/**
- * @brief Performs reproduction operation on two parent EvoIndividuals to generate a new EvoIndividual.
- *
- * @param parents An array of two EvoIndividual objects that are the parents.
- * @param chromosomes_size The size of the chromosomes in the EvoIndividual objects.
- * @param predictor_row_count The number of rows in the predictor matrix.
- * @param random_engine A random engine to be used for generating random numbers.
- *
- * @return An EvoIndividual object that is the result of the reproduction operation.
- *
- * This function performs a reproduction operation, a method of generating new individuals in a genetic algorithm.
- * It works by first performing a crossover operation on the parents to generate a new individual,
- * and then performing a mutation operation on the new individual.
- */
-EvoIndividual Reproduction::reproduction(
-    std::array<EvoIndividual, 2> && parents,
-    int chromosomes_size,
-    int predictor_row_count,
-    int mutation_rate,
-    XoshiroCpp::Xoshiro256Plus& random_engine
-) {
-    // crossover
-    EvoIndividual individual = Crossover::cross(std::move(parents), chromosomes_size, random_engine);
-    // mutation
-    Mutation::mutate(individual, chromosomes_size, predictor_row_count, mutation_rate, random_engine);
-    return individual;
-};
 
 /**
  * @brief Transforms a predictor matrix based on the characteristics of an EvoIndividual.

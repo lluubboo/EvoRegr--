@@ -62,7 +62,7 @@ class EvoAPI {
 
     // fitness & generation postprocessing
     void setTitan(EvoIndividual);
-    void titan_evaluation(EvoIndividual participant);
+    void titan_evaluation(EvoIndividual const& individual);
 
     // final postprocessing 
     void titan_postprocessing();

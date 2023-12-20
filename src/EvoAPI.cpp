@@ -200,166 +200,99 @@ void EvoAPI::batch_predict() {
 
     EvoAPI::logger->info("Starting batch prediction process...");
 
-    int island_count = omp_get_max_threads();
+    size_t island_count = 12;
+    size_t migration_interval = 5;
+    size_t global_generation_size_limit = generation_size_limit * island_count;
+    size_t migration_size = global_generation_size_limit / 30;
+    
+    auto random_engines = create_random_engines(omp_get_max_threads());
 
-    // random engine for each island
-    std::vector<XoshiroCpp::Xoshiro256Plus> random_engines = create_random_engines(island_count);
+    auto start_time = std::chrono::high_resolution_clock::now();
 
-    // create generation zero
-    EvoPopulation population(
+    // create old population as a genofond pool
+    std::vector<EvoIndividual> old_population(
         Factory::generate_random_generation(
-            island_count * generation_size_limit,
+            global_generation_size_limit,
             get_dataset(),
             random_engines[0],
             solver
         )
     );
 
-    std::vector<std::future<IslandOutput>> futures;
+    // create population of newborns
+    std::vector<EvoIndividual> newborns_population(global_generation_size_limit);
 
-    for (int island_index = 0; island_index < island_count; island_index++) {
+    for (int gen_index = 0; gen_index < generation_count_limit; gen_index++) {
 
-        // Prepare the input for the function
-        EvoRegressionInput input{
-            x,
-            y,
-            population,
-            random_engines[island_index],
-            solver,
-            mutation_rate,
-            generation_size_limit,
-            generation_count_limit,
-            island_index,
-            island_count
-        };
+        if (gen_index % migration_interval == 0 && gen_index != 0) {
 
-        // Start a new task for each island
-        futures.push_back(std::async(std::launch::async, &EvoAPI::run_island_async, input));
-    }
+            EvoAPI::logger->info("Migration in gen {} started...", gen_index);
 
-    std::vector<IslandOutput> results;
-    for (auto& future : futures) {
-        auto result = future.get();
-        titan_evaluation(result.best_individual);
-        EvoAPI::logger->info("Island {} finished with titan fitness: {}", result.island_id, result.best_individual.fitness);
-    }
-
-    log_result();
-}
-
-/**
- * @brief Runs the evolutionary algorithm on a single island (subpopulation) and logs the execution time.
- *
- * @param input An EvoRegressionInput object containing the parameters for the evolutionary algorithm.
- *
- * @return An IslandOutput object containing the best individual found on the island and the island's ID.
- *
- * This function performs the following steps:
- * 1. Records the start time.
- * 2. Calls the run_island function to run the evolutionary algorithm on the island.
- * 3. Records the end time.
- * 4. Logs the execution time and the island's ID.
- * 5. Returns the output from the run_island function.
- *
- * The function is designed to be run asynchronously, so it can be used with std::async or similar functions to run the evolutionary algorithm on multiple islands concurrently.
- */
-IslandOutput EvoAPI::run_island_async(EvoRegressionInput input) {
-
-    auto start_time = std::chrono::high_resolution_clock::now();
-
-    IslandOutput output = run_island(input);
-
-    auto end_time = std::chrono::high_resolution_clock::now();
-
-    EvoAPI::logger->info("Island {} finished in /s: {}", input.island_id, std::chrono::duration<double>(end_time - start_time).count());
-    return output;
-}
-
-/**
- * @brief Runs the evolutionary algorithm on a single island (subpopulation).
- *
- * @param input An EvoRegressionInput object containing the parameters for the evolutionary algorithm.
- *
- * @return An IslandOutput object containing the best individual found on the island and the island's ID.
- *
- * This function performs the following steps for a specified number of generations:
- * 1. If the current generation is a multiple of 10 and not the first, it performs a migration operation, swapping a portion of the island's population with individuals from other islands.
- * 2. For each individual in the island's subpopulation, it performs crossover and mutation to produce a new individual, evaluates the new individual's fitness, and adds the new individual to the island's population.
- * 3. It checks each individual in the island's population and updates the island's best individual (the "titan") if it finds an individual with a lower fitness.
- * 4. It moves the island's population to the shared population.
- *
- * The function returns the island's titan and the island's ID.
- */
-IslandOutput EvoAPI::run_island(EvoRegressionInput input) {
-
-    // subpopulation borders
-    auto island_borders = EvoAPI::get_island_borders(input.island_id, input.generation_size_limit);
-
-    // island cache
-    auto island_cache = LRUCache<std::string, double>(input.generation_size_limit * 10);
-
-    EvoIndividual island_titan, newborn;
-
-    // create island population and reserve it to generation size limit
-    // its more efficient to move to shared population after each generation only
-    EvoPopulation island_population(0, input.generation_size_limit);
-
-    for (int gen_index = 0; gen_index < input.generation_count_limit; gen_index++) {
-
-        if (gen_index != 0 && gen_index % 100 == 0) EvoAPI::logger->info("Started island {} generation {} of {}", input.island_id, gen_index, input.generation_count_limit);
-
-        if (gen_index != 0 && gen_index % 10 == 0) {
-            input.population.batch_swap_individuals(input.island_id, input.island_count, island_population.size() * 0.05, input.random_engine);
+            // migration
+            for (size_t i = 0; i < migration_size; i++) {
+                std::swap(
+                    old_population[RandomNumbers::rand_interval_int(0, global_generation_size_limit - 1, random_engines[omp_get_thread_num()])],
+                    old_population[RandomNumbers::rand_interval_int(0, global_generation_size_limit - 1, random_engines[omp_get_thread_num()])]
+                );
+            }
         }
 
-        for (unsigned int entity_index = island_borders[0]; entity_index <= island_borders[1]; entity_index++) {
+#pragma omp parallel for schedule(guided)
+        for (size_t entity_index = 0; entity_index < global_generation_size_limit; entity_index++) {
 
-            //crossover & mutation [vector sex]
-            newborn = Reproduction::reproduction(
-                std::move(Selection::tournament_selection(input.population,input.random_engine,island_borders[0],island_borders[1])),
-                input.x.cols(),
-                input.x.rows(),
-                input.mutation_rate,
-                input.random_engine
+            //get boundaries for island
+            size_t thread_id = omp_get_thread_num();
+            size_t island_index = entity_index / generation_size_limit;
+            size_t lower_bound = island_index * generation_size_limit;
+            
+            //tournament selection
+            EvoIndividual const& parent1 = Selection::tournament_selection(
+                old_population.begin() + lower_bound,
+                generation_size_limit,
+                random_engines[thread_id]
             );
 
-            auto newborn_string_code = newborn.to_string_code();
-            auto it = island_cache.get(newborn_string_code);
+            EvoIndividual const& parent2 = Selection::tournament_selection(
+                old_population.begin() + lower_bound,
+                generation_size_limit,
+                random_engines[thread_id]
+            );
 
-            if (it) {
-                newborn.fitness = *it;
-            }
-            else {
-                // merge & transform & make robust predictors & target / solve regression problem
-                newborn.evaluate(
-                    EvoMath::get_fitness<std::function<double(Eigen::MatrixXd const&, Eigen::VectorXd const&)>>(
-                        Transform::data_transformation_robust(
-                            input.x,
-                            input.y,
-                            newborn
-                        ),
-                        input.solver
-                    )
-                );
+            auto newborn = Crossover::cross(parent1, parent2, x.cols(), random_engines[thread_id]);
 
-                island_cache.put(newborn_string_code, newborn.fitness);
-            }
+            Mutation::mutate(newborn, x.cols(), x.rows(), mutation_rate, random_engines[thread_id]);
 
-            // newborn to population
-            island_population.move_to_end(std::move(newborn));
+            //evaluate
+            newborn.evaluate(
+                EvoMath::get_fitness<std::function<double(Eigen::MatrixXd const&, Eigen::VectorXd const&)>>(
+                    Transform::data_transformation_robust(
+                        x,
+                        y,
+                        newborn
+                    ),
+                    solver
+                )
+            );
+
+            newborns_population[entity_index] = std::move(newborn);
         }
 
-        for (const auto& individual : island_population) {
-            if (individual.fitness < island_titan.fitness) {
-                island_titan = individual;
-                EvoAPI::logger->info("Island {} new titan with fitness {} in generation {}", input.island_id, island_titan.fitness, gen_index);
-            }
+        // find best individual in population
+        for (const auto& newborn : newborns_population)
+        {
+            titan_evaluation(newborn);
         }
 
-        input.population.batch_population_move(std::move(island_population), island_borders[0]);
+        // move newoborns to old population, they are now old
+        old_population = std::move(newborns_population);
+        newborns_population = std::vector<EvoIndividual>(global_generation_size_limit);
     }
 
-    return { island_titan, input.island_id };
+    auto end_time = std::chrono::high_resolution_clock::now();
+    auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time).count();
+    EvoAPI::logger->info("Batch prediction process took {} seconds.", duration/1000.0);
+
+    log_result();
 }
 
 /**
@@ -400,6 +333,7 @@ void EvoAPI::log_result() {
  * the algorithm.
  */
 void EvoAPI::setTitan(EvoIndividual titan) {
+    EvoAPI::logger->info("New titan found with fitness {}", titan.fitness);
     this->titan = titan;
 }
 
@@ -414,7 +348,7 @@ void EvoAPI::setTitan(EvoIndividual titan) {
  * generation of the evolutionary algorithm. It is used to keep track of the progress of the algorithm
  * and can be used for various purposes, such as logging or analysis.
  */
-void EvoAPI::titan_evaluation(EvoIndividual participant) {
+void EvoAPI::titan_evaluation(EvoIndividual const& participant) {
     if (participant.fitness < titan.fitness) setTitan(participant);
 }
 
