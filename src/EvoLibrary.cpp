@@ -3,15 +3,37 @@
 #include "RandomChoices.hpp"
 #include "RandomNumberGenerator.hpp"
 
+/**
+ * @brief Performs tournament selection on a population of individuals.
+ *
+ * This function selects two random individuals from the population and returns the one with the lower fitness.
+ * The selection is performed using a tournament approach, where the "winner" is the individual with the lower fitness.
+ *
+ * @param begin Iterator pointing to the beginning of the population.
+ * @param size The size of the population.
+ * @param random_engine A reference to a random number generator.
+ * @return A const reference to the selected individual.
+ */
 EvoIndividual const& Selection::tournament_selection(std::vector<EvoIndividual>::iterator begin, size_t size, XoshiroCpp::Xoshiro256Plus& random_engine) {
     const auto& individual1 = *(begin + RandomNumbers::rand_interval_int(0, size - 1, random_engine));
     const auto& individual2 = *(begin + RandomNumbers::rand_interval_int(0, size - 1, random_engine));
     return (individual1.fitness < individual2.fitness) ? individual1 : individual2;
 };
 
+/**
+ * Performs short-distance migration on the given population.
+ * 
+ * @param population The population of EvoIndividuals to perform migration on.
+ * @param migration_size The number of individuals to migrate.
+ * @param random_engines The random engines used for random number generation.
+ */
 void Migration::short_distance_migration(std::vector<EvoIndividual>& population, size_t migration_size, std::vector<XoshiroCpp::Xoshiro256Plus>& random_engines) {
 
     size_t num_threads = omp_get_max_threads();
+
+    // calculate batch size, each thread will perform migration on a batch of individuals
+    // elements are migrating only inside batches
+    // the last thread will perform migration on the remaining individuals
     size_t batch_size = migration_size / num_threads;
 
     // do short-distance migration
