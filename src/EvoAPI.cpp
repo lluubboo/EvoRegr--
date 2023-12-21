@@ -65,9 +65,16 @@ void EvoAPI::set_boundary_conditions(
     this->global_generation_size_limit = generation_size_limit * island_count;
     this->migrants_count = static_cast<size_t>((global_generation_size_limit * migration_ratio) / 100);
 
-    EvoAPI::logger->info("Boundary conditions set to generation_size_limit: {}, generation_count_limit: {}, interaction_cols: {}, mutation_rate: {}, island_count: {}, migration_ratio: {}, migration_interval: {}",
-        generation_size_limit, generation_count_limit, interaction_cols, mutation_rate, island_count, migration_ratio, migration_interval);
-    EvoAPI::logger->info("global_generation_size_limit: {}, migrants_count: {}", global_generation_size_limit, migrants_count);
+    EvoAPI::logger->info("Boundary conditions set to:");
+    EvoAPI::logger->info("generation_size_limit: {}", generation_size_limit);
+    EvoAPI::logger->info("generation_count_limit: {}", generation_count_limit);
+    EvoAPI::logger->info("interaction_cols: {}", interaction_cols);
+    EvoAPI::logger->info("mutation_rate: {}", mutation_rate);
+    EvoAPI::logger->info("island_count: {}", island_count);
+    EvoAPI::logger->info("migration_ratio: {}", migration_ratio);
+    EvoAPI::logger->info("migration_interval: {}", migration_interval);
+    EvoAPI::logger->info("global_generation_size_limit: {}", global_generation_size_limit);
+    EvoAPI::logger->info("migrants_count: {}", migrants_count);
 }
 
 /**
