@@ -1,3 +1,4 @@
+#include <unordered_set>
 #include "EvoLibrary.hpp"
 #include "RandomChoices.hpp"
 #include "RandomNumberGenerator.hpp"
@@ -6,6 +7,27 @@ EvoIndividual const& Selection::tournament_selection(std::vector<EvoIndividual>:
     const auto& individual1 = *(begin + RandomNumbers::rand_interval_int(0, size - 1, random_engine));
     const auto& individual2 = *(begin + RandomNumbers::rand_interval_int(0, size - 1, random_engine));
     return (individual1.fitness < individual2.fitness) ? individual1 : individual2;
+};
+
+void Migration::short_distance_migration(std::vector<EvoIndividual>& population, size_t migration_size, std::vector<XoshiroCpp::Xoshiro256Plus>& random_engines) {
+
+    size_t num_threads = omp_get_max_threads();
+    size_t batch_size = migration_size / num_threads;
+
+    // do short-distance migration
+#pragma omp parallel for schedule(guided)
+    for (size_t i = 0; i < migration_size; i++) {
+
+        unsigned int thread_num = omp_get_thread_num();
+
+        size_t start = thread_num * batch_size;
+        size_t end = (thread_num == num_threads - 1) ? migration_size : start + batch_size - 1;
+
+        std::swap(
+            population[RandomNumbers::rand_interval_int(start, end, random_engines[thread_num])],
+            population[RandomNumbers::rand_interval_int(start, end, random_engines[thread_num])]
+        );
+    }
 };
 
 /**
@@ -176,7 +198,7 @@ EvoIndividual Crossover::cross(const EvoIndividual& parent1, const EvoIndividual
     // cross multi gene chromosomes merger & xtransformer
     youngling.merger_chromosome = parent1.merger_chromosome;
     youngling.x_transformer_chromosome = parent1.x_transformer_chromosome;
-    
+
     std::copy(parent2.merger_chromosome.begin() + m_crossover_twist_index, parent2.merger_chromosome.end(), youngling.merger_chromosome.begin() + m_crossover_twist_index);
     std::copy(parent2.x_transformer_chromosome.begin() + t_crossover_twist_index, parent2.x_transformer_chromosome.end(), youngling.x_transformer_chromosome.begin() + t_crossover_twist_index);
     return youngling;

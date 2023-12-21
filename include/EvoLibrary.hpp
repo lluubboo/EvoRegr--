@@ -24,6 +24,12 @@ namespace Mutation {
 
 }
 
+namespace Migration {
+
+    void short_distance_migration(std::vector<EvoIndividual>& population, size_t migration_size, std::vector<XoshiroCpp::Xoshiro256Plus>& random_engines);
+
+}
+
 namespace Transform {
 
     struct EvoDataSet {

@@ -238,14 +238,8 @@ void EvoAPI::batch_predict() {
         if (gen_index % migration_interval == 0 && gen_index != 0) {
 
             EvoAPI::logger->info("Migration in gen {} started...", gen_index);
+            Migration::short_distance_migration(old_population, migrants_count, random_engines);
 
-            // migration
-            for (size_t i = 0; i < migrants_count; i++) {
-                std::swap(
-                    old_population[RandomNumbers::rand_interval_int(0, global_generation_size_limit - 1, random_engines[omp_get_thread_num()])],
-                    old_population[RandomNumbers::rand_interval_int(0, global_generation_size_limit - 1, random_engines[omp_get_thread_num()])]
-                );
-            }
         }
 
 #pragma omp parallel for schedule(guided)
