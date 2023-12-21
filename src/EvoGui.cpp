@@ -177,6 +177,13 @@ void EvoView::mutation_rate_callback(Fl_Widget* w, void* v) {
     }
 }
 
+/**
+ * Callback function for handling the island count input.
+ * Parses the input value as an integer and sets the island count accordingly.
+ * If the input is invalid (not an integer or negative), an error message is logged.
+ * @param w The Fl_Widget object representing the input field.
+ * @param v A pointer to the EvoView object.
+ */
 void EvoView::island_count_callback(Fl_Widget* w, void* v) {
     EvoView* T = (EvoView*)v;
     std::istringstream iss(((Fl_Input*)w)->value());
@@ -190,6 +197,13 @@ void EvoView::island_count_callback(Fl_Widget* w, void* v) {
     }
 }
 
+/**
+ * Callback function for handling the migration ratio input.
+ * Parses the input value as an integer and sets it as the migration ratio.
+ * If the input is invalid, an error message is logged.
+ * @param w The Fl_Widget triggering the callback.
+ * @param v The user data associated with the widget.
+ */
 void EvoView::migration_ratio_callback(Fl_Widget* w, void* v) {
     EvoView* T = (EvoView*)v;
     std::istringstream iss(((Fl_Input*)w)->value());
@@ -203,6 +217,13 @@ void EvoView::migration_ratio_callback(Fl_Widget* w, void* v) {
     }
 }
 
+/**
+ * Callback function for handling the migration interval input.
+ * Parses the input value as an integer and sets it as the migration interval.
+ * If the input is invalid (not an integer or negative), an error message is logged.
+ * @param w The Fl_Widget triggering the callback.
+ * @param v The user data associated with the widget.
+ */
 void EvoView::migration_interval_callback(Fl_Widget* w, void* v) {
     EvoView* T = (EvoView*)v;
     std::istringstream iss(((Fl_Input*)w)->value());
@@ -245,6 +266,14 @@ void EvoView::load_file_button_callback(Fl_Widget* /*w*/, void* v) {
     T->evo_api.load_file(T->filepath);
 }
 
+/**
+ * Callback function for the batch predict button in the EvoView class.
+ * It checks if the Evo API is ready to predict and starts a new thread to perform batch prediction.
+ * If the Evo API is not ready, it logs an error message.
+ * 
+ * @param w The Fl_Widget object that triggered the callback (not used).
+ * @param v A pointer to the EvoView object.
+ */
 void EvoView::batch_predict_button_callback(Fl_Widget* /*w*/, void* v) {
     EvoView* T = (EvoView*)v;
 
@@ -264,6 +293,11 @@ void EvoView::batch_predict_button_callback(Fl_Widget* /*w*/, void* v) {
 
 //*************************************************************************************************methods
 
+/**
+ * Calls the batch_predict method of the EvoAPI object.
+ * 
+ * @param evo_api The EvoAPI object to call the batch_predict method on.
+ */
 void EvoView::call_batch_predict(EvoAPI evo_api) {
     try {
         evo_api.batch_predict();
@@ -396,6 +430,16 @@ Fl_Button* EvoView::create_load_button(int h) {
     return button;
 }
 
+/**
+ * @brief Creates a Fl_Button object with the specified dimensions and label.
+ * 
+ * @param x The x-coordinate of the button.
+ * @param y The y-coordinate of the button.
+ * @param w The width of the button.
+ * @param h The height of the button.
+ * @param label The label text of the button.
+ * @return Fl_Button* A pointer to the created Fl_Button object.
+ */
 Fl_Button* EvoView::create_batch_predict_button(int h) {
     Fl_Button* button = new Fl_Button(0, 0, 0, h, "Start batch prediction");
     button->callback(batch_predict_button_callback, (void*)this);
@@ -487,14 +531,32 @@ Fl_Input* EvoView::create_mutation_rate_box(int h) {
     return inputBox;
 }
 
+/**
+ * @brief Creates a Fl_Input object with the specified dimensions and sets its initial value.
+ * 
+ * @param x The x-coordinate of the input box.
+ * @param y The y-coordinate of the input box.
+ * @param w The width of the input box.
+ * @param h The height of the input box.
+ * @return Fl_Input* A pointer to the created Fl_Input object.
+ */
 Fl_Input* EvoView::create_island_count_box(int h) {
     Fl_Input* inputBox = new Fl_Input(0, 0, 0, h);
     inputBox->value(island_count);
     inputBox->tooltip("Enter the island count here [integer]");
-    inputBox->callback(mutation_rate_callback, (void*)(this));
+    inputBox->callback(island_count_callback, (void*)(this));
     return inputBox;
 }
 
+/**
+ * @brief Creates a Fl_Input object with the specified dimensions and sets its initial value.
+ * 
+ * @param x The x-coordinate of the input box.
+ * @param y The y-coordinate of the input box.
+ * @param w The width of the input box.
+ * @param h The height of the input box.
+ * @return Fl_Input* A pointer to the created Fl_Input object.
+ */
 Fl_Input* EvoView::create_migration_ratio_box(int h) {
     Fl_Input* inputBox = new Fl_Input(0, 0, 0, h);
     inputBox->value(migration_ratio);
@@ -503,6 +565,12 @@ Fl_Input* EvoView::create_migration_ratio_box(int h) {
     return inputBox;
 }
 
+/**
+ * @brief Creates a Fl_Input widget with the specified height.
+ * 
+ * @param h The height of the Fl_Input widget.
+ * @return Fl_Input* A pointer to the created Fl_Input widget.
+ */
 Fl_Input* EvoView::create_migration_interval_box(int h) {
     Fl_Input* inputBox = new Fl_Input(0, 0, 0, h);
     inputBox->value(migration_interval);
