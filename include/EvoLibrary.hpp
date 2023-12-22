@@ -49,6 +49,8 @@ namespace Transform {
     EvoDataSet data_transformation_robust(Eigen::MatrixXd, Eigen::VectorXd, EvoIndividual const&);
     EvoDataSet data_transformation_nonrobust(Eigen::MatrixXd, Eigen::VectorXd, EvoIndividual const&);
 
+    EvoIndividual reproduction(std::vector<EvoIndividual> const& old_population, XoshiroCpp::Xoshiro256Plus& random_engine);
+
 }
 
 namespace EvoMath {

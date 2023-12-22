@@ -240,7 +240,7 @@ void EvoAPI::batch_predict() {
         global_generation_size_limit
     );
 
-    for (int gen_index = 0; gen_index < generation_count_limit; gen_index++) {
+    for (unsigned int gen_index = 0; gen_index < generation_count_limit; gen_index++) {
 
         if (gen_index % migration_interval == 0 && gen_index != 0) {
 
@@ -254,23 +254,23 @@ void EvoAPI::batch_predict() {
 
             //get boundaries for island
             size_t thread_id = omp_get_thread_num();
-            size_t island_index = entity_index / generation_size_limit;
-            size_t lower_bound = island_index * generation_size_limit;
-            
-            //tournament selection
-            EvoIndividual const& parent1 = Selection::tournament_selection(
-                old_population.begin() + lower_bound,
-                generation_size_limit,
+            size_t lower_bound = (entity_index / generation_size_limit) * generation_size_limit;
+
+
+            EvoIndividual newborn = Crossover::cross(
+                Selection::tournament_selection(
+                    old_population.begin() + lower_bound,
+                    generation_size_limit,
+                    random_engines[thread_id]
+                ),
+                Selection::tournament_selection(
+                    old_population.begin() + lower_bound,
+                    generation_size_limit,
+                    random_engines[thread_id]
+                ),
+                x.cols(),
                 random_engines[thread_id]
             );
-
-            EvoIndividual const& parent2 = Selection::tournament_selection(
-                old_population.begin() + lower_bound,
-                generation_size_limit,
-                random_engines[thread_id]
-            );
-
-            auto newborn = Crossover::cross(parent1, parent2, x.cols(), random_engines[thread_id]);
 
             Mutation::mutate(newborn, x.cols(), x.rows(), mutation_rate, random_engines[thread_id]);
 
@@ -297,12 +297,15 @@ void EvoAPI::batch_predict() {
 
         // move newoborns to old population, they are now old
         old_population = std::move(newborns_population);
+
+        // init population of some default newborns
         newborns_population = std::vector<EvoIndividual>(global_generation_size_limit);
     }
 
     auto end_time = std::chrono::high_resolution_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time).count();
-    EvoAPI::logger->info("Batch prediction process took {} seconds.", duration/1000.0);
+    
+    EvoAPI::logger->info("Batch prediction process took {} seconds.", duration / 1000.0);
 
     log_result();
 }

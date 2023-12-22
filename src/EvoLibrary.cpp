@@ -205,7 +205,8 @@ RobustAllele Factory::getRandomRobustAllele(int row_count, XoshiroCpp::Xoshiro25
 };
 
 EvoIndividual Crossover::cross(const EvoIndividual& parent1, const EvoIndividual& parent2, int chromosome_size, XoshiroCpp::Xoshiro256Plus& random_engine) {
-    EvoIndividual youngling{};
+
+    EvoIndividual youngling{}; //newborn
 
     // indexes which points to place of chromosome cut & recombination
     int m_crossover_twist_index = RandomNumbers::rand_interval_int(0, chromosome_size, random_engine);
@@ -223,6 +224,7 @@ EvoIndividual Crossover::cross(const EvoIndividual& parent1, const EvoIndividual
 
     std::copy(parent2.merger_chromosome.begin() + m_crossover_twist_index, parent2.merger_chromosome.end(), youngling.merger_chromosome.begin() + m_crossover_twist_index);
     std::copy(parent2.x_transformer_chromosome.begin() + t_crossover_twist_index, parent2.x_transformer_chromosome.end(), youngling.x_transformer_chromosome.begin() + t_crossover_twist_index);
+
     return youngling;
 }
 
