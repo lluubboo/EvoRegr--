@@ -307,7 +307,7 @@ void Transform::full_predictor_transform(Eigen::MatrixXd& matrix, EvoIndividual 
  * Then, it transforms predictors based on the x_transformer_chromosome of the EvoIndividual.
  * Unlike the full_predictor_transform function, this function does not erase any rows from the predictor matrix.
  */
-Eigen::MatrixXd Transform::half_predictor_transform(Eigen::MatrixXd& matrix, EvoIndividual const& individual) {
+void Transform::half_predictor_transform(Eigen::MatrixXd& matrix, EvoIndividual const& individual) {
     //merge predictors
     for (int i = 0; i < matrix.cols(); i++)
     {
@@ -318,7 +318,6 @@ Eigen::MatrixXd Transform::half_predictor_transform(Eigen::MatrixXd& matrix, Evo
     {
         individual.x_transformer_chromosome.at(i).transform(matrix);
     }
-    return matrix;
 };
 
 /**
@@ -332,9 +331,8 @@ Eigen::MatrixXd Transform::half_predictor_transform(Eigen::MatrixXd& matrix, Evo
  * This function performs a robust transformation on a predictor matrix based on the characteristics of an EvoIndividual.
  * It erases some rows from the predictor matrix based on the robuster_chromosome of the EvoIndividual.
  */
-Eigen::MatrixXd Transform::robust_predictor_transform(Eigen::MatrixXd& matrix, EvoIndividual const& individual) {
+void Transform::robust_predictor_transform(Eigen::MatrixXd& matrix, EvoIndividual const& individual) {
     individual.robuster_chromosome.at(0).transform(matrix);
-    return matrix;
 };
 
 /**
@@ -366,9 +364,8 @@ void Transform::full_target_transform(Eigen::VectorXd& vector, EvoIndividual con
  * It applies a transformation on the vector based on the y_transformer_chromosome of the EvoIndividual.
  * Unlike the full_target_transform function, this function does not apply any robust transformation.
  */
-Eigen::VectorXd Transform::half_target_transform(Eigen::VectorXd& vector, EvoIndividual const& individual) {
+void Transform::half_target_transform(Eigen::VectorXd& vector, EvoIndividual const& individual) {
     individual.y_transformer_chromosome.at(0).transformVector(vector);
-    return vector;
 };
 
 /**
