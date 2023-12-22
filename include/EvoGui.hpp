@@ -23,12 +23,7 @@
 
 class EvoView : public Fl_Window {
 
-    // logger
-
-    std::shared_ptr<spdlog::logger> logger;
-
     // evo api
-
     EvoAPI evo_api;
 
     //flags
@@ -106,7 +101,7 @@ class EvoView : public Fl_Window {
 
     void get_filepath();
     void set_appearance();
-    void init_loggers();
+    void connect_terminal_to_logger();
     void render_main_window();
     void call_batch_predict(EvoAPI evo_api);
 

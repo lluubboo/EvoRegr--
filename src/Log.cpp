@@ -7,6 +7,12 @@ namespace EvoRegression {
 
     std::shared_ptr<spdlog::logger> Log::s_logger;
 
+    /**
+     * Initializes the logging system.
+     * This function sets up the necessary sinks for logging, including a console sink and a file sink.
+     * It also configures the logger with a specific pattern and log level.
+     * After calling this function, the logging system is ready to be used.
+     */
     void Log::init()
     {
         std::vector<spdlog::sink_ptr> logSinks;
@@ -20,5 +26,17 @@ namespace EvoRegression {
 
         spdlog::set_pattern("[EvoRegression++] [%H:%M:%S] [%^%l%$] [thread %t] %v");
         spdlog::register_logger(s_logger);
+    }
+
+    /**
+     * @brief Get the logger instance.
+     * 
+     * @return std::shared_ptr<spdlog::logger>& The logger instance.
+     */
+    std::shared_ptr<spdlog::logger>& Log::get_logger() {
+        if (!s_logger) {
+            throw std::runtime_error("Logger not initialized");
+        }
+        return s_logger;
     }
 }

@@ -12,9 +12,7 @@
 #include "Stats.hpp"
 #include "Plotter.hpp"
 #include "omp.h"
-
-// Define the static logger
-std::shared_ptr<spdlog::logger> EvoAPI::logger;
+#include "Log.hpp"
 
 /**
  * @brief Default constructor for the EvoAPI class.
@@ -65,16 +63,16 @@ void EvoAPI::set_boundary_conditions(
     this->global_generation_size_limit = generation_size_limit * island_count;
     this->migrants_count = static_cast<size_t>((global_generation_size_limit * migration_ratio) / 100);
 
-    EvoAPI::logger->info("Boundary conditions set to:");
-    EvoAPI::logger->info("generation_size_limit: {}", generation_size_limit);
-    EvoAPI::logger->info("generation_count_limit: {}", generation_count_limit);
-    EvoAPI::logger->info("interaction_cols: {}", interaction_cols);
-    EvoAPI::logger->info("mutation_rate: {}", mutation_rate);
-    EvoAPI::logger->info("island_count: {}", island_count);
-    EvoAPI::logger->info("migration_ratio: {}", migration_ratio);
-    EvoAPI::logger->info("migration_interval: {}", migration_interval);
-    EvoAPI::logger->info("global_generation_size_limit: {}", global_generation_size_limit);
-    EvoAPI::logger->info("migrants_count: {}", migrants_count);
+    EvoRegression::Log::get_logger()->info("Boundary conditions set to:");
+    EvoRegression::Log::get_logger()->info("generation_size_limit: {}", generation_size_limit);
+    EvoRegression::Log::get_logger()->info("generation_count_limit: {}", generation_count_limit);
+    EvoRegression::Log::get_logger()->info("interaction_cols: {}", interaction_cols);
+    EvoRegression::Log::get_logger()->info("mutation_rate: {}", mutation_rate);
+    EvoRegression::Log::get_logger()->info("island_count: {}", island_count);
+    EvoRegression::Log::get_logger()->info("migration_ratio: {}", migration_ratio);
+    EvoRegression::Log::get_logger()->info("migration_interval: {}", migration_interval);
+    EvoRegression::Log::get_logger()->info("global_generation_size_limit: {}", global_generation_size_limit);
+    EvoRegression::Log::get_logger()->info("migrants_count: {}", migrants_count);
 }
 
 /**
@@ -90,42 +88,19 @@ void EvoAPI::set_boundary_conditions(
 void EvoAPI::set_solver(std::string const& solver_name) {
     if (solver_name == "LLT") {
         solver = LLTSolver();
-        EvoAPI::logger->info("Solver set to LLT");
+        EvoRegression::Log::get_logger()->info("Solver set to LLT");
     }
     else if (solver_name == "LDLT") {
         solver = LDLTSolver();
-        EvoAPI::logger->info("Solver set to LDLT");
+        EvoRegression::Log::get_logger()->info("Solver set to LDLT");
     }
     else if (solver_name == "ColPivHouseholderQr") {
         solver = ColPivHouseholderQrSolver();
-        EvoAPI::logger->info("Solver set to ColPivHouseholderQr");
+        EvoRegression::Log::get_logger()->info("Solver set to ColPivHouseholderQr");
     }
     else {
         solver = LDLTSolver();
-        EvoAPI::logger->info("Unrecognized solver type. Solver set to default LDLT");
-    }
-}
-
-/**
- * Initializes the logger for the EvoAPI class.
- * If a logger with the name "EvoRegression++" already exists, it connects to it.
- * Otherwise, it creates a new logger with the name "EvoRegression++" and sets its level to debug.
- * The logger's pattern is set to "[EvoRegression++] [%H:%M:%S.%e] [%^%l%$] [thread %t] %v".
- */
-void EvoAPI::init_logger() {
-
-    auto shared_logger = spdlog::get("EvoLogger");
-    shared_logger->info("EvoAPI logger trying to connect to existing logger");
-
-    if (shared_logger) {
-        EvoAPI::logger = shared_logger;
-        EvoAPI::logger->info("EvoAPI logger connected to existing logger");
-    }
-    else {
-        EvoAPI::logger = spdlog::stdout_color_mt("EvoLogger");
-        EvoAPI::logger->set_level(spdlog::level::debug);
-        EvoAPI::logger->set_pattern("[EvoRegression++] [%H:%M:%S.%e] [%^%l%$] [thread %t] %v");
-        EvoAPI::logger->info("EvoAPI logger initialized");
+        EvoRegression::Log::get_logger()->info("Unrecognized solver type. Solver set to default LDLT");
     }
 }
 
@@ -138,12 +113,12 @@ void EvoAPI::load_file(const std::string& filename) {
         create_regression_input(parse_csv<double>(filename));
     }
     catch (const std::exception& e) {
-        EvoAPI::logger->error("Error processing file {}: {}", filename, e.what());
+        EvoRegression::Log::get_logger()->error("Error processing file {}: {}", filename, e.what());
     }
     catch (...) {
-        EvoAPI::logger->error("An unknown error occurred while processing file {}", filename);
+        EvoRegression::Log::get_logger()->error("An unknown error occurred while processing file {}", filename);
     }
-    EvoAPI::logger->info("File {} loaded", filename);
+    EvoRegression::Log::get_logger()->info("File {} loaded", filename);
 }
 
 /**
@@ -190,8 +165,8 @@ void EvoAPI::create_regression_input(std::tuple<int, std::vector<double>> input)
         }
     }
 
-    EvoAPI::logger->info("Predictor matrix initialized with {} rows and {} columns", m_output, n_output);
-    EvoAPI::logger->info("Target vector initialized with {} rows", m_output);
+    EvoRegression::Log::get_logger()->info("Predictor matrix initialized with {} rows and {} columns", m_output, n_output);
+    EvoRegression::Log::get_logger()->info("Target vector initialized with {} rows", m_output);
 }
 
 /**
@@ -219,7 +194,7 @@ bool EvoAPI::is_ready_to_predict() {
 
 void EvoAPI::batch_predict() {
 
-    EvoAPI::logger->info("Starting batch prediction process...");
+    EvoRegression::Log::get_logger()->info("Starting batch prediction process...");
 
     auto random_engines = create_random_engines(omp_get_max_threads());
 
@@ -244,7 +219,7 @@ void EvoAPI::batch_predict() {
 
         if (gen_index % migration_interval == 0 && gen_index != 0) {
 
-            EvoAPI::logger->info("Migration in gen {} started...", gen_index);
+            EvoRegression::Log::get_logger()->info("Migration in gen {} started...", gen_index);
             Migration::short_distance_migration(old_population, migrants_count, random_engines);
 
         }
@@ -305,7 +280,7 @@ void EvoAPI::batch_predict() {
     auto end_time = std::chrono::high_resolution_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time).count();
     
-    EvoAPI::logger->info("Batch prediction process took {} seconds.", duration / 1000.0);
+    EvoRegression::Log::get_logger()->info("Batch prediction process took {} seconds.", duration / 1000.0);
 
     log_result();
 }
@@ -317,8 +292,8 @@ void EvoAPI::batch_predict() {
  */
 void EvoAPI::log_result() {
     titan_postprocessing();
-    EvoAPI::logger->info(get_regression_summary_table());
-    EvoAPI::logger->info("Regression results showing...");
+    EvoRegression::Log::get_logger()->info(get_regression_summary_table());
+    EvoRegression::Log::get_logger()->info("Regression results showing...");
 }
 
 /**
@@ -332,7 +307,7 @@ void EvoAPI::log_result() {
  * the algorithm.
  */
 void EvoAPI::setTitan(EvoIndividual titan) {
-    EvoAPI::logger->info("New titan found with fitness {}", titan.fitness);
+    EvoRegression::Log::get_logger()->info("New titan found with fitness {}", titan.fitness);
     this->titan = titan;
 }
 
@@ -374,7 +349,7 @@ std::vector<XoshiroCpp::Xoshiro256Plus> EvoAPI::create_random_engines(int count)
         random_engines.emplace_back(master_random_engine.serialize());
     }
 
-    EvoAPI::logger->info("Created {} random engines", count);
+    EvoRegression::Log::get_logger()->info("Created {} random engines", count);
     return random_engines;
 }
 
@@ -391,7 +366,7 @@ void EvoAPI::titan_postprocessing() {
     // regression result
     titan_result = solve_system_detailed(titan_robust_dataset.predictor, titan_robust_dataset.target);
 
-    EvoAPI::logger->info("Titan postprocessing finished");
+    EvoRegression::Log::get_logger()->info("Titan postprocessing finished");
 }
 
 /**
@@ -617,7 +592,7 @@ std::string EvoAPI::get_regression_summary_table() {
     table << get_regression_coefficients_table();
     table << get_genotype_table();
     table << get_formula_table();
-    EvoAPI::logger->info("Regression summary table generated");
+    EvoRegression::Log::get_logger()->info("Regression summary table generated");
     return table.str();
 };
 

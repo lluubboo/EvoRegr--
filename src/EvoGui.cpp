@@ -17,6 +17,7 @@
 #include <future>
 #include <string>
 #include "EvoGui.hpp"
+#include "Log.hpp"
 
 //*************************************************************************************************constants
 
@@ -52,9 +53,8 @@ EvoView::EvoView(int width, int height, const char* title) :
 {
     set_appearance();
     render_main_window();
-    // EvoView is using widget as terminal sink, widget must be created first
-    // It initializes the logger of both EvoView and EvoAPI(EvoAPI is using EvoView logger)
-    init_loggers();
+    //connect terminal to global project logger
+    connect_terminal_to_logger();
 }
 
 //*************************************************************************************************callbacks
@@ -105,10 +105,10 @@ void EvoView::gen_count_input_callback(Fl_Widget* w, void* v) {
     std::string input_value = ((Fl_Input*)w)->value();
     if (!input_value.empty() && std::all_of(input_value.begin(), input_value.end(), ::isdigit)) {
         T->generations_count = std::stoi(input_value);
-        T->logger->info("Generations count set to: " + std::to_string(T->generations_count));
+        EvoRegression::Log::get_logger()->info("Generations count set to: " + std::to_string(T->generations_count));
     }
     else {
-        T->logger->error("Invalid input. Please enter a valid integer.");
+        EvoRegression::Log::get_logger()->error("Invalid input. Please enter a valid integer.");
     }
 }
 
@@ -127,10 +127,10 @@ void EvoView::gen_size_input_callback(Fl_Widget* w, void* v) {
     std::string input_value = ((Fl_Input*)w)->value();
     if (!input_value.empty() && std::all_of(input_value.begin(), input_value.end(), ::isdigit)) {
         T->generations_size = std::stoi(input_value);
-        T->logger->info("Generations size set to: " + std::to_string(T->generations_size));
+        EvoRegression::Log::get_logger()->info("Generations size set to: " + std::to_string(T->generations_size));
     }
     else {
-        T->logger->error("Invalid input. Please enter a valid integer.");
+        EvoRegression::Log::get_logger()->error("Invalid input. Please enter a valid integer.");
     }
 }
 
@@ -149,10 +149,10 @@ void EvoView::gen_interference_size_callback(Fl_Widget* w, void* v) {
     std::string input_value = ((Fl_Input*)w)->value();
     if (!input_value.empty() && std::all_of(input_value.begin(), input_value.end(), ::isdigit)) {
         T->interference_size = std::stoi(input_value);
-        T->logger->info("Interference columns size set to: " + std::to_string(T->interference_size));
+        EvoRegression::Log::get_logger()->info("Interference columns size set to: " + std::to_string(T->interference_size));
     }
     else {
-        T->logger->error("Invalid input. Please enter a valid integer.");
+        EvoRegression::Log::get_logger()->error("Invalid input. Please enter a valid integer.");
     }
 }
 
@@ -169,11 +169,11 @@ void EvoView::mutation_rate_callback(Fl_Widget* w, void* v) {
     std::istringstream iss(((Fl_Input*)w)->value());
     int value;
     if (!(iss >> value) || !iss.eof() || value < 0 || value > 100) {
-        T->logger->error("Invalid input. Please enter an integer number between 0 and 100.");
+        EvoRegression::Log::get_logger()->error("Invalid input. Please enter an integer number between 0 and 100.");
     }
     else {
         T->mutation_rate = value;
-        T->logger->info("Mutation rate set to: " + std::to_string(T->mutation_rate));
+        EvoRegression::Log::get_logger()->info("Mutation rate set to: " + std::to_string(T->mutation_rate));
     }
 }
 
@@ -188,12 +188,12 @@ void EvoView::island_count_callback(Fl_Widget* w, void* v) {
     EvoView* T = (EvoView*)v;
     std::istringstream iss(((Fl_Input*)w)->value());
     int value;
-    if (!(iss >> value) || !iss.eof() || value < 0 ) {
-        T->logger->error("Invalid input. Please enter an integer number.");
+    if (!(iss >> value) || !iss.eof() || value < 0) {
+        EvoRegression::Log::get_logger()->error("Invalid input. Please enter an integer number.");
     }
     else {
         T->island_count = value;
-        T->logger->info("Island count set to: " + std::to_string(T->island_count));
+        EvoRegression::Log::get_logger()->info("Island count set to: " + std::to_string(T->island_count));
     }
 }
 
@@ -209,11 +209,11 @@ void EvoView::migration_ratio_callback(Fl_Widget* w, void* v) {
     std::istringstream iss(((Fl_Input*)w)->value());
     int value;
     if (!(iss >> value) || !iss.eof() || value < 0) {
-        T->logger->error("Invalid input. Please enter an integer number.");
+        EvoRegression::Log::get_logger()->error("Invalid input. Please enter an integer number.");
     }
     else {
         T->migration_ratio = value;
-        T->logger->info("Migration ratio set to: " + std::to_string(T->migration_ratio));
+        EvoRegression::Log::get_logger()->info("Migration ratio set to: " + std::to_string(T->migration_ratio));
     }
 }
 
@@ -229,11 +229,11 @@ void EvoView::migration_interval_callback(Fl_Widget* w, void* v) {
     std::istringstream iss(((Fl_Input*)w)->value());
     int value;
     if (!(iss >> value) || !iss.eof() || value < 0) {
-        T->logger->error("Invalid input. Please enter an integer number.");
+        EvoRegression::Log::get_logger()->error("Invalid input. Please enter an integer number.");
     }
     else {
         T->migration_interval = value;
-        T->logger->info("Migration interval set to: " + std::to_string(T->migration_interval));
+        EvoRegression::Log::get_logger()->info("Migration interval set to: " + std::to_string(T->migration_interval));
     }
 }
 
@@ -270,7 +270,7 @@ void EvoView::load_file_button_callback(Fl_Widget* /*w*/, void* v) {
  * Callback function for the batch predict button in the EvoView class.
  * It checks if the Evo API is ready to predict and starts a new thread to perform batch prediction.
  * If the Evo API is not ready, it logs an error message.
- * 
+ *
  * @param w The Fl_Widget object that triggered the callback (not used).
  * @param v A pointer to the EvoView object.
  */
@@ -278,7 +278,7 @@ void EvoView::batch_predict_button_callback(Fl_Widget* /*w*/, void* v) {
     EvoView* T = (EvoView*)v;
 
     if (!T->evo_api.is_ready_to_predict()) {
-        T->logger->error("Cannot start prediction. Please load a file first.");
+        EvoRegression::Log::get_logger()->error("Cannot start prediction. Please load a file first.");
         return;
     }
 
@@ -295,7 +295,7 @@ void EvoView::batch_predict_button_callback(Fl_Widget* /*w*/, void* v) {
 
 /**
  * Calls the batch_predict method of the EvoAPI object.
- * 
+ *
  * @param evo_api The EvoAPI object to call the batch_predict method on.
  */
 void EvoView::call_batch_predict(EvoAPI evo_api) {
@@ -303,10 +303,10 @@ void EvoView::call_batch_predict(EvoAPI evo_api) {
         evo_api.batch_predict();
     }
     catch (const std::exception& e) {
-        logger->error("Standard exception caught in batch predict method call: " + std::string(e.what()));
+        EvoRegression::Log::get_logger()->error("Standard exception caught in batch predict method call: " + std::string(e.what()));
     }
     catch (...) {
-        logger->error("Unknown exception caught in batch predict method call.");
+        EvoRegression::Log::get_logger()->error("Unknown exception caught in batch predict method call.");
     }
 };
 
@@ -324,30 +324,27 @@ void EvoView::get_filepath() {
     }
     if (chooser.value() != nullptr) {
         filepath = chooser.value();
-        logger->info("Filepath set to: " + filepath);
+        EvoRegression::Log::get_logger()->info("Filepath set to: " + filepath);
     }
 }
 
 /**
- * Initializes the loggers for EvoView.
- * This function creates a logger named "EvoLogger" using the FLTK sink and registers it with spdlog.
- * It also sets the log pattern and log level for the logger.
- * Finally, it initializes the logger for EvoAPI.
+ * Connects the terminal sink to the global logger.
+ * This function creates a FLTK sink terminal and tries to connect to global logger.
  */
-void EvoView::init_loggers() {
-    // FLTK sink
-    auto fltk_sink = std::make_shared<Fl_Terminal_Sink<std::mutex>>(log_terminal);
-    // File sink
-    auto file_sink = std::make_shared<spdlog::sinks::basic_file_sink_mt>("log.txt", true);
-    // logger
-    logger = std::make_shared<spdlog::logger>("EvoLogger", spdlog::sinks_init_list{ fltk_sink, file_sink });
-    // register the logger so it can be accessed using spdlog::get()
-    spdlog::register_logger(logger);
-    // settings
-    spdlog::set_pattern("[EvoRegression++] [%H:%M:%S] [%^%l%$] [thread %t] %v");
-    spdlog::set_level(spdlog::level::debug);
-    // EvoAPI is using EvoView logger
-    evo_api.init_logger();
+void EvoView::connect_terminal_to_logger() {
+    // FLTK sink terminal
+    auto fltk_terminal_sink = std::make_shared<Fl_Terminal_Sink<std::mutex>>(log_terminal);
+    // Get global logger
+    auto global_logger = spdlog::default_logger();
+
+    if (!global_logger) {
+        EvoRegression::Log::get_logger()->info("Cannot connect GUI terminal to global logger.");
+    }
+    else {
+        global_logger->sinks().push_back(fltk_terminal_sink);
+        EvoRegression::Log::get_logger()->info("EvoView logger connected to global logger.");
+    }
 }
 
 /**
@@ -432,7 +429,7 @@ Fl_Button* EvoView::create_load_button(int h) {
 
 /**
  * @brief Creates a Fl_Button object with the specified dimensions and label.
- * 
+ *
  * @param x The x-coordinate of the button.
  * @param y The y-coordinate of the button.
  * @param w The width of the button.
@@ -533,7 +530,7 @@ Fl_Input* EvoView::create_mutation_rate_box(int h) {
 
 /**
  * @brief Creates a Fl_Input object with the specified dimensions and sets its initial value.
- * 
+ *
  * @param x The x-coordinate of the input box.
  * @param y The y-coordinate of the input box.
  * @param w The width of the input box.
@@ -550,7 +547,7 @@ Fl_Input* EvoView::create_island_count_box(int h) {
 
 /**
  * @brief Creates a Fl_Input object with the specified dimensions and sets its initial value.
- * 
+ *
  * @param x The x-coordinate of the input box.
  * @param y The y-coordinate of the input box.
  * @param w The width of the input box.
@@ -567,7 +564,7 @@ Fl_Input* EvoView::create_migration_ratio_box(int h) {
 
 /**
  * @brief Creates a Fl_Input widget with the specified height.
- * 
+ *
  * @param h The height of the Fl_Input widget.
  * @return Fl_Input* A pointer to the created Fl_Input widget.
  */
