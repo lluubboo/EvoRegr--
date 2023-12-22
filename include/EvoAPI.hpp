@@ -35,7 +35,8 @@ class EvoAPI {
     void create_regression_input(std::tuple<int, std::vector<double>>);
     Transform::EvoDataSet get_dataset();
 
-    // concurrent random engines
+    // concurrent random engines 
+    // TODO move to EvoLibrary
     std::vector<XoshiroCpp::Xoshiro256Plus> create_random_engines(int count);
 
     // fitness & generation postprocessing
