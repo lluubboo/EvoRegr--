@@ -49,5 +49,5 @@ public:
      * 
      * @return True if the API is ready to predict, false otherwise.
      */
-    virtual bool is_ready_to_predict() = 0;
+    virtual bool is_ready_to_predict() const = 0;
 };
