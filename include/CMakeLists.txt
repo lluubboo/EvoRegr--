@@ -1,3 +1,3 @@
-add_library(includes_lib CustomCaches.hpp IOTools.hpp EvoPopulation.hpp EvoAPI.hpp EvoGene.hpp RegressionSolver.hpp RandomChoices.hpp EvoLibrary.hpp RandomNumberGenerator.hpp Stats.hpp Plotter.hpp EvoGui.hpp emptyfile.cpp)
+add_library(includes_lib Log.hpp CustomCaches.hpp IOTools.hpp EvoPopulation.hpp EvoAPI.hpp EvoGene.hpp RegressionSolver.hpp RandomChoices.hpp EvoLibrary.hpp RandomNumberGenerator.hpp Stats.hpp Plotter.hpp EvoGui.hpp emptyfile.cpp)
 target_link_libraries(includes_lib PRIVATE OpenMP::OpenMP_CXX Eigen3::Eigen spdlog::spdlog fltk externals_lib)
 target_include_directories(includes_lib INTERFACE . ${FLTK_INCLUDE_DIRS})
