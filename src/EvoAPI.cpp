@@ -240,7 +240,7 @@ void EvoAPI::batch_predict() {
         global_generation_size_limit
     );
 
-    for (int gen_index = 0; gen_index < generation_count_limit; gen_index++) {
+    for (unsigned int gen_index = 0; gen_index < generation_count_limit; gen_index++) {
 
         if (gen_index % migration_interval == 0 && gen_index != 0) {
 
