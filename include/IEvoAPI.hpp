@@ -16,7 +16,7 @@ public:
     /**
      * @brief Sets the boundary conditions.
      */
-    virtual void set_boundary_conditions() = 0;
+    virtual void set_boundary_conditions(size_t, size_t, size_t, size_t, size_t, size_t, size_t, size_t, size_t) = 0;
 
     /**
      * @brief Sets the solver.

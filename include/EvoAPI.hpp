@@ -61,7 +61,6 @@ public:
     void load_file(const std::string& filename);
     void batch_predict();
     void log_result();
-    void init_logger();
     void set_boundary_conditions(unsigned int generation_size_limit, unsigned int generation_count_limit, unsigned int interaction_cols, unsigned int mutation_rate, unsigned int island_count, unsigned int migration_ratio, unsigned int migration_interval);
     bool is_ready_to_predict();
 };
