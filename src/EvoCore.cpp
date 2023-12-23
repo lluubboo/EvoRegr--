@@ -12,6 +12,14 @@ EvoCore::EvoCore() :
     titan_result()
 {}
 
+void EvoCore::set_boundary_conditions(EvoBoundaryConditions const& boundary_conditions) {
+    this->boundary_conditions = boundary_conditions;
+}
+
+void EvoCore::set_solver(std::function<double(Eigen::MatrixXd const&, Eigen::VectorXd const&)> solver) {
+    this->solver = solver;
+}
+
 void EvoCore::load_file(const std::string& filename) {
     try {
         create_regression_input(parse_csv<double>(filename));
@@ -42,54 +50,7 @@ void EvoCore::load_file(const std::string& filename) {
     );
 }
 
-void EvoCore::create_regression_input(std::tuple<int, std::vector<double>> input) {
-
-    std::vector<double> data = std::get<1>(input);
-
-    //input matrix columns (with target column)
-    int n_input{ std::get<0>(input) };
-    int m_input{ static_cast<int>(data.size()) / n_input };
-
-    // predictor matrix column count (n_input - 1 (because of target column) + 1 + interaction columns)
-    int n_output = n_input + boundary_conditions.interaction_cols;
-
-    // + 1 because of header row
-    int m_output = m_input + 1;
-
-    // mark y column indexed from 0 (is last every time)
-    int target_col_index = n_input - 1;
-
-    // initialize predictors matrix to matrix of ones because of x0 and interaction columns
-    original_dataset.predictor = Eigen::MatrixXd::Ones(m_input, n_output);
-    original_dataset.target.resize(m_input, 1);
-
-    for (int row = 0; row < m_input; ++row) {
-        for (int col = 0; col < n_input; ++col) {
-            // last column is always Y or in other words regressant, dependant variable
-            if (col == target_col_index) {
-                original_dataset.target(row, 0) = data[col + n_input * row];
-            }
-            // fil predictors (first is x0 column of 1, last are interaction filled default to 1 too - but they are able to mutate)
-            if (col < target_col_index) {
-                original_dataset.predictor(row, col + 1) = data[col + n_input * row];
-            }
-        }
-    }
-}
-
-void EvoCore::set_boundary_conditions(EvoBoundaryConditions const& boundary_conditions) {
-    this->boundary_conditions = boundary_conditions;
-}
-
-void EvoCore::set_solver(std::function<double(Eigen::MatrixXd const&, Eigen::VectorXd const&)> solver) {
-    this->solver = solver;
-}
-
-bool EvoCore::is_ready_to_predict() {
-    return original_dataset.predictor.size() > 0 && original_dataset.target.size() > 0;
-}
-
-void EvoCore::predict() {
+void EvoCore::call_predict_method() {
 
     EvoRegression::Log::get_logger()->info("Starting batch prediction process...");
 
@@ -187,6 +148,45 @@ void EvoCore::predict() {
     EvoRegression::Log::get_logger()->info("Batch prediction process took {} seconds.", duration / 1000.0);
 
     log_result();
+}
+
+bool EvoCore::is_ready_to_predict() const {
+    return original_dataset.predictor.size() > 0 && original_dataset.target.size() > 0;
+}
+
+void EvoCore::create_regression_input(std::tuple<int, std::vector<double>> input) {
+
+    std::vector<double> data = std::get<1>(input);
+
+    //input matrix columns (with target column)
+    int n_input{ std::get<0>(input) };
+    int m_input{ static_cast<int>(data.size()) / n_input };
+
+    // predictor matrix column count (n_input - 1 (because of target column) + 1 + interaction columns)
+    int n_output = n_input + boundary_conditions.interaction_cols;
+
+    // + 1 because of header row
+    int m_output = m_input + 1;
+
+    // mark y column indexed from 0 (is last every time)
+    int target_col_index = n_input - 1;
+
+    // initialize predictors matrix to matrix of ones because of x0 and interaction columns
+    original_dataset.predictor = Eigen::MatrixXd::Ones(m_input, n_output);
+    original_dataset.target.resize(m_input, 1);
+
+    for (int row = 0; row < m_input; ++row) {
+        for (int col = 0; col < n_input; ++col) {
+            // last column is always Y or in other words regressant, dependant variable
+            if (col == target_col_index) {
+                original_dataset.target(row, 0) = data[col + n_input * row];
+            }
+            // fil predictors (first is x0 column of 1, last are interaction filled default to 1 too - but they are able to mutate)
+            if (col < target_col_index) {
+                original_dataset.predictor(row, col + 1) = data[col + n_input * row];
+            }
+        }
+    }
 }
 
 void EvoCore::setTitan(EvoIndividual titan) {

@@ -27,13 +27,6 @@ public:
     virtual void set_solver(std::string const& solver_name) = 0;
 
     /**
-     * @brief Sets the decomposition method.
-     * 
-     * @param decomposition_method The name of the decomposition method.
-     */
-    virtual void set_decomposition_method(std::string const& decomposition_method) = 0;
-
-    /**
      * @brief Loads a file.
      * 
      * @param filepath The path to the file.
