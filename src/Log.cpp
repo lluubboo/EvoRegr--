@@ -24,6 +24,7 @@ namespace EvoRegression {
 
         spdlog::set_pattern("[EvoRegression++] [%H:%M:%S] [%^%l%$] [thread %t] %v");
         spdlog::register_logger(s_logger);
+        spdlog::set_default_logger(s_logger);
         spdlog::set_level(spdlog::level::trace);
         spdlog::flush_on(spdlog::level::trace);
     }
