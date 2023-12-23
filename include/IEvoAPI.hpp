@@ -1,5 +1,6 @@
 #pragma once
 #include <string>
+#include "BoundaryConditions.hpp"
 
 /**
  * @brief Interface for the EvoAPI class.
@@ -16,7 +17,7 @@ public:
     /**
      * @brief Sets the boundary conditions.
      */
-    virtual void set_boundary_conditions(size_t, size_t, size_t, size_t, size_t, size_t, size_t, size_t, size_t) = 0;
+    virtual void set_boundary_conditions(EvoBoundaryConditions const&) = 0;
 
     /**
      * @brief Sets the solver.

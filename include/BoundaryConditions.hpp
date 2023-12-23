@@ -1,3 +1,5 @@
+#include <cstddef>
+
 /**
  * @brief Struct representing the boundary conditions for the evolutionary algorithm.
  */
