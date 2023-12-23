@@ -25,12 +25,12 @@ class EvoAPI {
 
     // titan 
     EvoIndividual titan;
-    Transform::EvoDataSet titan_robust_dataset, titan_nonrobust_dataset;
+    EvoRegression::EvoDataSet titan_robust_dataset, titan_nonrobust_dataset;
     RegressionDetailedResult titan_result;
 
     // data
     void create_regression_input(std::tuple<int, std::vector<double>>);
-    Transform::EvoDataSet get_dataset();
+    EvoRegression::EvoDataSet get_dataset();
 
     // concurrent random engines 
     // TODO move to EvoLibrary

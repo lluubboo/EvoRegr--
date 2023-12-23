@@ -1,6 +1,7 @@
 #include "EvoCore.hpp"
 #include "Log.hpp"
 #include "IOTools.hpp"
+#include "RandomChoices.hpp"
 
 EvoCore::EvoCore() :
     original_dataset(),
@@ -69,7 +70,7 @@ void EvoCore::call_predict_method() {
 
     EvoRegression::Log::get_logger()->info("Starting batch prediction process...");
 
-    auto random_engines = create_random_engines(omp_get_max_threads());
+    auto random_engines = Random::create_random_engines(omp_get_max_threads());
 
     auto start_time = std::chrono::high_resolution_clock::now();
 
@@ -162,7 +163,7 @@ void EvoCore::call_predict_method() {
 
     EvoRegression::Log::get_logger()->info("Batch prediction process took {} seconds.", duration / 1000.0);
 
-    log_result();
+    //log_result();
 }
 
 bool EvoCore::is_ready_to_predict() const {
@@ -179,9 +180,6 @@ void EvoCore::create_regression_input(std::tuple<int, std::vector<double>> input
 
     // predictor matrix column count (n_input - 1 (because of target column) + 1 + interaction columns)
     int n_output = n_input + boundary_conditions.interaction_cols;
-
-    // + 1 because of header row
-    int m_output = m_input + 1;
 
     // mark y column indexed from 0 (is last every time)
     int target_col_index = n_input - 1;

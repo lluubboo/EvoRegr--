@@ -94,7 +94,7 @@ EvoIndividual Factory::getRandomEvoIndividual(int predictor_row_count, int predi
  */
 std::vector<EvoIndividual> Factory::generate_random_generation(
     int size,
-    Transform::EvoDataSet const& dataset,
+    EvoRegression::EvoDataSet const& dataset,
     XoshiroCpp::Xoshiro256Plus& random_engine,
     std::function<double(Eigen::MatrixXd const&, Eigen::VectorXd const&)> solver
 ) {
@@ -380,7 +380,7 @@ void Transform::half_target_transform(Eigen::VectorXd& vector, EvoIndividual con
  *
  * @return a Transform::EvoDataSet object containing the transformed predictor and target data.
  */
-Transform::EvoDataSet Transform::data_transformation_robust(Eigen::MatrixXd predictor, Eigen::VectorXd target, EvoIndividual const& individual) {
+EvoRegression::EvoDataSet Transform::data_transformation_robust(Eigen::MatrixXd predictor, Eigen::VectorXd target, EvoIndividual const& individual) {
     Transform::full_predictor_transform(predictor, individual);
     Transform::full_target_transform(target, individual);
     return { predictor, target };
@@ -396,7 +396,7 @@ Transform::EvoDataSet Transform::data_transformation_robust(Eigen::MatrixXd pred
  *
  * @return a Transform::EvoDataSet object containing the transformed predictor and target data.
  */
-Transform::EvoDataSet Transform::data_transformation_nonrobust(Eigen::MatrixXd predictor, Eigen::VectorXd target, EvoIndividual const& individual) {
+EvoRegression::EvoDataSet Transform::data_transformation_nonrobust(Eigen::MatrixXd predictor, Eigen::VectorXd target, EvoIndividual const& individual) {
     Transform::half_predictor_transform(predictor, individual);
     Transform::half_target_transform(target, individual);
     return { predictor, target };
@@ -415,12 +415,12 @@ Transform::EvoDataSet Transform::data_transformation_nonrobust(Eigen::MatrixXd p
  * The fitness is calculated as the sum of squares of errors of the solver on the dataset.
  */
 template <typename T>
-double EvoMath::get_fitness(Transform::EvoDataSet const& dataset, T solver) {
+double EvoMath::get_fitness(EvoRegression::EvoDataSet const& dataset, T solver) {
     return solver(dataset.predictor, dataset.target);
 }
 
 // Explicit instantiation
-template double EvoMath::get_fitness(Transform::EvoDataSet const& dataset, std::function<double(Eigen::MatrixXd const&, Eigen::VectorXd const&)> solver);
+template double EvoMath::get_fitness(EvoRegression::EvoDataSet const& dataset, std::function<double(Eigen::MatrixXd const&, Eigen::VectorXd const&)> solver);
 
 /**
  * @brief Extracts a column from a 1D vector representing a 2D matrix.
@@ -450,3 +450,22 @@ std::vector<T> EvoMath::extract_column(std::vector<T> data, unsigned int column_
 template std::vector<int> EvoMath::extract_column(std::vector<int> data, unsigned int column_count, unsigned int column_index);
 template std::vector<double> EvoMath::extract_column(std::vector<double> data, unsigned int column_count, unsigned int column_index);
 template std::vector<float> EvoMath::extract_column(std::vector<float> data, unsigned int column_count, unsigned int column_index);
+
+std::vector<XoshiroCpp::Xoshiro256Plus> Random::create_random_engines(size_t count) {
+    //create random seed for master random engine
+    std::random_device rd;
+    uint64_t seed = (static_cast<uint64_t>(rd()) << 32) | rd();
+
+    //create master random engine
+    XoshiroCpp::Xoshiro256Plus master_random_engine(seed);
+
+    //create n random engines and store them in vector
+    //each one is created by long jumping the master random engine
+    std::vector<XoshiroCpp::Xoshiro256Plus> random_engines;
+    for (unsigned int i = 0;i < count;i++) {
+        master_random_engine.longJump();
+        random_engines.emplace_back(master_random_engine.serialize());
+    }
+
+    return random_engines;
+};
