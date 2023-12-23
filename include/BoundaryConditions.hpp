@@ -15,10 +15,6 @@ struct EvoBoundaryConditions {
     size_t global_generation_size;          ///< The maximum size of the global generation.
     size_t migrants_count;                  ///< The number of migrants in each migration.
 
-    /**
-     * @brief Default constructor for EvoBoundaryConditions.
-     * Initializes the member variables with default values.
-     */
     EvoBoundaryConditions() :
         island_generation_size(100),
         generation_count(100),
@@ -27,6 +23,26 @@ struct EvoBoundaryConditions {
         island_count(12),
         migration_ratio(5),
         migration_interval(5),
+        global_generation_size(island_generation_size* island_count),
+        migrants_count(static_cast<size_t>((global_generation_size* migration_ratio) / 100))
+    {}
+
+    EvoBoundaryConditions(
+        size_t island_generation_size,
+        size_t generation_count,
+        size_t interaction_cols,
+        size_t mutation_ratio,
+        size_t island_count,
+        size_t migration_ratio,
+        size_t migration_interval
+    ) :
+        island_generation_size(island_generation_size),
+        generation_count(generation_count),
+        interaction_cols(interaction_cols),
+        mutation_ratio(mutation_ratio),
+        island_count(island_count),
+        migration_ratio(migration_ratio),
+        migration_interval(migration_interval),
         global_generation_size(island_generation_size* island_count),
         migrants_count(static_cast<size_t>((global_generation_size* migration_ratio) / 100))
     {}

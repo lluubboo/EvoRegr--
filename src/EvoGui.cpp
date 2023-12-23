@@ -247,7 +247,7 @@ void EvoView::migration_interval_callback(Fl_Widget* w, void* v) {
 void EvoView::decomposition_choice_callback(Fl_Widget* w, void* v) {
     EvoView* T = (EvoView*)v;
     T->decomposition_method = ((Fl_Choice*)w)->text();
-    T->evo_api.set_solver(T->decomposition_method);
+    T->_api->set_solver(T->decomposition_method);
 }
 
 /**
@@ -262,8 +262,19 @@ void EvoView::decomposition_choice_callback(Fl_Widget* w, void* v) {
 void EvoView::load_file_button_callback(Fl_Widget* /*w*/, void* v) {
     EvoView* T = (EvoView*)v;
     T->get_filepath();
-    T->evo_api.set_boundary_conditions(T->generations_size, T->generations_count, T->interference_size, T->mutation_rate, T->island_count, T->migration_ratio, T->migration_interval);
-    T->evo_api.load_file(T->filepath);
+
+    EvoBoundaryConditions bc(
+        T->generations_size,
+        T->generations_count,
+        T->interference_size,
+        T->mutation_rate,
+        T->island_count,
+        T->migration_ratio,
+        T->migration_interval
+    );
+
+    T->_api->set_boundary_conditions(bc);
+    T->_api->load_file(T->filepath);
 }
 
 /**
@@ -277,15 +288,14 @@ void EvoView::load_file_button_callback(Fl_Widget* /*w*/, void* v) {
 void EvoView::batch_predict_button_callback(Fl_Widget* /*w*/, void* v) {
     EvoView* T = (EvoView*)v;
 
-    if (!T->evo_api.is_ready_to_predict()) {
+    if (!T->_api->is_ready_to_predict()) {
         EvoRegression::Log::get_logger()->error("Cannot start prediction. Please load a file first.");
         return;
     }
 
     std::thread predict_thread(
         &EvoView::call_batch_predict,
-        T,
-        T->evo_api
+        T
     );
 
     predict_thread.detach();
@@ -293,6 +303,11 @@ void EvoView::batch_predict_button_callback(Fl_Widget* /*w*/, void* v) {
 
 //*************************************************************************************************methods
 
+/**
+ * Binds the given API implementation to the EvoView instance.
+ * 
+ * @param api The unique pointer to the IEvoAPI implementation.
+ */
 void EvoView::bind_to_backend(std::unique_ptr<IEvoAPI> api) {
     _api = std::move(api);
 };
@@ -302,9 +317,9 @@ void EvoView::bind_to_backend(std::unique_ptr<IEvoAPI> api) {
  *
  * @param evo_api The EvoAPI object to call the batch_predict method on.
  */
-void EvoView::call_batch_predict(EvoAPI evo_api) {
+void EvoView::call_batch_predict() {
     try {
-        evo_api.batch_predict();
+        _api -> call_predict_method();
     }
     catch (const std::exception& e) {
         EvoRegression::Log::get_logger()->error("Standard exception caught in batch predict method call: " + std::string(e.what()));
