@@ -16,8 +16,23 @@ void EvoCore::set_boundary_conditions(EvoBoundaryConditions const& boundary_cond
     this->boundary_conditions = boundary_conditions;
 }
 
-void EvoCore::set_solver(std::function<double(Eigen::MatrixXd const&, Eigen::VectorXd const&)> solver) {
-    this->solver = solver;
+void EvoCore::set_solver(std::string const& solver_name) {
+    if (solver_name == "LLT") {
+        solver = LLTSolver();
+        EvoRegression::Log::get_logger()->info("Solver set to LLT");
+    }
+    else if (solver_name == "LDLT") {
+        solver = LDLTSolver();
+        EvoRegression::Log::get_logger()->info("Solver set to LDLT");
+    }
+    else if (solver_name == "ColPivHouseholderQr") {
+        solver = ColPivHouseholderQrSolver();
+        EvoRegression::Log::get_logger()->info("Solver set to ColPivHouseholderQr");
+    }
+    else {
+        solver = LDLTSolver();
+        EvoRegression::Log::get_logger()->info("Unrecognized solver type. Solver set to default LDLT");
+    }
 }
 
 void EvoCore::load_file(const std::string& filename) {

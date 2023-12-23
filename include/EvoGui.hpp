@@ -20,11 +20,13 @@
 #include <spdlog/sinks/basic_file_sink.h>
 #include <spdlog/sinks/stdout_color_sinks.h>
 #include "EvoAPI.hpp"
+#include "IEvoAPI.hpp"
 
 class EvoView : public Fl_Window {
 
     // evo api
     EvoAPI evo_api;
+    std::unique_ptr<IEvoAPI> _api;
 
     //flags
 
@@ -107,6 +109,7 @@ class EvoView : public Fl_Window {
 
 public:
     EvoView(int width, int height, const char* title);
+    void bind_to_backend(std::unique_ptr<IEvoAPI>);
 };
 
 template <typename T>

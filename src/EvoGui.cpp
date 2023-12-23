@@ -293,6 +293,10 @@ void EvoView::batch_predict_button_callback(Fl_Widget* /*w*/, void* v) {
 
 //*************************************************************************************************methods
 
+void EvoView::bind_to_backend(std::unique_ptr<IEvoAPI> api) {
+    _api = std::move(api);
+};
+
 /**
  * Calls the batch_predict method of the EvoAPI object.
  *

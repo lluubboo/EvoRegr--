@@ -1,5 +1,5 @@
 #include "IEvoAPI.hpp"
-#include "EvoBoundaryConditions.hpp"
+#include "BoundaryConditions.hpp"
 #include "EvoPopulation.hpp"
 #include "RegressionSolver.hpp"
 #include "EvoLibrary.hpp"
@@ -56,7 +56,7 @@ public:
     EvoCore();
 
     void set_boundary_conditions(EvoBoundaryConditions const& boundary_conditions) override;
-    void set_solver(std::function<double(Eigen::MatrixXd const&, Eigen::VectorXd const&)>) override;
+    void set_solver(std::string const& solver_name) override;
     void load_file(std::string const& filepath) override;
     void call_predict_method() override;
     bool is_ready_to_predict() const override;

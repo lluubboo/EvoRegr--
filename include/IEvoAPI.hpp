@@ -12,7 +12,6 @@
  */
 class IEvoAPI {
 public:
-    virtual ~IEvoAPI() = default;
 
     /**
      * @brief Sets the boundary conditions.
