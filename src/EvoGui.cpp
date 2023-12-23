@@ -335,6 +335,7 @@ void EvoView::get_filepath() {
 void EvoView::connect_terminal_to_logger() {
     // FLTK sink terminal
     auto fltk_terminal_sink = std::make_shared<Fl_Terminal_Sink<std::mutex>>(log_terminal);
+    
     // Get global logger
     auto global_logger = spdlog::default_logger();
 
