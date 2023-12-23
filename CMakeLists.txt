@@ -25,8 +25,8 @@ add_executable(EVOREGR++ main.cpp)
 
 # append user paths 
 list(APPEND CMAKE_PREFIX_PATH "C:/Users/lubomir.balaz/SWLibraries/eigen-3.4.0-install/share/eigen3/cmake")
-list(APPEND CMAKE_PREFIX_PATH "C:/.local/lib/cmake/Matplot++")
 list(APPEND CMAKE_PREFIX_PATH "C:/Users/lubomir.balaz/SWLibraries/fltk/build")
+list(APPEND CMAKE_PREFIX_PATH "C:/Users/lubomir.balaz/SWLibraries/spdlog-1.12.0-install")
 
 # Eigen
 find_package(Eigen3 3.3 REQUIRED NO_MODULE)
@@ -39,9 +39,6 @@ find_package(spdlog REQUIRED)
 
 # fltk
 find_package(FLTK REQUIRED NO_MODULE)
-
-# SparseHash
-include_directories("C:/Users/lubomir.balaz/SWLibraries/sparsehash-sparsehash-2.0.4-install/include")
 
 add_subdirectory(external)
 add_subdirectory(include)
