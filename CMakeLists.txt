@@ -49,7 +49,3 @@ target_link_libraries (${PROJECT_NAME} PRIVATE OpenMP::OpenMP_CXX Eigen3::Eigen 
 
 target_include_directories(${PROJECT_NAME} PRIVATE ${PROJECT_BINARY_DIR} ${FLTK_INCLUDE_DIRS})
 
-# packs, but what thez are doing?find out.....
-set(CPACK_PROJECT_NAME ${PROJECT_NAME})
-set(CPACK_PROJECT_VERSION ${PROJECT_VERSION})
-include(CPack)
