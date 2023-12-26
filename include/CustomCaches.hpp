@@ -4,13 +4,13 @@
 #include <utility>
 #include <string>
 #include <optional>
-#include <sparsehash/dense_hash_map>
+#include <unordered_map>
 
 template<typename KeyType, typename ValueType>
 class LRUCache {
 
     std::list<KeyType> _list;
-    google::dense_hash_map<KeyType, std::pair<ValueType, typename std::list<KeyType>::iterator>> _map;
+    std::unordered_map<KeyType, std::pair<ValueType, typename std::list<KeyType>::iterator>> _map;
     size_t limit_size;
 
 public:
