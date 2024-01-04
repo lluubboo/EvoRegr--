@@ -15,8 +15,37 @@ EvoCore::EvoCore() :
 
 void EvoCore::set_boundary_conditions(EvoBoundaryConditions const& boundary_conditions) {
     this->boundary_conditions = boundary_conditions;
+
+    EvoRegression::Log::get_logger()->info(
+        "Boundary conditions set to:\n"
+        "Island generation size: {}\n"
+        "Generation count: {}\n"
+        "Interaction columns: {}\n"
+        "Mutation ratio: {}\n"
+        "Island count: {}\n"
+        "Migration ratio: {}\n"
+        "Migration interval: {}\n"
+        "Global generation size: {}\n"
+        "Migrants count: {}",
+        boundary_conditions.island_generation_size,
+        boundary_conditions.generation_count,
+        boundary_conditions.interaction_cols,
+        boundary_conditions.mutation_ratio,
+        boundary_conditions.island_count,
+        boundary_conditions.migration_ratio,
+        boundary_conditions.migration_interval,
+        boundary_conditions.global_generation_size,
+        boundary_conditions.migrants_count
+    );
 }
 
+/**
+ * Sets the solver for EvoCore.
+ * 
+ * @param solver_name The name of the solver to set.
+ *                    Valid options are "LLT", "LDLT", and "ColPivHouseholderQr".
+ *                    If an unrecognized solver name is provided, the default solver "LDLT" will be set.
+ */
 void EvoCore::set_solver(std::string const& solver_name) {
     if (solver_name == "LLT") {
         solver = LLTSolver();
@@ -37,6 +66,7 @@ void EvoCore::set_solver(std::string const& solver_name) {
 }
 
 void EvoCore::load_file(const std::string& filename) {
+
     try {
         create_regression_input(parse_csv<double>(filename));
     }
@@ -54,16 +84,7 @@ void EvoCore::load_file(const std::string& filename) {
         );
     }
 
-    EvoRegression::Log::get_logger()->info(
-        "File {} loaded",
-        filename
-    );
-
-    EvoRegression::Log::get_logger()->info(
-        "Predictor matrix initialized with {} rows and {} columns",
-        original_dataset.predictor.rows(),
-        original_dataset.predictor.cols()
-    );
+    EvoRegression::Log::get_logger()->info("File {} loaded",filename);
 }
 
 void EvoCore::call_predict_method() {
@@ -166,6 +187,11 @@ void EvoCore::call_predict_method() {
     //log_result();
 }
 
+/**
+ * Checks if the EvoCore object is ready to perform predictions.
+ * 
+ * @return true if the original dataset has predictor and target data, false otherwise.
+ */
 bool EvoCore::is_ready_to_predict() const {
     return original_dataset.predictor.size() > 0 && original_dataset.target.size() > 0;
 }
@@ -200,6 +226,12 @@ void EvoCore::create_regression_input(std::tuple<int, std::vector<double>> input
             }
         }
     }
+
+    EvoRegression::Log::get_logger()->info(
+        "Predictor matrix initialized with {} rows and {} columns",
+        original_dataset.predictor.rows(),
+        original_dataset.predictor.cols()
+    );
 }
 
 void EvoCore::setTitan(EvoIndividual titan) {
