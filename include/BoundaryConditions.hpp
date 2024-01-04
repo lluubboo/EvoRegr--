@@ -24,7 +24,7 @@ struct EvoBoundaryConditions {
         migration_ratio(5),
         migration_interval(5),
         global_generation_size(island_generation_size* island_count),
-        migrants_count(static_cast<size_t>((global_generation_size* migration_ratio) / 100))
+        migrants_count(static_cast<size_t>((global_generation_size * migration_ratio) / 100))
     {}
 
     EvoBoundaryConditions(

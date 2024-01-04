@@ -559,7 +559,6 @@ std::string EvoAPI::get_result_metrics_table() {
  */
 std::string EvoAPI::get_regression_summary_table() {
     std::stringstream table;
-
     table << get_regression_result_table();
     table << get_regression_robust_result_table();
     table << get_result_metrics_table();

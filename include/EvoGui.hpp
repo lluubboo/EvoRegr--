@@ -27,11 +27,9 @@ class EvoView : public Fl_Window {
     std::unique_ptr<IEvoAPI> _api;
 
     //flags
-
     std::string decomposition_method;
 
     //variables
-
     std::string filepath;
     
     int generations_count;
@@ -107,10 +105,21 @@ class EvoView : public Fl_Window {
     void call_batch_predict();
 
 public:
+    
     EvoView(int width, int height, const char* title);
     void bind_to_backend(std::unique_ptr<IEvoAPI>);
 };
 
+
+
+/**
+ * @brief A custom sink for logging messages to a Fl_Terminal widget.
+ * 
+ * This class is a template class that inherits from spdlog::sinks::base_sink<T>.
+ * It provides functionality to sink log messages to a Fl_Terminal widget.
+ * 
+ * @tparam T The type of log messages to be sunk.
+ */
 template <typename T>
 class Fl_Terminal_Sink : public spdlog::sinks::base_sink<T> {
 

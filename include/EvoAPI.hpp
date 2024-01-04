@@ -11,6 +11,8 @@
 #include "EvoLibrary.hpp"
 #include "XoshiroCpp.hpp"
 
+//TODO: delete class, move plots to unique class, vykuchat evoAPI
+
 class EvoAPI {
 
     // algorithm boundary conditions

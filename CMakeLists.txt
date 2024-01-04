@@ -17,7 +17,7 @@ elseif (CMAKE_BUILD_TYPE STREQUAL "Release")
         set(CMAKE_EXE_LINKER_FLAGS "-mwindows")
         add_compile_options(-march=native)
     else()
-        add_compile_options(-march=native)
+        # do nothing now
     endif()
 endif()
 
@@ -43,7 +43,6 @@ find_package(FLTK REQUIRED NO_MODULE)
 add_subdirectory(external)
 add_subdirectory(include)
 add_subdirectory(src)
-
 
 target_link_libraries (${PROJECT_NAME} PRIVATE OpenMP::OpenMP_CXX Eigen3::Eigen spdlog::spdlog fltk includes_lib sources_lib externals_lib)
 

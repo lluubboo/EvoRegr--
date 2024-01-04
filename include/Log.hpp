@@ -13,5 +13,4 @@ namespace EvoRegression {
     private:
         static std::shared_ptr<spdlog::logger> s_logger;
     };
-
 }

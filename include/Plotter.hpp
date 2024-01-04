@@ -13,10 +13,15 @@ template <typename T>
 class Plotter {
 
     std::stringstream _table;
+    
     T* _data;
+
     DataArrangement _data_arrangement;
+
     std::vector<std::string> _column_names;
+
     std::string _name;
+
     unsigned int _table_width;
     unsigned int _column_width;
     unsigned int _size;
