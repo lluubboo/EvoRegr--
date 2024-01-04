@@ -88,12 +88,26 @@ void EvoCore::load_file(const std::string& filename) {
 }
 
 void EvoCore::call_predict_method() {
+    EvoRegression::Log::get_logger()->info("Starting prediction process...");
 
-    EvoRegression::Log::get_logger()->info("Starting batch prediction process...");
+    auto start = std::chrono::high_resolution_clock::now();
+    predict();
+    auto end = std::chrono::high_resolution_clock::now();
 
+    std::chrono::duration<double> elapsed = end - start;
+
+    EvoRegression::Log::get_logger()->info(
+        "Prediction process finished in {} seconds",
+        elapsed.count()
+    );
+
+    titan_postprocessing();
+    //log_result();
+}
+
+void EvoCore::predict() {
     auto random_engines = Random::create_random_engines(omp_get_max_threads());
-
-    auto start_time = std::chrono::high_resolution_clock::now();
+    EvoRegression::Log::get_logger()->info("Random engines created");
 
     // create old population as a genofond pool
     std::vector<EvoIndividual> old_population(
@@ -110,13 +124,12 @@ void EvoCore::call_predict_method() {
         boundary_conditions.global_generation_size
     );
 
+    EvoRegression::Log::get_logger()->info("Starting evolution process...");
     for (unsigned int gen_index = 0; gen_index < boundary_conditions.generation_count; gen_index++) {
 
         if (gen_index % boundary_conditions.migration_interval == 0 && gen_index != 0) {
-
             EvoRegression::Log::get_logger()->info("Migration in gen {} started...", gen_index);
             Migration::short_distance_migration(old_population, boundary_conditions.migrants_count, random_engines);
-
         }
 
 #pragma omp parallel for schedule(guided)
@@ -175,16 +188,10 @@ void EvoCore::call_predict_method() {
         // move newoborns to old population, they are now old
         old_population = std::move(newborns_population);
 
-        // init population of some default newborns
+        // init population of default empty newborns
         newborns_population = std::vector<EvoIndividual>(boundary_conditions.global_generation_size);
     }
-
-    auto end_time = std::chrono::high_resolution_clock::now();
-    auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time).count();
-
-    EvoRegression::Log::get_logger()->info("Batch prediction process took {} seconds.", duration / 1000.0);
-
-    //log_result();
+    EvoRegression::Log::get_logger()->info("Evolution process finished");
 }
 
 /**
@@ -196,6 +203,16 @@ bool EvoCore::is_ready_to_predict() const {
     return original_dataset.predictor.size() > 0 && original_dataset.target.size() > 0;
 }
 
+/**
+ * @brief Creates the regression input matrix from the given input tuple.
+ * 
+ * The regression input matrix consists of a predictor matrix and a target vector.
+ * The predictor matrix is initialized with ones and contains the input data columns,
+ * excluding the target column. The target vector is filled with the values from the
+ * target column of the input data.
+ * 
+ * @param input The input tuple containing the number of input columns and the input data.
+ */
 void EvoCore::create_regression_input(std::tuple<int, std::vector<double>> input) {
 
     std::vector<double> data = std::get<1>(input);
@@ -244,12 +261,12 @@ void EvoCore::titan_evaluation(EvoIndividual const& individual) {
 }
 
 void EvoCore::titan_postprocessing() {
+    EvoRegression::Log::get_logger()->info("Titan postprocessing has begun.");
     // data without outliers
     titan_dataset_robust = Transform::data_transformation_robust(original_dataset.predictor, original_dataset.target, titan);
-    // data witho outliers
+    // data without outliers
     titan_dataset_nonrobust = Transform::data_transformation_nonrobust(original_dataset.predictor, original_dataset.target, titan);
     // regression result
     titan_result = solve_system_detailed(titan_dataset_robust.predictor, titan_dataset_robust.target);
-
-    EvoRegression::Log::get_logger()->info("Titan postprocessing finished");
+    EvoRegression::Log::get_logger()->info("Titan postprocessing finished.");
 }

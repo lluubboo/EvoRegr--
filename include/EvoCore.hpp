@@ -8,12 +8,10 @@
 
 class EvoCore : public IEvoAPI {
 
-    // datasets
-    EvoRegression::EvoDataSet original_dataset;
-    EvoRegression::EvoDataSet titan_dataset_robust;
-    EvoRegression::EvoDataSet titan_dataset_nonrobust;
+    EvoRegression::EvoDataSet original_dataset; // original dataset
+    EvoRegression::EvoDataSet titan_dataset_robust; // dataset of titan with robust features
+    EvoRegression::EvoDataSet titan_dataset_nonrobust; // dataset of titan with without robusting (deleting outliers)
 
-    // boundary conditions
     EvoBoundaryConditions boundary_conditions;
 
     // solver functor
@@ -27,6 +25,7 @@ class EvoCore : public IEvoAPI {
     void setTitan(EvoIndividual);
     void titan_evaluation(EvoIndividual const& individual);
     void titan_postprocessing();
+    void predict();
 
 public:
 
