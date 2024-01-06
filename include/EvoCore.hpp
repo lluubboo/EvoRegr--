@@ -26,6 +26,7 @@ class EvoCore : public IEvoAPI {
     void titan_evaluation(EvoIndividual const& individual);
     void titan_postprocessing();
     void predict();
+    void log_result();
 
 public:
 

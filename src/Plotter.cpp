@@ -265,6 +265,7 @@ void Plotter<T>::print_endline() {
 // Explicit instantiation
 template class Plotter<int>;
 template class Plotter<double>;
+template class Plotter<float>;
 template class Plotter<std::string>;
 
 

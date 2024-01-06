@@ -1,7 +1,9 @@
 #include "EvoCore.hpp"
+#include "Stats.hpp"
 #include "Log.hpp"
 #include "IOTools.hpp"
 #include "RandomChoices.hpp"
+#include "EvoResultPostprocessing.hpp"
 
 EvoCore::EvoCore() :
     original_dataset(),
@@ -102,7 +104,7 @@ void EvoCore::call_predict_method() {
     );
 
     titan_postprocessing();
-    //log_result();
+    log_result();
 }
 
 void EvoCore::predict() {
@@ -269,4 +271,22 @@ void EvoCore::titan_postprocessing() {
     // regression result
     titan_result = solve_system_detailed(titan_dataset_robust.predictor, titan_dataset_robust.target);
     EvoRegression::Log::get_logger()->info("Titan postprocessing finished.");
+}
+
+void EvoCore::log_result() {
+    EvoRegression::Log::get_logger()->info("Logging results...");
+    std::stringstream table;
+    table << EvoRegression::get_regression_result_table(titan_dataset_nonrobust.target.data(), titan_dataset_nonrobust.target.size());
+    table << EvoRegression::get_regression_robust_result_table(titan_dataset_robust.target.data(), titan_dataset_robust.target.size());
+    table << EvoRegression::get_result_metrics_table(
+        {
+            DescriptiveStatistics::median(titan_dataset_nonrobust.target.data(), titan_dataset_nonrobust.target.size()),
+            titan_result.standard_deviation,
+            titan_result.rsquared
+        }
+    );
+    table << EvoRegression::get_regression_coefficients_table(titan_result.theta.data(), titan_result.theta.size());
+    table << EvoRegression::get_genotype_table(titan);
+    table << EvoRegression::get_formula_table({ titan.to_math_formula() });
+    EvoRegression::Log::get_logger()->info("Regression summary:\n{}", table.str());
 }
