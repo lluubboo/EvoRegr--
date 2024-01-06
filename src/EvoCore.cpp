@@ -4,6 +4,7 @@
 #include "IOTools.hpp"
 #include "RandomChoices.hpp"
 #include "EvoResultPostprocessing.hpp"
+#include "LRUCache.hpp"
 
 EvoCore::EvoCore() :
     original_dataset(),
