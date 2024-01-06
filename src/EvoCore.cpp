@@ -45,8 +45,8 @@ void EvoCore::set_boundary_conditions(EvoBoundaryConditions const& boundary_cond
  * Sets the solver for EvoCore.
  * 
  * @param solver_name The name of the solver to set.
- *                    Valid options are "LLT", "LDLT", and "ColPivHouseholderQr".
- *                    If an unrecognized solver name is provided, the default solver "LDLT" will be set.
+ * Valid options are "LLT", "LDLT", and "ColPivHouseholderQr".
+ * If an unrecognized solver name is provided, the default solver "LDLT" will be set.
  */
 void EvoCore::set_solver(std::string const& solver_name) {
     if (solver_name == "LLT") {
@@ -67,6 +67,16 @@ void EvoCore::set_solver(std::string const& solver_name) {
     }
 }
 
+/**
+ * @brief Loads a file and creates regression input from its contents.
+ * 
+ * This function reads a CSV file specified by the `filename` parameter and parses its contents
+ * to create regression input. If an error occurs during the file processing, an appropriate error
+ * message is logged. After successful processing, an information message is logged indicating that
+ * the file has been loaded.
+ * 
+ * @param filename The path of the CSV file to be loaded.
+ */
 void EvoCore::load_file(const std::string& filename) {
 
     try {
@@ -89,6 +99,10 @@ void EvoCore::load_file(const std::string& filename) {
     EvoRegression::Log::get_logger()->info("File {} loaded",filename);
 }
 
+/**
+ * Calls the predict method to perform prediction and logs the elapsed time.
+ * After prediction, it performs post-processing and logs the result.
+ */
 void EvoCore::call_predict_method() {
     EvoRegression::Log::get_logger()->info("Starting prediction process...");
 
@@ -262,6 +276,14 @@ void EvoCore::titan_evaluation(EvoIndividual const& individual) {
     if (individual.fitness < titan.fitness) setTitan(individual);
 }
 
+/**
+ * Performs postprocessing for the Titan dataset.
+ * This function applies data transformation to remove outliers from the original dataset,
+ * and then solves the regression system using the transformed data.
+ * 
+ * @remarks This function assumes that the original dataset, titan, and the necessary transformations
+ *          have already been initialized.
+ */
 void EvoCore::titan_postprocessing() {
     EvoRegression::Log::get_logger()->info("Titan postprocessing has begun.");
     // data without outliers
@@ -273,6 +295,12 @@ void EvoCore::titan_postprocessing() {
     EvoRegression::Log::get_logger()->info("Titan postprocessing finished.");
 }
 
+/**
+ * Logs the regression results.
+ * This function generates a summary table of the regression results and logs it using the logger.
+ * The table includes the regression result tables, result metrics table, regression coefficients table,
+ * genotype table, and the formula table.
+ */
 void EvoCore::log_result() {
     EvoRegression::Log::get_logger()->info("Logging results...");
     std::stringstream table;
