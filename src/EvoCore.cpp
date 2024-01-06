@@ -304,8 +304,22 @@ void EvoCore::titan_postprocessing() {
 void EvoCore::log_result() {
     EvoRegression::Log::get_logger()->info("Logging results...");
     std::stringstream table;
-    table << EvoRegression::get_regression_result_table(titan_dataset_nonrobust.target.data(), titan_dataset_nonrobust.target.size());
-    table << EvoRegression::get_regression_robust_result_table(titan_dataset_robust.target.data(), titan_dataset_robust.target.size());
+    table << EvoRegression::get_regression_result_table(
+        EvoRegression::get_regression_summary_matrix(
+            titan,
+            titan_result.theta,
+            titan_dataset_nonrobust
+        ).data(),
+        titan_dataset_nonrobust.target.size() * 4
+    );
+    table << EvoRegression::get_regression_robust_result_table(
+        EvoRegression::get_regression_summary_matrix(
+            titan,
+            titan_result.theta,
+            titan_dataset_robust
+        ).data(),
+        titan_dataset_robust.target.size() * 4
+    );
     table << EvoRegression::get_result_metrics_table(
         {
             DescriptiveStatistics::median(titan_dataset_nonrobust.target.data(), titan_dataset_nonrobust.target.size()),
