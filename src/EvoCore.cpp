@@ -128,6 +128,9 @@ void EvoCore::predict() {
     auto random_engines = Random::create_random_engines(omp_get_max_threads());
     EvoRegression::Log::get_logger()->info("Random engines initilized");
 
+    // allocated memory for matrices
+    std::vector<EvoRegression::EvoDataSet> workspace(boundary_conditions.island_count, original_dataset);
+
     // caches for each island
     unsigned int cache_size = boundary_conditions.island_generation_size * 10;
     std::vector<LRUCache<std::string, double>> caches(
@@ -166,6 +169,9 @@ void EvoCore::predict() {
             size_t thread_id = omp_get_thread_num();
             size_t lower_bound = (entity_index / boundary_conditions.island_generation_size) * boundary_conditions.island_generation_size;
 
+            // reset workspace to original state
+            workspace[thread_id] = original_dataset;
+
             EvoIndividual newborn = Crossover::cross(
                 Selection::tournament_selection(
                     old_population.begin() + lower_bound,
@@ -199,8 +205,7 @@ void EvoCore::predict() {
                 newborn.evaluate(
                     EvoMath::get_fitness<std::function<double(Eigen::MatrixXd const&, Eigen::VectorXd const&)>>(
                         Transform::data_transformation_robust(
-                            original_dataset.predictor,
-                            original_dataset.target,
+                            workspace[thread_id],
                             newborn
                         ),
                         solver
@@ -220,8 +225,7 @@ void EvoCore::predict() {
 
         // move newoborns to old population, they are now old
         old_population = std::move(population_of_newborns);
-
-        // init population of default empty newborns
+        // prepare new population of newborns
         population_of_newborns.clear();
         population_of_newborns.resize(boundary_conditions.global_generation_size);
     }

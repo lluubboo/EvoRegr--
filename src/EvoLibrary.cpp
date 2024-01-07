@@ -386,6 +386,12 @@ EvoRegression::EvoDataSet Transform::data_transformation_robust(Eigen::MatrixXd 
     return { predictor, target };
 };
 
+EvoRegression::EvoDataSet& Transform::data_transformation_robust(EvoRegression::EvoDataSet& dataset, EvoIndividual const& individual) {
+    Transform::full_predictor_transform(dataset.predictor, individual);
+    Transform::full_target_transform(dataset.target, individual);
+    return dataset;
+};
+
 /**
  * The function applies non-robust transformations to the predictor and target data based on the provided individual's characteristics.
  * It first transforms the predictor data, then the target data using the Transform::half_predictor_transform and Transform::half_target_transform functions respectively.
