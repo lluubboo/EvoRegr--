@@ -129,14 +129,11 @@ void EvoCore::predict() {
     EvoRegression::Log::get_logger()->info("Random engines initilized");
 
     // allocated memory for matrices
-    std::vector<EvoRegression::EvoDataSet> workspace(boundary_conditions.island_count, original_dataset);
+    std::vector<EvoRegression::EvoDataSet> compute_dataset(boundary_conditions.island_count, original_dataset);
 
     // caches for each island
     unsigned int cache_size = boundary_conditions.island_generation_size * 10;
-    std::vector<LRUCache<std::string, double>> caches(
-        boundary_conditions.island_count,
-        LRUCache<std::string, double>(cache_size)
-    );
+    std::vector<LRUCache<std::string, double>> caches(boundary_conditions.island_count, LRUCache<std::string, double>(cache_size));
     EvoRegression::Log::get_logger()->info("Island caches initialized with size {}", cache_size);
 
     // create old population as a genofond pool
@@ -165,12 +162,14 @@ void EvoCore::predict() {
 #pragma omp parallel for schedule(guided)
         for (size_t entity_index = 0; entity_index < boundary_conditions.global_generation_size; entity_index++) {
 
-            //get boundaries for island
             size_t thread_id = omp_get_thread_num();
-            size_t lower_bound = (entity_index / boundary_conditions.island_generation_size) * boundary_conditions.island_generation_size;
+
+            //get island lower boundary
+            size_t lower_bound = (entity_index / boundary_conditions.island_generation_size) *
+                boundary_conditions.island_generation_size;
 
             // reset workspace to original state
-            workspace[thread_id] = original_dataset;
+            compute_dataset[thread_id] = original_dataset;
 
             EvoIndividual newborn = Crossover::cross(
                 Selection::tournament_selection(
@@ -205,7 +204,7 @@ void EvoCore::predict() {
                 newborn.evaluate(
                     EvoMath::get_fitness<std::function<double(Eigen::MatrixXd const&, Eigen::VectorXd const&)>>(
                         Transform::data_transformation_robust(
-                            workspace[thread_id],
+                            compute_dataset[thread_id],
                             newborn
                         ),
                         solver
