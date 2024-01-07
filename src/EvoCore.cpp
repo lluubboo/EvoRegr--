@@ -222,7 +222,8 @@ void EvoCore::predict() {
         old_population = std::move(population_of_newborns);
 
         // init population of default empty newborns
-        population_of_newborns = std::vector<EvoIndividual>(boundary_conditions.global_generation_size);
+        population_of_newborns.clear();
+        population_of_newborns.resize(boundary_conditions.global_generation_size);
     }
     EvoRegression::Log::get_logger()->info("Evolution process finished");
 }
