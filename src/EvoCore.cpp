@@ -123,8 +123,16 @@ void EvoCore::call_predict_method() {
 }
 
 void EvoCore::predict() {
+
+    // random engines for each thread
     auto random_engines = Random::create_random_engines(omp_get_max_threads());
     EvoRegression::Log::get_logger()->info("Random engines created");
+
+    // caches for each island
+    std::vector<LRUCache<std::string, double>> caches(
+        boundary_conditions.island_count,
+        LRUCache<std::string, double>(boundary_conditions.island_generation_size)
+    );
 
     // create old population as a genofond pool
     std::vector<EvoIndividual> old_population(
@@ -154,9 +162,7 @@ void EvoCore::predict() {
 
             //get boundaries for island
             size_t thread_id = omp_get_thread_num();
-            size_t lower_bound = (entity_index / boundary_conditions.island_generation_size) *
-                boundary_conditions.island_generation_size;
-
+            size_t lower_bound = (entity_index / boundary_conditions.island_generation_size) * boundary_conditions.island_generation_size;
 
             EvoIndividual newborn = Crossover::cross(
                 Selection::tournament_selection(
@@ -181,17 +187,24 @@ void EvoCore::predict() {
                 random_engines[thread_id]
             );
 
-            //evaluate
-            newborn.evaluate(
-                EvoMath::get_fitness<std::function<double(Eigen::MatrixXd const&, Eigen::VectorXd const&)>>(
-                    Transform::data_transformation_robust(
-                        original_dataset.predictor,
-                        original_dataset.target,
-                        newborn
-                    ),
-                    solver
-                )
-            );
+            std::string genotype_key = newborn.to_string_code();
+            auto it = caches[thread_id].get(genotype_key);
+            if (it.has_value()) {
+                newborn.fitness = it.value();
+            }
+            else {
+                newborn.evaluate(
+                    EvoMath::get_fitness<std::function<double(Eigen::MatrixXd const&, Eigen::VectorXd const&)>>(
+                        Transform::data_transformation_robust(
+                            original_dataset.predictor,
+                            original_dataset.target,
+                            newborn
+                        ),
+                        solver
+                    )
+                );
+                caches[thread_id].put(genotype_key, newborn.fitness);
+            }
 
             newborns_population[entity_index] = std::move(newborn);
         }
