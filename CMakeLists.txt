@@ -7,7 +7,7 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED On)
 set(CMAKE_CXX_EXTENSIONS Off)
 
-set(CMAKE_BUILD_TYPE Release)
+set(CMAKE_BUILD_TYPE Debug)
 
 if (CMAKE_BUILD_TYPE STREQUAL "Debug") 
     #-Weffc++
@@ -15,7 +15,7 @@ if (CMAKE_BUILD_TYPE STREQUAL "Debug")
 elseif (CMAKE_BUILD_TYPE STREQUAL "Release")
     if(WIN32)
         set(CMAKE_EXE_LINKER_FLAGS "-mwindows")
-        add_compile_options(-march=native)
+        add_compile_options(-march=native -flto -funroll-loops -fprefetch-loop-arrays)
     else()
         # do nothing now
     endif()

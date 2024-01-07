@@ -126,13 +126,15 @@ void EvoCore::predict() {
 
     // random engines for each thread
     auto random_engines = Random::create_random_engines(omp_get_max_threads());
-    EvoRegression::Log::get_logger()->info("Random engines created");
+    EvoRegression::Log::get_logger()->info("Random engines initilized");
 
     // caches for each island
+    unsigned int cache_size = boundary_conditions.island_generation_size * 10;
     std::vector<LRUCache<std::string, double>> caches(
         boundary_conditions.island_count,
-        LRUCache<std::string, double>(boundary_conditions.island_generation_size)
+        LRUCache<std::string, double>(cache_size)
     );
+    EvoRegression::Log::get_logger()->info("Island caches initialized with size {}", cache_size);
 
     // create old population as a genofond pool
     std::vector<EvoIndividual> old_population(
@@ -145,7 +147,7 @@ void EvoCore::predict() {
     );
 
     // create population of newborns
-    std::vector<EvoIndividual> newborns_population(
+    std::vector<EvoIndividual> population_of_newborns(
         boundary_conditions.global_generation_size
     );
 
@@ -188,9 +190,10 @@ void EvoCore::predict() {
             );
 
             std::string genotype_key = newborn.to_string_code();
-            auto it = caches[thread_id].get(genotype_key);
-            if (it.has_value()) {
-                newborn.fitness = it.value();
+
+            auto opt_fitness = caches[thread_id].get(genotype_key);
+            if (opt_fitness.has_value()) {
+                newborn.fitness = opt_fitness.value();
             }
             else {
                 newborn.evaluate(
@@ -206,20 +209,20 @@ void EvoCore::predict() {
                 caches[thread_id].put(genotype_key, newborn.fitness);
             }
 
-            newborns_population[entity_index] = std::move(newborn);
+            population_of_newborns[entity_index] = std::move(newborn);
         }
 
         // find best individual in population
-        for (const auto& newborn : newborns_population)
+        for (const auto& newborn : population_of_newborns)
         {
             titan_evaluation(newborn);
         }
 
         // move newoborns to old population, they are now old
-        old_population = std::move(newborns_population);
+        old_population = std::move(population_of_newborns);
 
         // init population of default empty newborns
-        newborns_population = std::vector<EvoIndividual>(boundary_conditions.global_generation_size);
+        population_of_newborns = std::vector<EvoIndividual>(boundary_conditions.global_generation_size);
     }
     EvoRegression::Log::get_logger()->info("Evolution process finished");
 }
