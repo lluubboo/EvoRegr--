@@ -32,6 +32,28 @@ public:
     };
 
     /**
+     * @brief Assignment operator for LRUCache.
+     * 
+     * This operator assigns the LRUCache object with the contents of another LRUCache object.
+     * It performs a deep copy of the LRUCache, including the internal list and map.
+     * 
+     * @param other The LRUCache object to be assigned from.
+     * @return Reference to the assigned LRUCache object.
+     */
+    LRUCache& operator=(const LRUCache& other) {
+        if (this != &other) {
+            _list = other._list;
+            _limit_size = other._limit_size;
+            _map.clear();
+            for (const auto& key : _list) {
+                auto it = other._map.find(key);
+                _map[key] = std::make_pair(it->second.first, std::find(_list.begin(), _list.end(), key));
+            }
+        }
+        return *this;
+    }
+
+    /**
      * Inserts a key-value pair into the cache.
      * If the key already exists in the cache, the value is updated.
      * If the cache is full, the least recently used item is removed.

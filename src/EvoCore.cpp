@@ -4,7 +4,7 @@
 #include "IOTools.hpp"
 #include "RandomChoices.hpp"
 #include "EvoResultPostprocessing.hpp"
-#include "LRUCache.hpp"
+
 
 EvoCore::EvoCore() :
     original_dataset(),
@@ -44,7 +44,7 @@ void EvoCore::set_boundary_conditions(EvoBoundaryConditions const& boundary_cond
 
 /**
  * Sets the solver for EvoCore.
- * 
+ *
  * @param solver_name The name of the solver to set.
  * Valid options are "LLT", "LDLT", and "ColPivHouseholderQr".
  * If an unrecognized solver name is provided, the default solver "LDLT" will be set.
@@ -70,12 +70,12 @@ void EvoCore::set_solver(std::string const& solver_name) {
 
 /**
  * @brief Loads a file and creates regression input from its contents.
- * 
+ *
  * This function reads a CSV file specified by the `filename` parameter and parses its contents
  * to create regression input. If an error occurs during the file processing, an appropriate error
  * message is logged. After successful processing, an information message is logged indicating that
  * the file has been loaded.
- * 
+ *
  * @param filename The path of the CSV file to be loaded.
  */
 void EvoCore::load_file(const std::string& filename) {
@@ -97,7 +97,7 @@ void EvoCore::load_file(const std::string& filename) {
         );
     }
 
-    EvoRegression::Log::get_logger()->info("File {} loaded",filename);
+    EvoRegression::Log::get_logger()->info("File {} loaded", filename);
 }
 
 /**
@@ -122,22 +122,30 @@ void EvoCore::call_predict_method() {
     log_result();
 }
 
-void EvoCore::predict() {
-
+/**
+ * Prepares the EvoCore object for the prediction process.
+ * This function initializes random engines, allocates memory for matrices,
+ * initializes caches for each island, creates the initial generation,
+ * and initializes the population of newborns.
+ */
+void EvoCore::prepare_for_prediction() {
+    EvoRegression::Log::get_logger()->info("Preparing for evolution process...");
     // random engines for each thread
-    auto random_engines = Random::create_random_engines(omp_get_max_threads());
+    random_engines = Random::create_random_engines(omp_get_max_threads());
     EvoRegression::Log::get_logger()->info("Random engines initilized");
 
     // allocated memory for matrices
-    std::vector<EvoRegression::EvoDataSet> compute_dataset(boundary_conditions.island_count, original_dataset);
+    EvoRegression::Log::get_logger()->info("Trying to allocate memory for matrices...");
+    compute_datasets = std::vector(boundary_conditions.island_count, original_dataset);
+    EvoRegression::Log::get_logger()->info("Memory allocated for matrices");
 
     // caches for each island
     unsigned int cache_size = boundary_conditions.island_generation_size * 10;
-    std::vector<LRUCache<std::string, double>> caches(boundary_conditions.island_count, LRUCache<std::string, double>(cache_size));
+    caches = std::vector<LRUCache<std::string, double>>(boundary_conditions.island_count, LRUCache<std::string, double>(cache_size));
     EvoRegression::Log::get_logger()->info("Island caches initialized with size {}", cache_size);
 
     // create old population as a genofond pool
-    std::vector<EvoIndividual> old_population(
+    pensioners = std::vector<EvoIndividual>(
         Factory::generate_random_generation(
             boundary_conditions.global_generation_size,
             original_dataset,
@@ -145,18 +153,27 @@ void EvoCore::predict() {
             solver
         )
     );
+    EvoRegression::Log::get_logger()->info("Generation zero created");
 
     // create population of newborns
-    std::vector<EvoIndividual> population_of_newborns(
+    newborns = std::vector<EvoIndividual>(
         boundary_conditions.global_generation_size
     );
+    EvoRegression::Log::get_logger()->info("Population of newborns initialized");
+    EvoRegression::Log::get_logger()->info("Preparation finished");
+}
+
+void EvoCore::predict() {
+
+    // initialize random engines, caches, containers, create gen zero...
+    prepare_for_prediction();
 
     EvoRegression::Log::get_logger()->info("Starting evolution process...");
     for (unsigned int gen_index = 0; gen_index < boundary_conditions.generation_count; gen_index++) {
 
         if (gen_index % boundary_conditions.migration_interval == 0 && gen_index != 0) {
             EvoRegression::Log::get_logger()->info("Migration in gen {} started...", gen_index);
-            Migration::short_distance_migration(old_population, boundary_conditions.migrants_count, random_engines);
+            Migration::short_distance_migration(pensioners, boundary_conditions.migrants_count, random_engines);
         }
 
 #pragma omp parallel for schedule(guided)
@@ -169,16 +186,16 @@ void EvoCore::predict() {
                 boundary_conditions.island_generation_size;
 
             // reset workspace to original state
-            compute_dataset[thread_id] = original_dataset;
+            compute_datasets[thread_id] = original_dataset;
 
             EvoIndividual newborn = Crossover::cross(
                 Selection::tournament_selection(
-                    old_population.begin() + lower_bound,
+                    pensioners.begin() + lower_bound,
                     boundary_conditions.island_generation_size,
                     random_engines[thread_id]
                 ),
                 Selection::tournament_selection(
-                    old_population.begin() + lower_bound,
+                    pensioners.begin() + lower_bound,
                     boundary_conditions.island_generation_size,
                     random_engines[thread_id]
                 ),
@@ -204,7 +221,7 @@ void EvoCore::predict() {
                 newborn.evaluate(
                     EvoMath::get_fitness<std::function<double(Eigen::MatrixXd const&, Eigen::VectorXd const&)>>(
                         Transform::data_transformation_robust(
-                            compute_dataset[thread_id],
+                            compute_datasets[thread_id],
                             newborn
                         ),
                         solver
@@ -213,27 +230,27 @@ void EvoCore::predict() {
                 caches[thread_id].put(genotype_key, newborn.fitness);
             }
 
-            population_of_newborns[entity_index] = std::move(newborn);
+            newborns[entity_index] = std::move(newborn);
         }
 
         // find best individual in population
-        for (const auto& newborn : population_of_newborns)
+        for (const auto& newborn : newborns)
         {
             titan_evaluation(newborn);
         }
 
         // move newoborns to old population, they are now old
-        old_population = std::move(population_of_newborns);
+        pensioners = std::move(newborns);
         // prepare new population of newborns
-        population_of_newborns.clear();
-        population_of_newborns.resize(boundary_conditions.global_generation_size);
+        newborns.clear();
+        newborns.resize(boundary_conditions.global_generation_size);
     }
     EvoRegression::Log::get_logger()->info("Evolution process finished");
 }
 
 /**
  * Checks if the EvoCore object is ready to perform predictions.
- * 
+ *
  * @return true if the original dataset has predictor and target data, false otherwise.
  */
 bool EvoCore::is_ready_to_predict() const {
@@ -242,12 +259,12 @@ bool EvoCore::is_ready_to_predict() const {
 
 /**
  * @brief Creates the regression input matrix from the given input tuple.
- * 
+ *
  * The regression input matrix consists of a predictor matrix and a target vector.
  * The predictor matrix is initialized with ones and contains the input data columns,
  * excluding the target column. The target vector is filled with the values from the
  * target column of the input data.
- * 
+ *
  * @param input The input tuple containing the number of input columns and the input data.
  */
 void EvoCore::create_regression_input(std::tuple<int, std::vector<double>> input) {
@@ -301,7 +318,7 @@ void EvoCore::titan_evaluation(EvoIndividual const& individual) {
  * Performs postprocessing for the Titan dataset.
  * This function applies data transformation to remove outliers from the original dataset,
  * and then solves the regression system using the transformed data.
- * 
+ *
  * @remarks This function assumes that the original dataset, titan, and the necessary transformations
  *          have already been initialized.
  */

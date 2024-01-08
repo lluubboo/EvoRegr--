@@ -5,6 +5,7 @@
 #include "RegressionSolver.hpp"
 #include "EvoLibrary.hpp"
 #include "EvoDataSet.hpp"
+#include "LRUCache.hpp"
 
 class EvoCore : public IEvoAPI {
 
@@ -13,6 +14,15 @@ class EvoCore : public IEvoAPI {
     EvoRegression::EvoDataSet titan_dataset_nonrobust; // dataset of titan with without robusting (deleting outliers)
 
     EvoBoundaryConditions boundary_conditions;
+
+    // population
+    std::vector<EvoIndividual> newborns;
+    std::vector<EvoIndividual> pensioners; // using only for reading genetic material
+
+    // tools
+    std::vector<XoshiroCpp::Xoshiro256Plus> random_engines;
+    std::vector<EvoRegression::EvoDataSet> compute_datasets;
+    std::vector<LRUCache<std::string, double>> caches;
 
     // solver functor
     std::function<double(Eigen::MatrixXd const&, Eigen::VectorXd const&)> solver;
@@ -26,6 +36,7 @@ class EvoCore : public IEvoAPI {
     void titan_evaluation(EvoIndividual const& individual);
     void titan_postprocessing();
     void predict();
+    void prepare_for_prediction();
     void log_result();
 
 public:
