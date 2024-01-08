@@ -129,7 +129,9 @@ void EvoCore::call_predict_method() {
  * and initializes the population of newborns.
  */
 void EvoCore::prepare_for_prediction() {
+
     EvoRegression::Log::get_logger()->info("Preparing for evolution process...");
+
     // random engines for each thread
     random_engines = Random::create_random_engines(omp_get_max_threads());
     EvoRegression::Log::get_logger()->info("Random engines initilized");
@@ -176,61 +178,69 @@ void EvoCore::predict() {
             Migration::short_distance_migration(pensioners, boundary_conditions.migrants_count, random_engines);
         }
 
+        // loop through islands
+        for (size_t island_index = 0; island_index < boundary_conditions.island_count; island_index++) {
+
+            std::array<int, 2> island_borders{
+                island_index* boundary_conditions.island_generation_size,
+                 ((island_index + 1)* boundary_conditions.island_generation_size) - 1
+            };
+
 #pragma omp parallel for schedule(guided)
-        for (size_t entity_index = 0; entity_index < boundary_conditions.global_generation_size; entity_index++) {
+            for (size_t entity_index = 0; entity_index < boundary_conditions.island_generation_size; entity_index++) {
 
-            size_t thread_id = omp_get_thread_num();
+                // indexes
+                size_t thread_id = omp_get_thread_num();
+                size_t global_index = island_borders[0] + entity_index;
 
-            //get island lower boundary
-            size_t lower_bound = (entity_index / boundary_conditions.island_generation_size) *
-                boundary_conditions.island_generation_size;
+                // reset workspace to original state
+                compute_datasets[thread_id] = original_dataset;
 
-            // reset workspace to original state
-            compute_datasets[thread_id] = original_dataset;
-
-            EvoIndividual newborn = Crossover::cross(
-                Selection::tournament_selection(
-                    pensioners.begin() + lower_bound,
-                    boundary_conditions.island_generation_size,
+                EvoIndividual newborn = Crossover::cross(
+                    Selection::tournament_selection(
+                        pensioners.begin() + island_borders[0],
+                        boundary_conditions.island_generation_size,
+                        random_engines[thread_id]
+                    ),
+                    Selection::tournament_selection(
+                        pensioners.begin() + island_borders[0],
+                        boundary_conditions.island_generation_size,
+                        random_engines[thread_id]
+                    ),
+                    original_dataset.predictor.cols(),
                     random_engines[thread_id]
-                ),
-                Selection::tournament_selection(
-                    pensioners.begin() + lower_bound,
-                    boundary_conditions.island_generation_size,
-                    random_engines[thread_id]
-                ),
-                original_dataset.predictor.cols(),
-                random_engines[thread_id]
-            );
-
-            Mutation::mutate(
-                newborn,
-                original_dataset.predictor.cols(),
-                original_dataset.predictor.rows(),
-                boundary_conditions.mutation_ratio,
-                random_engines[thread_id]
-            );
-
-            std::string genotype_key = newborn.to_string_code();
-
-            auto opt_fitness = caches[thread_id].get(genotype_key);
-            if (opt_fitness.has_value()) {
-                newborn.fitness = opt_fitness.value();
-            }
-            else {
-                newborn.evaluate(
-                    EvoMath::get_fitness<std::function<double(Eigen::MatrixXd const&, Eigen::VectorXd const&)>>(
-                        Transform::data_transformation_robust(
-                            compute_datasets[thread_id],
-                            newborn
-                        ),
-                        solver
-                    )
                 );
-                caches[thread_id].put(genotype_key, newborn.fitness);
-            }
 
-            newborns[entity_index] = std::move(newborn);
+                Mutation::mutate(
+                    newborn,
+                    original_dataset.predictor.cols(),
+                    original_dataset.predictor.rows(),
+                    boundary_conditions.mutation_ratio,
+                    random_engines[thread_id]
+                );
+
+                std::string genotype_key = newborn.to_string_code();
+
+                auto opt_fitness = caches[thread_id].get(genotype_key);
+
+                if (opt_fitness.has_value()) {
+                    newborn.fitness = opt_fitness.value();
+                }
+                else {
+                    newborn.evaluate(
+                        EvoMath::get_fitness<std::function<double(Eigen::MatrixXd const&, Eigen::VectorXd const&)>>(
+                            Transform::data_transformation_robust(
+                                compute_datasets[thread_id],
+                                newborn
+                            ),
+                            solver
+                        )
+                    );
+                    caches[thread_id].put(genotype_key, newborn.fitness);
+                }
+
+                newborns[global_index] = std::move(newborn);
+            }
         }
 
         // find best individual in population

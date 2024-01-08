@@ -15,7 +15,8 @@ if (CMAKE_BUILD_TYPE STREQUAL "Debug")
 elseif (CMAKE_BUILD_TYPE STREQUAL "Release")
     if(WIN32)
         set(CMAKE_EXE_LINKER_FLAGS "-mwindows")
-        add_compile_options(-march=native -flto -funroll-loops -fprefetch-loop-arrays)
+# -flto -funroll-loops -fprefetch-loop-arrays -mavx -mavx2
+add_compile_options(-march=native)
     else()
         # do nothing now
     endif()
