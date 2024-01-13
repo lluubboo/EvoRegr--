@@ -13,6 +13,7 @@ EvoCore::EvoCore() :
     boundary_conditions(),
     solver(LDLTSolver()),
     titan(),
+    island_titans(),
     titan_result()
 {}
 
@@ -101,6 +102,54 @@ void EvoCore::load_file(const std::string& filename) {
 }
 
 /**
+ * @brief Creates the regression input matrix from the given input tuple.
+ *
+ * The regression input matrix consists of a predictor matrix and a target vector.
+ * The predictor matrix is initialized with ones and contains the input data columns,
+ * excluding the target column. The target vector is filled with the values from the
+ * target column of the input data.
+ *
+ * @param input The input tuple containing the number of input columns and the input data.
+ */
+void EvoCore::create_regression_input(std::tuple<int, std::vector<double>> input) {
+
+    std::vector<double> data = std::get<1>(input);
+
+    //input matrix columns (with target column)
+    int n_input{ std::get<0>(input) };
+    int m_input{ static_cast<int>(data.size()) / n_input };
+
+    // predictor matrix column count (n_input - 1 (because of target column) + 1 + interaction columns)
+    int n_output = n_input + boundary_conditions.interaction_cols;
+
+    // mark y column indexed from 0 (is last every time)
+    int target_col_index = n_input - 1;
+
+    // initialize predictors matrix to matrix of ones because of x0 and interaction columns
+    original_dataset.predictor = Eigen::MatrixXd::Ones(m_input, n_output);
+    original_dataset.target.resize(m_input, 1);
+
+    for (int row = 0; row < m_input; ++row) {
+        for (int col = 0; col < n_input; ++col) {
+            // last column is always Y or in other words regressant, dependant variable
+            if (col == target_col_index) {
+                original_dataset.target(row, 0) = data[col + n_input * row];
+            }
+            // fil predictors (first is x0 column of 1, last are interaction filled default to 1 too - but they are able to mutate)
+            if (col < target_col_index) {
+                original_dataset.predictor(row, col + 1) = data[col + n_input * row];
+            }
+        }
+    }
+
+    EvoRegression::Log::get_logger()->info(
+        "Predictor matrix initialized with {} rows and {} columns",
+        original_dataset.predictor.rows(),
+        original_dataset.predictor.cols()
+    );
+}
+
+/**
  * Calls the predict method to perform prediction and logs the elapsed time.
  * After prediction, it performs post-processing and logs the result.
  */
@@ -146,6 +195,10 @@ void EvoCore::prepare_for_prediction() {
     caches = std::vector<LRUCache<std::string, double>>(boundary_conditions.island_count, LRUCache<std::string, double>(cache_size));
     EvoRegression::Log::get_logger()->info("Island caches initialized with size {}", cache_size);
 
+    // titans
+    island_titans = std::vector<EvoIndividual>(boundary_conditions.island_count);
+    EvoRegression::Log::get_logger()->info("Island titans initialized");
+
     // create old population as a genofond pool
     pensioners = std::vector<EvoIndividual>(
         Factory::generate_random_generation(
@@ -182,10 +235,11 @@ void EvoCore::predict() {
         for (size_t island_index = 0; island_index < boundary_conditions.island_count; island_index++) {
 
             std::array<int, 2> island_borders{
-                island_index* boundary_conditions.island_generation_size,
-                 ((island_index + 1)* boundary_conditions.island_generation_size) - 1
+                island_index * boundary_conditions.island_generation_size,
+                 ((island_index + 1) * boundary_conditions.island_generation_size) - 1
             };
 
+            // loop through entities in island
 #pragma omp parallel for schedule(guided)
             for (size_t entity_index = 0; entity_index < boundary_conditions.island_generation_size; entity_index++) {
 
@@ -242,20 +296,48 @@ void EvoCore::predict() {
                 newborns[global_index] = std::move(newborn);
             }
         }
-
-        // find best individual in population
-        for (const auto& newborn : newborns)
-        {
-            titan_evaluation(newborn);
-        }
-
         // move newoborns to old population, they are now old
         pensioners = std::move(newborns);
         // prepare new population of newborns
         newborns.clear();
         newborns.resize(boundary_conditions.global_generation_size);
+        rank_past_generation();
     }
+    rank_island_titans();
     EvoRegression::Log::get_logger()->info("Evolution process finished");
+}
+
+/**
+ * Ranks the individuals in the past generation based on their fitness and updates the island titans.
+ * Each individual is assigned to an island based on its index in the pensioners vector.
+ * If an individual has a lower fitness than the current titan of its assigned island, it becomes the new titan.
+ */
+void EvoCore::rank_past_generation() {
+    // loop through islands and evaluate island titan
+#pragma omp parallel for schedule(guided)
+    for (size_t entity_index = 0; entity_index < pensioners.size(); entity_index++) {
+        // integer division in C++ rounds down to the nearest integer
+        size_t island_index = entity_index / boundary_conditions.island_generation_size;
+        // get reference to entity
+        EvoIndividual const& entity = pensioners[entity_index];
+        if (entity.fitness < island_titans[island_index].fitness) {
+            EvoRegression::Log::get_logger()->info("New titan with fitness {} found in island {}", entity.fitness, island_index);
+#pragma omp critical
+            island_titans[island_index] = entity;
+        }
+    }
+}
+
+/**
+ * Ranks the island titans based on their fitness.
+ * For each island titan, it performs titan evaluation and logs the fitness.
+ */
+void EvoCore::rank_island_titans() {
+    unsigned int island_index = 0;
+    for (auto const& island_titan : island_titans) {
+        titan_evaluation(island_titan);
+        EvoRegression::Log::get_logger()->info("Titan from island {} has fitness {}", island_index++, island_titan.fitness);
+    }
 }
 
 /**
@@ -267,57 +349,8 @@ bool EvoCore::is_ready_to_predict() const {
     return original_dataset.predictor.size() > 0 && original_dataset.target.size() > 0;
 }
 
-/**
- * @brief Creates the regression input matrix from the given input tuple.
- *
- * The regression input matrix consists of a predictor matrix and a target vector.
- * The predictor matrix is initialized with ones and contains the input data columns,
- * excluding the target column. The target vector is filled with the values from the
- * target column of the input data.
- *
- * @param input The input tuple containing the number of input columns and the input data.
- */
-void EvoCore::create_regression_input(std::tuple<int, std::vector<double>> input) {
-
-    std::vector<double> data = std::get<1>(input);
-
-    //input matrix columns (with target column)
-    int n_input{ std::get<0>(input) };
-    int m_input{ static_cast<int>(data.size()) / n_input };
-
-    // predictor matrix column count (n_input - 1 (because of target column) + 1 + interaction columns)
-    int n_output = n_input + boundary_conditions.interaction_cols;
-
-    // mark y column indexed from 0 (is last every time)
-    int target_col_index = n_input - 1;
-
-    // initialize predictors matrix to matrix of ones because of x0 and interaction columns
-    original_dataset.predictor = Eigen::MatrixXd::Ones(m_input, n_output);
-    original_dataset.target.resize(m_input, 1);
-
-    for (int row = 0; row < m_input; ++row) {
-        for (int col = 0; col < n_input; ++col) {
-            // last column is always Y or in other words regressant, dependant variable
-            if (col == target_col_index) {
-                original_dataset.target(row, 0) = data[col + n_input * row];
-            }
-            // fil predictors (first is x0 column of 1, last are interaction filled default to 1 too - but they are able to mutate)
-            if (col < target_col_index) {
-                original_dataset.predictor(row, col + 1) = data[col + n_input * row];
-            }
-        }
-    }
-
-    EvoRegression::Log::get_logger()->info(
-        "Predictor matrix initialized with {} rows and {} columns",
-        original_dataset.predictor.rows(),
-        original_dataset.predictor.cols()
-    );
-}
-
 void EvoCore::setTitan(EvoIndividual titan) {
     this->titan = titan;
-    EvoRegression::Log::get_logger()->info("New titan found with fitness {}", titan.fitness);
 }
 
 void EvoCore::titan_evaluation(EvoIndividual const& individual) {

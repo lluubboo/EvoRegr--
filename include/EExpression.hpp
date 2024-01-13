@@ -119,7 +119,7 @@ class EExpression {
      */
     template<typename Engine>
     inline std::array<char, 2> get_random_operand(Engine& engine) {
-        std::uniform_int_distribution<int> distribution(0, 3);
+        std::uniform_int_distribution<int> distribution(0, 10);
         if (distribution(engine) == 0) {
             return get_random_constant(engine);
         }
@@ -239,6 +239,17 @@ public:
         other._expr_leaf_count = 0;
     }
 
+    EExpression& operator=(const EExpression& other) {
+        if (this != &other) {
+            _var_count = other._var_count;
+            _expr_leaf_count = other._expr_leaf_count;
+            _expression = other._expression;
+            _variables = other._variables;
+            _constants = other._constants;
+        }
+        return *this;
+    }
+
     Eigen::VectorXd evaluate_expression(Eigen::MatrixXd const& data) const {
 
         // the stack is used to store the operands
@@ -291,5 +302,25 @@ public:
             return;
         }
         _constants = std::move(constants);
+    }
+
+    bool empty() const noexcept {
+        return _expression.empty();
+    }
+
+    std::string get_expression() const {
+        std::string result;
+        for (const auto& symbol : _expression) {
+            if (symbol[0] == 'b') {
+                result += std::string(1, symbol[1]);
+            }
+            else if (symbol[0] == 'c') {
+                result += std::to_string(_constants[symbol[1] - '0']);
+            }
+            else if (symbol[0] == 'v') {
+                result += "v" + std::to_string(_variables[symbol[1] - '0']);
+            }
+        }
+        return result;
     }
 };

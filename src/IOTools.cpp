@@ -15,13 +15,19 @@ std::tuple<int, std::vector<T>> parse_csv(const std::string& filename) {
     if (!file.good()) {
         throw std::runtime_error("File cannot be opened");
     }
+
+    // Determine the delimiter
+    std::string firstLine;
+    std::getline(file, firstLine);
+    char delimiter = firstLine.find(';') != std::string::npos ? ';' : ',';
+
     file.close();
 
     std::vector<T> data;
     csv::CSVFileInfo info;
     info = csv::get_file_info(filename);
     csv::CSVFormat format;
-    csv::CSVReader reader(filename, format.delimiter(';').header_row(0));
+    csv::CSVReader reader(filename, format.delimiter(delimiter).header_row(0));
 
     for (csv::CSVRow& row : reader) {
         for (csv::CSVField& field : row) {

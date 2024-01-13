@@ -32,7 +32,7 @@ EvoGene::~EvoGene() {}
  * 
  * @param index The index of the MergeAllele object.
  */
-MergeAllele::MergeAllele(int index) : EvoGene(index), allele{} {}
+MergeAllele::MergeAllele(int index) : EvoGene(index), allele() {}
 
 /**
  * @brief Destructor for the MergeAllele class.
@@ -48,35 +48,7 @@ MergeAllele::~MergeAllele() {}
  * @param matrix The matrix to be transformed.
  */
 void MergeAllele::transform(Eigen::MatrixXd& matrix) const {
-    //create copy of matrix
-    Eigen::MatrixXd original_matrix = matrix;
-    for (auto const& twin : allele) {
-        modifyMatrixAccordingToTwin(twin, matrix, original_matrix);
-    }
-}
-
-/**
- * Modifies the given matrix according to the provided twin using the specified merge operator.
- * 
- * @param twin The twin containing the merge operator and merge column information.
- * @param matrix The matrix to be modified.
- * @param original_matrix The original matrix used for merging.
- */
-void MergeAllele::modifyMatrixAccordingToTwin(MergeTwin const& twin, Eigen::MatrixXd& matrix, Eigen::MatrixXd const& original_matrix) const {
-    switch (twin.merge_operator) {
-    case Merge_operator::Add:
-        matrix.col(column_index).array() += original_matrix.col(twin.merge_column).array();
-        break;
-    case Merge_operator::Sub:
-        matrix.col(column_index).array() -= original_matrix.col(twin.merge_column).array();
-        break;
-    case Merge_operator::Mul:
-        matrix.col(column_index).array() *= original_matrix.col(twin.merge_column).array();
-        break;
-    case Merge_operator::Div:
-        matrix.col(column_index).array() /= original_matrix.col(twin.merge_column).array();
-        break;
-    }
+    if (!allele.empty()) matrix.col(column_index) = allele.evaluate_expression(matrix);
 }
 
 /**
@@ -87,16 +59,7 @@ void MergeAllele::modifyMatrixAccordingToTwin(MergeTwin const& twin, Eigen::Matr
  * @return The string representation of the MergeAllele object.
  */
 std::string MergeAllele::to_string() const {
-    std::string sallele;
-    if (allele.empty()) {
-        return "(col" + std::to_string(column_index) + ")";
-    } else {
-        sallele = std::string(allele.size(), '(') + "col" + std::to_string(column_index);
-        for (auto const& twin : allele) {
-            sallele += merge_operator_symbols.at(twin.merge_operator) + "col" + std::to_string(twin.merge_column) + ")";
-        }
-        return sallele;
-    }
+    return "(" + allele.get_expression() + ")";
 }
 
 /**
@@ -108,13 +71,7 @@ std::string MergeAllele::to_string() const {
  * @return The string representation of the MergeAllele object.
  */
 std::string MergeAllele::to_string_code() const {
-    std::string sallele("MA");
-    sallele += std::to_string(column_index);
-    for (auto const& twin : allele) {
-        sallele += merge_operator_names.at(twin.merge_operator);
-        sallele += std::to_string(twin.merge_column);
-    }
-    return sallele;
+    return allele.get_expression();
 }
 
 /*****************************************TransformXAllele*************************************/

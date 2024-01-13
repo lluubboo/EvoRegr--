@@ -125,15 +125,7 @@ MergeAllele Factory::getRandomMergeAllele(int column_index, int predictor_column
     MergeAllele merge_allele{ column_index };
     // column index 0 marks x0 (no merging)
     if (column_index != 0) {
-        std::vector<int> free_cols(predictor_column_count);
-        std::iota(begin(free_cols), end(free_cols), 0);
-        free_cols.erase(std::find(free_cols.begin(), free_cols.end(), column_index));
-        std::shuffle(free_cols.begin(), free_cols.end(), random_engine);
-        int number_of_cols_to_merge = RandomNumbers::rand_interval_int(0, predictor_column_count - 1, random_engine);
-        for (int i = 0; i < number_of_cols_to_merge; i++) {
-            merge_allele.allele.emplace_back(free_cols.back(), Merge_operator(RandomNumbers::rand_interval_int(0, merge_operator_maxindex, random_engine)));
-            free_cols.pop_back();
-        }
+        merge_allele.allele = EExpression{ predictor_column_count, predictor_column_count * 0.75, random_engine};
     }
     return merge_allele;
 };

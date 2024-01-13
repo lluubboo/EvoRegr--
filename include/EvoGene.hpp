@@ -3,23 +3,9 @@
 #include <map>
 #include <Eigen/Dense>
 #include "XoshiroCpp.hpp"
+#include "EExpression.hpp"
 
-enum class Merge_operator { Add, Sub, Mul, Div };
 enum class Transform_operator { Sqr, Cub, Pow, Wek, Sqt, Csqt, Let, Log, Log10, Log2, Nul };
-
-const std::map<Merge_operator, std::string> merge_operator_names{
-    {Merge_operator::Add, "Add"},
-    {Merge_operator::Sub, "Sub"} ,
-    {Merge_operator::Mul, "Mul"},
-    {Merge_operator::Div, "Div"}
-};
-
-const std::map<Merge_operator, std::string> merge_operator_symbols{
-    {Merge_operator::Add, "+"},
-    {Merge_operator::Sub, "-"} ,
-    {Merge_operator::Mul, "*"},
-    {Merge_operator::Div, "/"}
-};
 
 const std::map<Transform_operator, std::string> transform_operator_names{
     {Transform_operator::Sqr, "Sqr"} ,
@@ -53,12 +39,6 @@ inline constexpr int merge_operator_maxindex = 3;
 inline constexpr int transform_operator_maxindex = 10;
 inline constexpr int transform_y_operator_maxindex = 9;
 
-struct MergeTwin {
-    int merge_column;
-    Merge_operator merge_operator;
-};
-
-
 class EvoGene {
 public:
     EvoGene();
@@ -78,11 +58,10 @@ class MergeAllele : EvoGene {
 public:
     MergeAllele(int);
     ~MergeAllele();
-    void modifyMatrixAccordingToTwin(MergeTwin const&, Eigen::MatrixXd&, Eigen::MatrixXd const&) const;
     void transform(Eigen::MatrixXd&) const override;
     std::string to_string() const override;
     std::string to_string_code() const override;
-    std::vector<MergeTwin> allele;
+    EExpression allele;
 };
 
 

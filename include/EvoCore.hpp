@@ -15,7 +15,7 @@ class EvoCore : public IEvoAPI {
 
     EvoBoundaryConditions boundary_conditions;
 
-    // population
+    // population containers
     std::vector<EvoIndividual> newborns;
     std::vector<EvoIndividual> pensioners; // using only for reading genetic material
 
@@ -29,14 +29,20 @@ class EvoCore : public IEvoAPI {
 
     // titan 
     EvoIndividual titan;
+    std::vector<EvoIndividual> island_titans;
     RegressionDetailedResult titan_result;
 
     void create_regression_input(std::tuple<int, std::vector<double>>);
+
+    void prepare_for_prediction();
+    void predict();
+    void rank_past_generation();
+    void rank_island_titans();
+
     void setTitan(EvoIndividual);
     void titan_evaluation(EvoIndividual const& individual);
     void titan_postprocessing();
-    void predict();
-    void prepare_for_prediction();
+
     void log_result();
 
 public:
