@@ -7,8 +7,6 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED On)
 set(CMAKE_CXX_EXTENSIONS Off)
 
-set(CMAKE_BUILD_TYPE Release)
-
 if (CMAKE_BUILD_TYPE STREQUAL "Debug") 
     #-Weffc++
     add_compile_options(-Wall -Wpedantic -Wextra -fexceptions)
