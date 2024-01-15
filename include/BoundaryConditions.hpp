@@ -1,19 +1,23 @@
 #pragma once
 #include <cstddef>
+#include <vector>
+#include <array>
 
 /**
  * @brief Struct representing the boundary conditions for the evolutionary algorithm.
  */
 struct EvoBoundaryConditions {
-    size_t island_generation_size;          ///< The island generation size.
-    size_t generation_count;                ///< The maximum number of generations.
-    size_t interaction_cols;                ///< The number of columns used for interaction.
-    size_t mutation_ratio;                  ///< The mutation ratio as a percentage.
-    size_t island_count;                    ///< The number of islands in the algorithm.
-    size_t migration_ratio;                 ///< The migration ratio as a percentage.
-    size_t migration_interval;              ///< The interval at which migration occurs.
-    size_t global_generation_size;          ///< The maximum size of the global generation.
-    size_t migrants_count;                  ///< The number of migrants in each migration.
+    size_t island_generation_size;         
+    size_t generation_count;              
+    size_t interaction_cols;             
+    size_t mutation_ratio;                 
+    size_t island_count;               
+    size_t migration_ratio;             
+    size_t migration_interval;             
+    size_t global_generation_size;         
+    size_t migrants_count;                 
+    size_t elites_count;
+    std::vector<std::array<size_t, 2>> island_borders;
 
     EvoBoundaryConditions() :
         island_generation_size(100),
@@ -24,8 +28,18 @@ struct EvoBoundaryConditions {
         migration_ratio(5),
         migration_interval(5),
         global_generation_size(island_generation_size* island_count),
-        migrants_count(static_cast<size_t>((global_generation_size * migration_ratio) / 100))
-    {}
+        migrants_count(static_cast<size_t>((global_generation_size* migration_ratio) / 100)),
+        elites_count(static_cast<size_t>((island_generation_size * 5) / 100)),
+        island_borders(0)
+    {
+
+        // Initialize island_borders
+        for (size_t i = 0; i < island_count; ++i) {
+            size_t start = i * island_generation_size;
+            size_t end = start + island_generation_size - 1;
+            island_borders.push_back({start, end});
+        }
+    }
 
     EvoBoundaryConditions(
         size_t island_generation_size,
@@ -44,6 +58,17 @@ struct EvoBoundaryConditions {
         migration_ratio(migration_ratio),
         migration_interval(migration_interval),
         global_generation_size(island_generation_size* island_count),
-        migrants_count(static_cast<size_t>((global_generation_size* migration_ratio) / 100))
-    {}
+        migrants_count(static_cast<size_t>((global_generation_size* migration_ratio) / 100)),
+        elites_count(static_cast<size_t>((island_generation_size * 5) / 100)),
+        island_borders(0)
+    {
+
+        // Initialize island_borders
+
+        for (size_t i = 0; i < island_count; ++i) {
+            size_t start = i * island_generation_size;
+            size_t end = start + island_generation_size - 1;
+            island_borders.push_back({start, end});
+        }
+    }
 };

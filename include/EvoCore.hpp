@@ -1,11 +1,13 @@
 #pragma once
+#include <set>
 #include "IEvoAPI.hpp"
 #include "BoundaryConditions.hpp"
-#include "EvoPopulation.hpp"
+#include "EvoIndividual.hpp"
 #include "RegressionSolver.hpp"
 #include "EvoLibrary.hpp"
 #include "EvoDataSet.hpp"
 #include "LRUCache.hpp"
+
 
 class EvoCore : public IEvoAPI {
 
@@ -18,6 +20,7 @@ class EvoCore : public IEvoAPI {
     // population containers
     std::vector<EvoIndividual> newborns;
     std::vector<EvoIndividual> pensioners; // using only for reading genetic material
+    std::vector <std::set<EvoIndividual>> island_gen_elite_groups;
 
     // tools
     std::vector<XoshiroCpp::Xoshiro256Plus> random_engines;
@@ -37,7 +40,8 @@ class EvoCore : public IEvoAPI {
     void prepare_for_prediction();
     void predict();
     void rank_past_generation();
-    void rank_island_titans();
+    void find_titan();
+    void move_elites();
 
     void setTitan(EvoIndividual);
     void titan_evaluation(EvoIndividual const& individual);

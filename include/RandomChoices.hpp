@@ -4,7 +4,7 @@
 #include <algorithm>
 #include "RandomNumberGenerator.hpp"
 #include "XoshiroCpp.hpp"
-#include "EvoPopulation.hpp"
+#include "EvoIndividual.hpp"
 
 namespace Random {
 

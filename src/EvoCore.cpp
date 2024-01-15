@@ -173,9 +173,6 @@ void EvoCore::call_predict_method() {
 
 /**
  * Prepares the EvoCore object for the prediction process.
- * This function initializes random engines, allocates memory for matrices,
- * initializes caches for each island, creates the initial generation,
- * and initializes the population of newborns.
  */
 void EvoCore::prepare_for_prediction() {
 
@@ -198,6 +195,9 @@ void EvoCore::prepare_for_prediction() {
     // titans
     island_titans = std::vector<EvoIndividual>(boundary_conditions.island_count);
     EvoRegression::Log::get_logger()->info("Island titans initialized");
+
+    //elites 
+    island_gen_elite_groups = std::vector<std::set<EvoIndividual>>(boundary_conditions.island_count);
 
     // create old population as a genofond pool
     pensioners = std::vector<EvoIndividual>(
@@ -301,29 +301,76 @@ void EvoCore::predict() {
         // prepare new population of newborns
         newborns.clear();
         newborns.resize(boundary_conditions.global_generation_size);
+
         rank_past_generation();
+        move_elites();
     }
-    rank_island_titans();
+
+    find_titan();
     EvoRegression::Log::get_logger()->info("Evolution process finished");
 }
 
-/**
- * Ranks the individuals in the past generation based on their fitness and updates the island titans.
- * Each individual is assigned to an island based on its index in the pensioners vector.
- * If an individual has a lower fitness than the current titan of its assigned island, it becomes the new titan.
- */
 void EvoCore::rank_past_generation() {
-    // loop through islands and evaluate island titan
+
+    //clear elite groups because of previous generation
+
+    for (auto& elite_group : island_gen_elite_groups) {
+        elite_group.clear();
+    }
+
+    // create group of generation elites for each island
+
 #pragma omp parallel for schedule(guided)
-    for (size_t entity_index = 0; entity_index < pensioners.size(); entity_index++) {
-        // integer division in C++ rounds down to the nearest integer
-        size_t island_index = entity_index / boundary_conditions.island_generation_size;
-        // get reference to entity
-        EvoIndividual const& entity = pensioners[entity_index];
-        if (entity.fitness < island_titans[island_index].fitness) {
-            EvoRegression::Log::get_logger()->info("New titan with fitness {} found in island {}", entity.fitness, island_index);
-#pragma omp critical
-            island_titans[island_index] = entity;
+    for (size_t island_index = 0; island_index < boundary_conditions.island_count; island_index++) {
+
+        auto const& island_borders = boundary_conditions.island_borders[island_index];
+        auto & island_gen_elite_group = island_gen_elite_groups[island_index];
+
+        for (size_t entity_index = island_borders[0]; entity_index <= island_borders[1]; entity_index++) {
+
+            EvoIndividual const& entity = pensioners[entity_index];
+
+            if (island_gen_elite_group.empty() || entity.fitness < island_gen_elite_group.rbegin()->fitness) { // Check if the current entity is better than the worst elite
+                {
+
+                    if (island_gen_elite_group.size() == boundary_conditions.elites_count) { // If the elite group is full, remove the worst elite
+                        island_gen_elite_group.erase(--island_gen_elite_group.end());
+                    }
+
+                    island_gen_elite_group.insert(entity);
+                }
+            }
+        }
+    }
+
+    // check if generational elites group contains all-time island titan
+    for (size_t island_index = 0; island_index < boundary_conditions.island_count; island_index++) {
+
+        if (island_gen_elite_groups[island_index].begin()->fitness < island_titans[island_index].fitness)
+        {
+            island_titans[island_index] = *island_gen_elite_groups[island_index].begin();
+            EvoRegression::Log::get_logger()->info("New titan from island {} has fitness {}", island_index, island_titans[island_index].fitness);
+        }
+    }
+}
+
+void EvoCore::move_elites() {
+#pragma omp parallel for schedule(guided)
+    for (size_t island_index = 0; island_index < boundary_conditions.island_count; island_index++) {
+
+        auto const& elite_group = island_gen_elite_groups[island_index];
+
+        //copy each elite individual at random position in island
+
+        for (auto const& elite : elite_group) {
+
+            size_t random_island_position = RandomNumbers::rand_interval_int(
+                boundary_conditions.island_borders[island_index][0],
+                boundary_conditions.island_borders[island_index][1],
+                random_engines[0]
+            );
+
+            pensioners[random_island_position] = elite;
         }
     }
 }
@@ -332,11 +379,11 @@ void EvoCore::rank_past_generation() {
  * Ranks the island titans based on their fitness.
  * For each island titan, it performs titan evaluation and logs the fitness.
  */
-void EvoCore::rank_island_titans() {
-    unsigned int island_index = 0;
+void EvoCore::find_titan() {
+    int island_index = 0;
     for (auto const& island_titan : island_titans) {
         titan_evaluation(island_titan);
-        EvoRegression::Log::get_logger()->info("Titan from island {} has fitness {}", island_index++, island_titan.fitness);
+        EvoRegression::Log::get_logger()->info("All-time titan from island {} has fitness {}", island_index++, island_titan.fitness);
     }
 }
 

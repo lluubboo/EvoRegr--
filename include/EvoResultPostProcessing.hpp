@@ -1,7 +1,7 @@
 #include <Eigen/Dense>
 #include <string>
 #include <vector>
-#include "EvoPopulation.hpp"
+#include "EvoIndividual.hpp"
 #include "Plotter.hpp"
 #include "EvoDataSet.hpp"
 

@@ -1,6 +1,6 @@
 #include <algorithm>
 #include <mutex>
-#include "EvoPopulation.hpp"
+#include "EvoIndividual.hpp"
 #include "RandomChoices.hpp"
 
 /**
@@ -107,4 +107,12 @@ std::string EvoIndividual::to_string_code() const {
     // robuster chromosome
     string_genome.append(robuster_chromosome.at(0).to_string_code());
     return string_genome;
+}
+
+bool EvoIndividual::operator<(const EvoIndividual& other) const {
+    return fitness < other.fitness;
+}
+
+bool EvoIndividual::operator>(const EvoIndividual& other) const {
+    return fitness > other.fitness;
 }

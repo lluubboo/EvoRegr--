@@ -30,6 +30,9 @@ public:
     std::vector<TransformYAllele> y_transformer_chromosome;
     std::vector<RobustAllele> robuster_chromosome;
 
+    bool operator<(const EvoIndividual& other) const;
+    bool operator>(const EvoIndividual& other) const;
+
     double fitness;
     bool is_healthy;
 };

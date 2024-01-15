@@ -3,7 +3,7 @@
 #include <vector>
 #include <span>
 #include <functional>
-#include "EvoPopulation.hpp"
+#include "EvoIndividual.hpp"
 #include "EvoGene.hpp"
 #include "XoshiroCpp.hpp"
 #include "RegressionSolver.hpp"
