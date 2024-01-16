@@ -42,7 +42,9 @@ class EvoCore : public IEvoAPI {
     void rank_past_generation();
     void find_titan();
     void move_elites();
+    void clear_elite_groups();
 
+    void log_island_titans(int);
     void setTitan(EvoIndividual);
     void titan_evaluation(EvoIndividual const& individual);
     void titan_postprocessing();

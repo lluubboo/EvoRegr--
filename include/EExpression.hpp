@@ -94,21 +94,6 @@ class EExpression {
     }
 
     /**
-     * Generates a random constant using the specified engine.
-     * The generated constant is in the form of a character array with two elements.
-     * The first element is always 'c', and the second element is a digit representing the constant index.
-     *
-     * @param engine The engine used for random number generation.
-     * @return A character array representing the random constant.
-     */
-    template<typename Engine>
-    inline std::array<char, 2> get_random_constant(Engine& engine) {
-        std::uniform_real_distribution<double> distribution(std::nextafter(0.0, 1.0), 100000.0);
-        _constants.push_back(distribution(engine));
-        return { 'c', static_cast<char>('0' + _constants.size() - 1) };
-    }
-
-    /**
      * Generates a random operand.
      * 
      * This function generates a random operand for an expression. The operand can be either a constant or a variable.
@@ -119,7 +104,7 @@ class EExpression {
      */
     template<typename Engine>
     inline std::array<char, 2> get_random_operand(Engine& engine) {
-        std::uniform_int_distribution<int> distribution(0, 10);
+        std::uniform_int_distribution<int> distribution(0, 5);
         if (distribution(engine) == 0) {
             return get_random_constant(engine);
         }
@@ -140,6 +125,21 @@ class EExpression {
     inline std::array<char, 2> get_random_variable(Engine& engine) {
         std::uniform_int_distribution<int> distribution(0, _var_count - 1);
         return { 'v', static_cast<char>('0' + distribution(engine)) };
+    }
+
+    /**
+     * Generates a random constant using the specified engine.
+     * The generated constant is in the form of a character array with two elements.
+     * The first element is always 'c', and the second element is a digit representing the constant index.
+     *
+     * @param engine The engine used for random number generation.
+     * @return A character array representing the random constant.
+     */
+    template<typename Engine>
+    inline std::array<char, 2> get_random_constant(Engine& engine) {
+        std::uniform_real_distribution<double> distribution(std::nextafter(0.0, 1.0), 100000.0);
+        _constants.push_back(distribution(engine));
+        return { 'c', static_cast<char>('0' + _constants.size() - 1) };
     }
 
     /**

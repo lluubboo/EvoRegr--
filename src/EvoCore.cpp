@@ -231,33 +231,32 @@ void EvoCore::predict() {
             Migration::short_distance_migration(pensioners, boundary_conditions.migrants_count, random_engines);
         }
 
+        if (gen_index % 20 == 0 && gen_index != 0) {
+            log_island_titans(gen_index);
+        }
+
         // loop through islands
+#pragma omp parallel for schedule(guided)
         for (size_t island_index = 0; island_index < boundary_conditions.island_count; island_index++) {
 
-            std::array<int, 2> island_borders{
-                island_index * boundary_conditions.island_generation_size,
-                 ((island_index + 1) * boundary_conditions.island_generation_size) - 1
-            };
-
             // loop through entities in island
-#pragma omp parallel for schedule(guided)
-            for (size_t entity_index = 0; entity_index < boundary_conditions.island_generation_size; entity_index++) {
+
+            for (size_t entity_index = boundary_conditions.island_borders[island_index][0]; entity_index <= boundary_conditions.island_borders[island_index][1]; entity_index++) {
 
                 // indexes
                 size_t thread_id = omp_get_thread_num();
-                size_t global_index = island_borders[0] + entity_index;
 
                 // reset workspace to original state
-                compute_datasets[thread_id] = original_dataset;
+                compute_datasets[island_index] = original_dataset;
 
                 EvoIndividual newborn = Crossover::cross(
                     Selection::tournament_selection(
-                        pensioners.begin() + island_borders[0],
+                        pensioners.begin() + boundary_conditions.island_borders[island_index][0],
                         boundary_conditions.island_generation_size,
                         random_engines[thread_id]
                     ),
                     Selection::tournament_selection(
-                        pensioners.begin() + island_borders[0],
+                        pensioners.begin() + boundary_conditions.island_borders[island_index][0],
                         boundary_conditions.island_generation_size,
                         random_engines[thread_id]
                     ),
@@ -275,7 +274,7 @@ void EvoCore::predict() {
 
                 std::string genotype_key = newborn.to_string_code();
 
-                auto opt_fitness = caches[thread_id].get(genotype_key);
+                auto opt_fitness = caches[island_index].get(genotype_key);
 
                 if (opt_fitness.has_value()) {
                     newborn.fitness = opt_fitness.value();
@@ -284,16 +283,16 @@ void EvoCore::predict() {
                     newborn.evaluate(
                         EvoMath::get_fitness<std::function<double(Eigen::MatrixXd const&, Eigen::VectorXd const&)>>(
                             Transform::data_transformation_robust(
-                                compute_datasets[thread_id],
+                                compute_datasets[island_index],
                                 newborn
                             ),
                             solver
                         )
                     );
-                    caches[thread_id].put(genotype_key, newborn.fitness);
+                    caches[island_index].put(genotype_key, newborn.fitness);
                 }
 
-                newborns[global_index] = std::move(newborn);
+                newborns[entity_index] = std::move(newborn);
             }
         }
         // move newoborns to old population, they are now old
@@ -302,6 +301,7 @@ void EvoCore::predict() {
         newborns.clear();
         newborns.resize(boundary_conditions.global_generation_size);
 
+        clear_elite_groups();
         rank_past_generation();
         move_elites();
     }
@@ -311,14 +311,7 @@ void EvoCore::predict() {
 }
 
 void EvoCore::rank_past_generation() {
-
-    //clear elite groups because of previous generation
-
-    for (auto& elite_group : island_gen_elite_groups) {
-        elite_group.clear();
-    }
-
-    // create group of generation elites for each island
+    // find group of generation elites for each island
 
 #pragma omp parallel for schedule(guided)
     for (size_t island_index = 0; island_index < boundary_conditions.island_count; island_index++) {
@@ -342,15 +335,11 @@ void EvoCore::rank_past_generation() {
             }
         }
     }
+}
 
-    // check if generational elites group contains all-time island titan
-    for (size_t island_index = 0; island_index < boundary_conditions.island_count; island_index++) {
-
-        if (island_gen_elite_groups[island_index].begin()->fitness < island_titans[island_index].fitness)
-        {
-            island_titans[island_index] = *island_gen_elite_groups[island_index].begin();
-            EvoRegression::Log::get_logger()->info("New titan from island {} has fitness {}", island_index, island_titans[island_index].fitness);
-        }
+void EvoCore::clear_elite_groups() {
+    for (auto& elite_group : island_gen_elite_groups) {
+        elite_group.clear();
     }
 }
 
@@ -380,10 +369,16 @@ void EvoCore::move_elites() {
  * For each island titan, it performs titan evaluation and logs the fitness.
  */
 void EvoCore::find_titan() {
-    int island_index = 0;
-    for (auto const& island_titan : island_titans) {
-        titan_evaluation(island_titan);
-        EvoRegression::Log::get_logger()->info("All-time titan from island {} has fitness {}", island_index++, island_titan.fitness);
+    for (auto const& elite_group : island_gen_elite_groups) {
+        titan_evaluation(*elite_group.begin());
+    }
+    EvoRegression::Log::get_logger()->info("All-time titan fitness {}", titan.fitness);
+}
+
+void EvoCore::log_island_titans(int gen_index) {
+    EvoRegression::Log::get_logger()->info("Gen {} island titans: ", gen_index);
+    for (auto const& elite_group : island_gen_elite_groups) {
+        EvoRegression::Log::get_logger()->info("{}", elite_group.begin()->fitness);
     }
 }
 
