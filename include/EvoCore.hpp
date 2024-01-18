@@ -11,13 +11,20 @@
 
 class EvoCore : public IEvoAPI {
 
-    EvoRegression::EvoDataSet original_dataset; // original dataset
-    EvoRegression::EvoDataSet titan_dataset_robust; // dataset of titan with robust features
-    EvoRegression::EvoDataSet titan_dataset_nonrobust; // dataset of titan with without robusting (deleting outliers)
+    // input data (robust = without outliers, nonrobust = with outliers)
+    // algorithm is making basic selection of data based on robustness
+
+    EvoRegression::EvoDataSet original_training_dataset;
+    EvoRegression::EvoDataSet original_testing_dataset;
+
+    EvoRegression::EvoDataSet titan_dataset_robust;
+    EvoRegression::EvoDataSet titan_dataset_nonrobust;
+
+    // settings
 
     EvoBoundaryConditions boundary_conditions;
 
-    // population containers
+    // population containers used in main loop
     std::vector<EvoIndividual> newborns;
     std::vector<EvoIndividual> pensioners; // using only for reading genetic material
     std::vector <std::set<EvoIndividual>> island_gen_elite_groups;
@@ -35,8 +42,8 @@ class EvoCore : public IEvoAPI {
     std::vector<EvoIndividual> island_titans;
     RegressionDetailedResult titan_result;
 
-    void create_regression_input(std::tuple<int, std::vector<double>>);
-
+    void prepare_input_datasets(std::tuple<int, std::vector<double>>);
+    void split_dataset(Eigen::MatrixXd& dataset, double ratio);
     void prepare_for_prediction();
     void predict();
     void rank_past_generation();
