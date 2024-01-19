@@ -104,7 +104,7 @@ void EvoCore::load_file(const std::string& filename) {
 
 /**
  * Prepares the input datasets for training by adding ones to the input vector and splitting the data into training and testing sets.
- * 
+ *
  * @param input A tuple containing the number of columns in the input matrix and the input data as a vector of doubles.
  */
 void EvoCore::prepare_input_datasets(std::tuple<int, std::vector<double>> input) {
@@ -131,14 +131,14 @@ void EvoCore::prepare_input_datasets(std::tuple<int, std::vector<double>> input)
 
     EvoRegression::Log::get_logger()->info(
         "Predictor matrix initialized with {} rows and {} columns",
-        original_training_dataset.predictor.rows(),
-        original_training_dataset.predictor.cols()
+        original_training_dataset.learn_predictor.rows(),
+        original_training_dataset.learn_predictor.cols()
     );
 }
 
 /**
  * Splits the given dataset into training and testing datasets according to the specified ratio.
- * 
+ *
  * @param dataset The dataset to be split.
  * @param ratio The ratio of training data to total data.
  */
@@ -148,10 +148,10 @@ void EvoCore::split_dataset(Eigen::MatrixXd& dataset, double ratio) {
     int train_rows = static_cast<int>(dataset.rows() * ratio);
 
     // split raw matrix to test & training predictor and target matrices
-    original_training_dataset.predictor = dataset.block(0, 0, train_rows, dataset.cols() - 1).eval();
-    original_training_dataset.target = dataset.block(0, dataset.cols() - 1, train_rows, 1).eval();
-    original_testing_dataset.predictor = dataset.block(train_rows, 0, dataset.rows() - train_rows, dataset.cols() - 1).eval();
-    original_testing_dataset.target = dataset.block(train_rows, dataset.cols() - 1, dataset.rows() - train_rows, 1).eval();
+    original_training_dataset.learn_predictor = dataset.block(0, 0, train_rows, dataset.cols() - 1).eval();
+    original_training_dataset.learn_target = dataset.block(0, dataset.cols() - 1, train_rows, 1).eval();
+    original_testing_dataset.learn_predictor = dataset.block(train_rows, 0, dataset.rows() - train_rows, dataset.cols() - 1).eval();
+    original_testing_dataset.learn_target = dataset.block(train_rows, dataset.cols() - 1, dataset.rows() - train_rows, 1).eval();
 };
 
 /**
@@ -265,14 +265,14 @@ void EvoCore::predict() {
                         boundary_conditions.island_generation_size,
                         random_engines[thread_id]
                     ),
-                    original_training_dataset.predictor.cols(),
+                    original_training_dataset.learn_predictor.cols(),
                     random_engines[thread_id]
                 );
 
                 Mutation::mutate(
                     newborn,
-                    original_training_dataset.predictor.cols(),
-                    original_training_dataset.predictor.rows(),
+                    original_training_dataset.learn_predictor.cols(),
+                    original_training_dataset.learn_predictor.rows(),
                     boundary_conditions.mutation_ratio,
                     random_engines[thread_id]
                 );
@@ -286,13 +286,7 @@ void EvoCore::predict() {
                 }
                 else {
                     newborn.evaluate(
-                        EvoMath::get_fitness<std::function<double(Eigen::MatrixXd const&, Eigen::VectorXd const&)>>(
-                            Transform::data_transformation_robust(
-                                compute_datasets[island_index],
-                                newborn
-                            ),
-                            solver
-                        )
+                        EvoMath::get_fitness<std::function<double(Eigen::MatrixXd const&, Eigen::VectorXd const&)>>(Transform::transform_dataset(compute_datasets[island_index], newborn, true), solver)
                     );
                     caches[island_index].put(genotype_key, newborn.fitness);
                 }
@@ -393,7 +387,7 @@ void EvoCore::log_island_titans(int gen_index) {
  * @return true if the original dataset has predictor and target data, false otherwise.
  */
 bool EvoCore::is_ready_to_predict() const {
-    return original_training_dataset.predictor.size() > 0 && original_training_dataset.target.size() > 0;
+    return original_training_dataset.learn_predictor.size() > 0 && original_training_dataset.learn_target.size() > 0;
 }
 
 void EvoCore::setTitan(EvoIndividual titan) {
@@ -414,12 +408,11 @@ void EvoCore::titan_evaluation(EvoIndividual const& individual) {
  */
 void EvoCore::titan_postprocessing() {
     EvoRegression::Log::get_logger()->info("Titan postprocessing has begun.");
+    titan_dataset_robust = Transform::transform_dataset_copy(original_training_dataset, titan, true);
     // data without outliers
-    titan_dataset_robust = Transform::data_transformation_robust(original_training_dataset.predictor, original_training_dataset.target, titan);
-    // data without outliers
-    titan_dataset_nonrobust = Transform::data_transformation_nonrobust(original_training_dataset.predictor, original_training_dataset.target, titan);
+    titan_dataset_nonrobust = Transform::transform_dataset_copy(original_training_dataset, titan, false);
     // regression result
-    titan_result = solve_system_detailed(titan_dataset_robust.predictor, titan_dataset_robust.target);
+    titan_result = solve_system_detailed(titan_dataset_robust.learn_predictor, titan_dataset_robust.learn_target);
     EvoRegression::Log::get_logger()->info("Titan postprocessing finished.");
 }
 
@@ -438,7 +431,7 @@ void EvoCore::log_result() {
             titan_result.theta,
             titan_dataset_nonrobust
         ).data(),
-        titan_dataset_nonrobust.target.size() * 4
+        titan_dataset_nonrobust.learn_target.size() * 4
     );
     table << EvoRegression::get_regression_robust_result_table(
         EvoRegression::get_regression_summary_matrix(
@@ -446,11 +439,11 @@ void EvoCore::log_result() {
             titan_result.theta,
             titan_dataset_robust
         ).data(),
-        titan_dataset_robust.target.size() * 4
+        titan_dataset_robust.learn_target.size() * 4
     );
     table << EvoRegression::get_result_metrics_table(
         {
-            DescriptiveStatistics::median(titan_dataset_nonrobust.target.data(), titan_dataset_nonrobust.target.size()),
+            DescriptiveStatistics::median(titan_dataset_nonrobust.learn_target.data(), titan_dataset_nonrobust.learn_target.size()),
             titan_result.standard_deviation,
             titan_result.rsquared
         }

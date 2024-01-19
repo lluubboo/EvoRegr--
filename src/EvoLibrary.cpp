@@ -22,7 +22,7 @@ EvoIndividual const& Selection::tournament_selection(std::vector<EvoIndividual>:
 
 /**
  * Performs short-distance migration on the given population.
- * 
+ *
  * @param population The population of EvoIndividuals to perform migration on.
  * @param migration_size The number of individuals to migrate.
  * @param random_engines The random engines used for random number generation.
@@ -94,17 +94,13 @@ EvoIndividual Factory::getRandomEvoIndividual(int predictor_row_count, int predi
  */
 std::vector<EvoIndividual> Factory::generate_random_generation(
     int size,
-    EvoRegression::EvoDataSet const& dataset,
+    EvoRegression::EvoDataSet dataset,
     XoshiroCpp::Xoshiro256Plus& random_engine,
     std::function<double(Eigen::MatrixXd const&, Eigen::VectorXd const&)> solver
 ) {
     std::vector<EvoIndividual> generation(size);
-    std::generate(generation.begin(), generation.end(), [&]() {return Factory::getRandomEvoIndividual(dataset.predictor.rows(), dataset.predictor.cols(), random_engine);});
-    std::for_each(generation.begin(), generation.end(),
-        [&](EvoIndividual& individual) {
-            individual.evaluate(EvoMath::get_fitness(Transform::data_transformation_robust(dataset.predictor, dataset.target, individual), solver));
-        }
-    );
+    std::generate(generation.begin(), generation.end(), [&]() {return Factory::getRandomEvoIndividual(dataset.learn_predictor.rows(), dataset.learn_predictor.cols(), random_engine);});
+    std::for_each(generation.begin(), generation.end(), [&](EvoIndividual& individual) {individual.evaluate(EvoMath::get_fitness<std::function<double(Eigen::MatrixXd const&, Eigen::VectorXd const&)>>(Transform::transform_dataset_copy(dataset, individual, true), solver));});
     return generation;
 };
 
@@ -125,7 +121,7 @@ MergeAllele Factory::getRandomMergeAllele(int column_index, int predictor_column
     MergeAllele merge_allele{ column_index };
     // column index 0 marks x0 (no merging)
     if (column_index != 0) {
-        merge_allele.allele = EExpression{ predictor_column_count, predictor_column_count * 0.75, random_engine};
+        merge_allele.allele = EExpression{ predictor_column_count, predictor_column_count * 0.75, random_engine };
     }
     return merge_allele;
 };
@@ -362,42 +358,30 @@ void Transform::half_target_transform(Eigen::VectorXd& vector, EvoIndividual con
     individual.y_transformer_chromosome.at(0).transformVector(vector);
 };
 
-/**
- * The function applies transformations to the predictor and target data based on the provided individual's characteristics.
- * It first transforms the predictor data, then the target data using the Transform::full_predictor_transform and Transform::full_target_transform functions respectively.
- *
- * @param predictor The predictor is an Eigen::MatrixXd object representing the predictor data to be transformed.
- * @param target The target is an Eigen::VectorXd object representing the target data to be transformed.
- * @param individual The individual is a constant reference to an EvoIndividual object, whose characteristics are used to transform the data.
- *
- * @return a Transform::EvoDataSet object containing the transformed predictor and target data.
- */
-EvoRegression::EvoDataSet Transform::data_transformation_robust(Eigen::MatrixXd predictor, Eigen::VectorXd target, EvoIndividual const& individual) {
-    Transform::full_predictor_transform(predictor, individual);
-    Transform::full_target_transform(target, individual);
-    return { predictor, target };
-};
-
-EvoRegression::EvoDataSet& Transform::data_transformation_robust(EvoRegression::EvoDataSet& dataset, EvoIndividual const& individual) {
-    Transform::full_predictor_transform(dataset.predictor, individual);
-    Transform::full_target_transform(dataset.target, individual);
+EvoRegression::EvoDataSet& Transform::transform_dataset(EvoRegression::EvoDataSet& dataset, EvoIndividual const& individual, bool robust) {
+    // robust = filtering outliers
+    if (robust) {
+        Transform::full_predictor_transform(dataset.learn_predictor, individual);
+        Transform::full_target_transform(dataset.learn_target, individual);
+    }
+    else {
+        Transform::half_predictor_transform(dataset.learn_predictor, individual);
+        Transform::half_target_transform(dataset.learn_target, individual);
+    }
     return dataset;
 };
 
-/**
- * The function applies non-robust transformations to the predictor and target data based on the provided individual's characteristics.
- * It first transforms the predictor data, then the target data using the Transform::half_predictor_transform and Transform::half_target_transform functions respectively.
- *
- * @param predictor The predictor is an Eigen::MatrixXd object representing the predictor data to be transformed.
- * @param target The target is an Eigen::VectorXd object representing the target data to be transformed.
- * @param individual The individual is a constant reference to an EvoIndividual object, whose characteristics are used to transform the data.
- *
- * @return a Transform::EvoDataSet object containing the transformed predictor and target data.
- */
-EvoRegression::EvoDataSet Transform::data_transformation_nonrobust(Eigen::MatrixXd predictor, Eigen::VectorXd target, EvoIndividual const& individual) {
-    Transform::half_predictor_transform(predictor, individual);
-    Transform::half_target_transform(target, individual);
-    return { predictor, target };
+EvoRegression::EvoDataSet Transform::transform_dataset_copy(EvoRegression::EvoDataSet dataset, EvoIndividual const& individual, bool robust) {
+    // robust = filtering outliers
+    if (robust) {
+        Transform::full_predictor_transform(dataset.learn_predictor, individual);
+        Transform::full_target_transform(dataset.learn_target, individual);
+    }
+    else {
+        Transform::half_predictor_transform(dataset.learn_predictor, individual);
+        Transform::half_target_transform(dataset.learn_target, individual);
+    }
+    return dataset;
 };
 
 /**
@@ -414,7 +398,7 @@ EvoRegression::EvoDataSet Transform::data_transformation_nonrobust(Eigen::Matrix
  */
 template <typename T>
 double EvoMath::get_fitness(EvoRegression::EvoDataSet const& dataset, T solver) {
-    return solver(dataset.predictor, dataset.target);
+    return solver(dataset.learn_predictor, dataset.learn_target);
 }
 
 // Explicit instantiation

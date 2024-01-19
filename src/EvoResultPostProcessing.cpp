@@ -164,8 +164,8 @@ Eigen::MatrixXd EvoRegression::get_regression_summary_matrix(
     const EvoRegression::EvoDataSet& original
 ) {
     // get target and predicted target for comparison
-    Eigen::VectorXd target = original.target;
-    Eigen::VectorXd prediction = original.predictor * regression_coefficients;
+    Eigen::VectorXd target = original.learn_target;
+    Eigen::VectorXd prediction = original.learn_predictor * regression_coefficients;
 
     // transform target back to original values for presentation
     auto& transformer = titan.y_transformer_chromosome.at(0);
@@ -174,7 +174,7 @@ Eigen::MatrixXd EvoRegression::get_regression_summary_matrix(
 
     // assembly result matrix
     const int numColumns = 4;
-    Eigen::MatrixXd regression_result_matrix(original.predictor.rows(), numColumns);
+    Eigen::MatrixXd regression_result_matrix(original.learn_predictor.rows(), numColumns);
     regression_result_matrix.col(0) = target;
     regression_result_matrix.col(1) = prediction;
     regression_result_matrix.col(2) = target - prediction;

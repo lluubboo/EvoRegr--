@@ -40,13 +40,10 @@ namespace Transform {
     void robust_predictor_transform(Eigen::MatrixXd&, EvoIndividual const&);
     void half_target_transform(Eigen::VectorXd&, EvoIndividual const&);
 
-    EvoRegression::EvoDataSet data_transformation_robust(Eigen::MatrixXd, Eigen::VectorXd, EvoIndividual const&);
-    EvoRegression::EvoDataSet& data_transformation_robust(EvoRegression::EvoDataSet& dataset, EvoIndividual const& individual);
+    EvoRegression::EvoDataSet& robust_transform_dataset(EvoRegression::EvoDataSet& dataset, EvoIndividual const& individual);
 
-    EvoRegression::EvoDataSet data_transformation_nonrobust(Eigen::MatrixXd, Eigen::VectorXd, EvoIndividual const&);
-
-    EvoIndividual reproduction(std::vector<EvoIndividual> const& old_population, XoshiroCpp::Xoshiro256Plus& random_engine);
-
+    EvoRegression::EvoDataSet& transform_dataset(EvoRegression::EvoDataSet& dataset, EvoIndividual const& individual, bool robust = false);
+    EvoRegression::EvoDataSet transform_dataset_copy(EvoRegression::EvoDataSet dataset, EvoIndividual const& individual, bool robust = false);
 }
 
 namespace EvoMath {
@@ -65,8 +62,8 @@ namespace Factory {
     TransformXAllele getRandomTransformXAllele(int column_index, XoshiroCpp::Xoshiro256Plus& random_engine);
     TransformYAllele getRandomTransformYAllele(XoshiroCpp::Xoshiro256Plus& random_engine);
     RobustAllele getRandomRobustAllele(int row_count, XoshiroCpp::Xoshiro256Plus& random_engine);
-    std::vector<EvoIndividual> generate_random_generation(int, EvoRegression::EvoDataSet const&, XoshiroCpp::Xoshiro256Plus&, std::function<double(Eigen::MatrixXd const&, Eigen::VectorXd const&)>);
-    
+    std::vector<EvoIndividual> generate_random_generation(int, EvoRegression::EvoDataSet, XoshiroCpp::Xoshiro256Plus&, std::function<double(Eigen::MatrixXd const&, Eigen::VectorXd const&)>);
+
 }
 
 namespace Random {
