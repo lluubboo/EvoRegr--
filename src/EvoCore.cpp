@@ -101,15 +101,11 @@ void EvoCore::load_file(const std::string& filename) {
     EvoRegression::Log::get_logger()->info("File {} loaded", filename);
 }
 
+
 /**
- * @brief Creates the regression input matrix from the given input tuple.
- *
- * The regression input matrix consists of a predictor matrix and a target vector.
- * The predictor matrix is initialized with ones and contains the input data columns,
- * excluding the target column. The target vector is filled with the values from the
- * target column of the input data.
- *
- * @param input The input tuple containing the number of input columns and the input data.
+ * Prepares the input datasets for training by adding ones to the input vector and splitting the data into training and testing sets.
+ * 
+ * @param input A tuple containing the number of columns in the input matrix and the input data as a vector of doubles.
  */
 void EvoCore::prepare_input_datasets(std::tuple<int, std::vector<double>> input) {
 
@@ -128,10 +124,10 @@ void EvoCore::prepare_input_datasets(std::tuple<int, std::vector<double>> input)
     int output_rows = input_rows;
 
     // Map vector to a matrix (last column is the target vector)
-    Eigen::MatrixXd matrix = Eigen::Map<Eigen::MatrixXd>(data.data(), output_rows, output_cols);
+    Eigen::MatrixXd raw_data_matrix = Eigen::Map<Eigen::MatrixXd>(data.data(), output_rows, output_cols);
 
     // populate datasets
-    split_dataset(matrix, 0.8);
+    split_dataset(raw_data_matrix, 0.8);
 
     EvoRegression::Log::get_logger()->info(
         "Predictor matrix initialized with {} rows and {} columns",
@@ -140,17 +136,22 @@ void EvoCore::prepare_input_datasets(std::tuple<int, std::vector<double>> input)
     );
 }
 
+/**
+ * Splits the given dataset into training and testing datasets according to the specified ratio.
+ * 
+ * @param dataset The dataset to be split.
+ * @param ratio The ratio of training data to total data.
+ */
 void EvoCore::split_dataset(Eigen::MatrixXd& dataset, double ratio) {
-    int train_rows = static_cast<int>(dataset.rows() * ratio);
-    original_training_dataset.predictor = dataset.block(0, 0, train_rows, dataset.cols() - 1);
-    original_training_dataset.target = dataset.block(0, dataset.cols() - 1, train_rows, 1);
-    original_testing_dataset.predictor = dataset.block(train_rows, 0, dataset.rows() - train_rows, dataset.cols() - 1);
-    original_testing_dataset.target = dataset.block(train_rows, dataset.cols() - 1, dataset.rows() - train_rows, 1);
 
-    std::cout << "Training predictor dataset:\n" << original_training_dataset.predictor << std::endl;
-    std::cout << "Training target dataset:\n" << original_training_dataset.target << std::endl;
-    std::cout << "Testing predictor dataset:\n" << original_testing_dataset.predictor << std::endl;
-    std::cout << "Testing target dataset:\n" << original_testing_dataset.target << std::endl;
+    // split dataset into training and testing datasets according to ratio
+    int train_rows = static_cast<int>(dataset.rows() * ratio);
+
+    // split raw matrix to test & training predictor and target matrices
+    original_training_dataset.predictor = dataset.block(0, 0, train_rows, dataset.cols() - 1).eval();
+    original_training_dataset.target = dataset.block(0, dataset.cols() - 1, train_rows, 1).eval();
+    original_testing_dataset.predictor = dataset.block(train_rows, 0, dataset.rows() - train_rows, dataset.cols() - 1).eval();
+    original_testing_dataset.target = dataset.block(train_rows, dataset.cols() - 1, dataset.rows() - train_rows, 1).eval();
 };
 
 /**
