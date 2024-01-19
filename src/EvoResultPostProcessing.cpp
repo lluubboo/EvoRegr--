@@ -105,7 +105,7 @@ std::string EvoRegression::get_genotype_table(EvoIndividual titan) {
     );
     genotype_table << plt.get_table();
 
-    std::vector<std::string> robust_chromosome = titan.robust_chromosome_to_string_vector();
+    std::vector<std::string> robust_chromosome = titan.robust_tr_chromosome_to_string_vector();
     plt = Plotter(
         robust_chromosome.data(),
         "Robust chromosome",

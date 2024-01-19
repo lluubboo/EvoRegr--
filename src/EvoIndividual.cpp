@@ -33,9 +33,22 @@ std::vector<std::string> EvoIndividual::merge_chromosome_to_string_vector() cons
  *
  * @return The function `robust_chromosome_to_string_vector` returns a `std::vector<std::string>`.
  */
-std::vector<std::string> EvoIndividual::robust_chromosome_to_string_vector() const {
+std::vector<std::string> EvoIndividual::robust_tr_chromosome_to_string_vector() const {
     std::vector<std::string> string_vector;
-    for (auto const& allele : robuster_chromosome) {
+    for (auto const& allele : tr_robuster_chromosome) {
+        string_vector.push_back(allele.to_string());
+    }
+    return string_vector;
+};
+
+/**
+ * The function converts the alleles of a robust chromosome into a vector of strings.
+ *
+ * @return The function `robust_chromosome_to_string_vector` returns a `std::vector<std::string>`.
+ */
+std::vector<std::string> EvoIndividual::robust_te_chromosome_to_string_vector() const {
+    std::vector<std::string> string_vector;
+    for (auto const& allele : te_robuster_chromosome) {
         string_vector.push_back(allele.to_string());
     }
     return string_vector;
@@ -104,8 +117,10 @@ std::string EvoIndividual::to_string_code() const {
     }
     // transform Y chromosome
     string_genome.append(y_transformer_chromosome.at(0).to_string_code());
-    // robuster chromosome
-    string_genome.append(robuster_chromosome.at(0).to_string_code());
+
+    // robuster chromosomes
+    string_genome.append(tr_robuster_chromosome.at(0).to_string_code());
+    string_genome.append(te_robuster_chromosome.at(0).to_string_code());
     return string_genome;
 }
 

@@ -73,7 +73,7 @@ EvoIndividual Factory::getRandomEvoIndividual(int predictor_row_count, int predi
         individual.merger_chromosome.push_back(Factory::getRandomMergeAllele(i, predictor_column_count, random_engine));
         individual.x_transformer_chromosome.push_back(Factory::getRandomTransformXAllele(i, random_engine));
     }
-    individual.robuster_chromosome.push_back(Factory::getRandomRobustAllele(predictor_row_count, random_engine));
+    individual.tr_robuster_chromosome.push_back(Factory::getRandomRobustAllele(predictor_row_count, random_engine));
     individual.y_transformer_chromosome.push_back(Factory::getRandomTransformYAllele(random_engine));
     return individual;
 }
@@ -203,7 +203,7 @@ EvoIndividual Crossover::cross(const EvoIndividual& parent1, const EvoIndividual
     int y_crossover_twist_index = RandomNumbers::rand_interval_int(0, 1, random_engine);
 
     // cross single gene chromosomes robuster & ytransformer
-    youngling.robuster_chromosome = (r_crossover_twist_index == 0) ? parent1.robuster_chromosome : parent2.robuster_chromosome;
+    youngling.tr_robuster_chromosome = (r_crossover_twist_index == 0) ? parent1.tr_robuster_chromosome : parent2.tr_robuster_chromosome;
     youngling.y_transformer_chromosome = (y_crossover_twist_index == 0) ? parent1.y_transformer_chromosome : parent2.y_transformer_chromosome;
 
     // cross multi gene chromosomes merger & xtransformer
@@ -245,7 +245,7 @@ void Mutation::mutate(EvoIndividual& individual, int chromosome_size, int predic
             individual.merger_chromosome.at(col) = Factory::getRandomMergeAllele(col, chromosome_size, random_engine);
         }
         if (mutation_index == 2) {
-            individual.robuster_chromosome.at(0) = Factory::getRandomRobustAllele(predictor_row_count, random_engine);
+            individual.tr_robuster_chromosome.at(0) = Factory::getRandomRobustAllele(predictor_row_count, random_engine);
         }
         if (mutation_index == 3) {
             individual.y_transformer_chromosome.at(0) = Factory::getRandomTransformYAllele(random_engine);
@@ -269,7 +269,7 @@ void Mutation::mutate(EvoIndividual& individual, int chromosome_size, int predic
 void Transform::full_predictor_transform(Eigen::MatrixXd& matrix, EvoIndividual const& individual) {
 
     // erase some rows
-    individual.robuster_chromosome.at(0).transform(matrix);
+    individual.tr_robuster_chromosome.at(0).transform(matrix);
 
     //merge predictors
     for (int i = 0; i < matrix.cols(); i++)
@@ -322,7 +322,7 @@ void Transform::half_predictor_transform(Eigen::MatrixXd& matrix, EvoIndividual 
  * It erases some rows from the predictor matrix based on the robuster_chromosome of the EvoIndividual.
  */
 void Transform::robust_predictor_transform(Eigen::MatrixXd& matrix, EvoIndividual const& individual) {
-    individual.robuster_chromosome.at(0).transform(matrix);
+    individual.tr_robuster_chromosome.at(0).transform(matrix);
 };
 
 /**
@@ -338,7 +338,7 @@ void Transform::robust_predictor_transform(Eigen::MatrixXd& matrix, EvoIndividua
  * Then, it applies a transformation on the vector based on the y_transformer_chromosome of the EvoIndividual.
  */
 void Transform::full_target_transform(Eigen::VectorXd& vector, EvoIndividual const& individual) {
-    individual.robuster_chromosome.at(0).transformVector(vector);
+    individual.tr_robuster_chromosome.at(0).transformVector(vector);
     individual.y_transformer_chromosome.at(0).transformVector(vector);
 };
 
