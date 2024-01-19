@@ -65,16 +65,16 @@ void Migration::short_distance_migration(std::vector<EvoIndividual>& population,
  * The EvoIndividual object contains several chromosomes, each of which is a vector of alleles.
  * The function generates these chromosomes by calling other functions in the Factory class to generate random alleles.
  */
-EvoIndividual Factory::getRandomEvoIndividual(int predictor_row_count, int predictor_column_count, XoshiroCpp::Xoshiro256Plus& random_engine) {
+EvoIndividual Factory::get_random_evo_individual(int predictor_row_count, int predictor_column_count, XoshiroCpp::Xoshiro256Plus& random_engine) {
     EvoIndividual individual{};
     // create genofond
     for (int i = 0; i < predictor_column_count; i++)
     {
-        individual.merger_chromosome.push_back(Factory::getRandomMergeAllele(i, predictor_column_count, random_engine));
-        individual.x_transformer_chromosome.push_back(Factory::getRandomTransformXAllele(i, random_engine));
+        individual.merger_chromosome.push_back(Factory::get_random_merge_allele(i, predictor_column_count, random_engine));
+        individual.x_transformer_chromosome.push_back(Factory::get_random_transform_xallele(i, random_engine));
     }
-    individual.tr_robuster_chromosome.push_back(Factory::getRandomRobustAllele(predictor_row_count, random_engine));
-    individual.y_transformer_chromosome.push_back(Factory::getRandomTransformYAllele(random_engine));
+    individual.tr_robuster_chromosome.push_back(Factory::get_random_robust_allele(predictor_row_count, random_engine));
+    individual.y_transformer_chromosome.push_back(Factory::get_random_transform_yallele(random_engine));
     return individual;
 }
 
@@ -99,7 +99,7 @@ std::vector<EvoIndividual> Factory::generate_random_generation(
     std::function<double(EvoRegression::EvoDataSet const& dataset)> solver
 ) {
     std::vector<EvoIndividual> generation(size);
-    std::generate(generation.begin(), generation.end(), [&]() {return Factory::getRandomEvoIndividual(dataset.training_predictor.rows(), dataset.training_predictor.cols(), random_engine);});
+    std::generate(generation.begin(), generation.end(), [&]() {return Factory::get_random_evo_individual(dataset.training_predictor.rows(), dataset.training_predictor.cols(), random_engine);});
     std::for_each(generation.begin(), generation.end(), [&](EvoIndividual& individual) {individual.evaluate(EvoMath::get_fitness<std::function<double(EvoRegression::EvoDataSet const& dataset)>>(Transform::transform_dataset_copy(dataset, individual, true), solver));});
     return generation;
 };
@@ -117,7 +117,7 @@ std::vector<EvoIndividual> Factory::generate_random_generation(
  * The MergeAllele object contains several alleles, each of which is a vector of MergeTwins.
  * The function generates these alleles by calling other functions in the Factory class to generate random MergeTwins.
  */
-MergeAllele Factory::getRandomMergeAllele(int column_index, int predictor_column_count, XoshiroCpp::Xoshiro256Plus& random_engine) {
+MergeAllele Factory::get_random_merge_allele(int column_index, int predictor_column_count, XoshiroCpp::Xoshiro256Plus& random_engine) {
     MergeAllele merge_allele{ column_index };
     // column index 0 marks x0 (no merging)
     if (column_index != 0) {
@@ -138,7 +138,7 @@ MergeAllele Factory::getRandomMergeAllele(int column_index, int predictor_column
  * The TransformXAllele object contains several alleles, each of which is a Transform_operator.
  * The function generates these alleles by calling other functions in the Factory class to generate random Transform_operators.
  */
-TransformXAllele Factory::getRandomTransformXAllele(int column_index, XoshiroCpp::Xoshiro256Plus& random_engine) {
+TransformXAllele Factory::get_random_transform_xallele(int column_index, XoshiroCpp::Xoshiro256Plus& random_engine) {
     TransformXAllele transformx_allele{ column_index };
     if (column_index != 0) {
         transformx_allele.allele = Transform_operator{ RandomNumbers::rand_interval_int(0, transform_operator_maxindex, random_engine) };
@@ -161,7 +161,7 @@ TransformXAllele Factory::getRandomTransformXAllele(int column_index, XoshiroCpp
  * The TransformYAllele object contains a Transform_operator allele, which is randomly generated.
  * If the generated Transform_operator is Pow or Wek, the function also generates a characteristic number for the TransformYAllele.
  */
-TransformYAllele Factory::getRandomTransformYAllele(XoshiroCpp::Xoshiro256Plus& random_engine) {
+TransformYAllele Factory::get_random_transform_yallele(XoshiroCpp::Xoshiro256Plus& random_engine) {
     TransformYAllele transformy_allele{};
     transformy_allele.allele = Transform_operator{ RandomNumbers::rand_interval_int(0, transform_y_operator_maxindex, random_engine) };
     if (transformy_allele.allele == Transform_operator::Pow || transformy_allele.allele == Transform_operator::Wek) transformy_allele.resetCharacteristicNumber(RandomNumbers::rand_interval_decimal_number(1., 3., random_engine));
@@ -180,7 +180,7 @@ TransformYAllele Factory::getRandomTransformYAllele(XoshiroCpp::Xoshiro256Plus& 
  * The RobustAllele object contains a vector of integers representing the rows of the predictor matrix that should be used.
  * The function generates this vector by randomly selecting a subset of the rows from the predictor matrix.
  */
-RobustAllele Factory::getRandomRobustAllele(int row_count, XoshiroCpp::Xoshiro256Plus& random_engine) {
+RobustAllele Factory::get_random_robust_allele(int row_count, XoshiroCpp::Xoshiro256Plus& random_engine) {
     RobustAllele robust_allele{};
     int rows_to_erase = RandomNumbers::rand_interval_int(0, row_count / 4., random_engine);
     std::vector<int> choosen_rows(row_count);
@@ -238,17 +238,17 @@ void Mutation::mutate(EvoIndividual& individual, int chromosome_size, int predic
         int mutation_index = RandomNumbers::rand_interval_int(0, 3, random_engine);
         if (mutation_index == 0) {
             int col = RandomNumbers::rand_interval_int(0, chromosome_size - 1, random_engine);
-            individual.x_transformer_chromosome.at(col) = Factory::getRandomTransformXAllele(col, random_engine);
+            individual.x_transformer_chromosome.at(col) = Factory::get_random_transform_xallele(col, random_engine);
         }
         if (mutation_index == 1) {
             int col = RandomNumbers::rand_interval_int(0, chromosome_size - 1, random_engine);
-            individual.merger_chromosome.at(col) = Factory::getRandomMergeAllele(col, chromosome_size, random_engine);
+            individual.merger_chromosome.at(col) = Factory::get_random_merge_allele(col, chromosome_size, random_engine);
         }
         if (mutation_index == 2) {
-            individual.tr_robuster_chromosome.at(0) = Factory::getRandomRobustAllele(predictor_row_count, random_engine);
+            individual.tr_robuster_chromosome.at(0) = Factory::get_random_robust_allele(predictor_row_count, random_engine);
         }
         if (mutation_index == 3) {
-            individual.y_transformer_chromosome.at(0) = Factory::getRandomTransformYAllele(random_engine);
+            individual.y_transformer_chromosome.at(0) = Factory::get_random_transform_yallele(random_engine);
         }
     }
 }
