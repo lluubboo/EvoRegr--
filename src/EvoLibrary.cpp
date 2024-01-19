@@ -65,15 +65,19 @@ void Migration::short_distance_migration(std::vector<EvoIndividual>& population,
  * The EvoIndividual object contains several chromosomes, each of which is a vector of alleles.
  * The function generates these chromosomes by calling other functions in the Factory class to generate random alleles.
  */
-EvoIndividual Factory::get_random_evo_individual(int predictor_row_count, int predictor_column_count, XoshiroCpp::Xoshiro256Plus& random_engine) {
+EvoIndividual Factory::get_random_evo_individual(EvoRegression::EvoDataSet const& dataset, XoshiroCpp::Xoshiro256Plus& random_engine) {
     EvoIndividual individual{};
+    int training_row_count = dataset.training_predictor.rows();
+    int test_row_count = dataset.training_predictor.cols();
+    int column_count = dataset.training_predictor.cols();
     // create genofond
-    for (int i = 0; i < predictor_column_count; i++)
+    for (int i = 0; i < column_count; i++)
     {
-        individual.merger_chromosome.push_back(Factory::get_random_merge_allele(i, predictor_column_count, random_engine));
+        individual.merger_chromosome.push_back(Factory::get_random_merge_allele(i, column_count, random_engine));
         individual.x_transformer_chromosome.push_back(Factory::get_random_transform_xallele(i, random_engine));
     }
-    individual.tr_robuster_chromosome.push_back(Factory::get_random_robust_allele(predictor_row_count, random_engine));
+    individual.tr_robuster_chromosome.push_back(Factory::get_random_robust_allele(training_row_count, random_engine));
+    individual.te_robuster_chromosome.push_back(Factory::get_random_robust_allele(test_row_count, random_engine));
     individual.y_transformer_chromosome.push_back(Factory::get_random_transform_yallele(random_engine));
     return individual;
 }

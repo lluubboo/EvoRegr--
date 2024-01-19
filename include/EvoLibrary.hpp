@@ -55,7 +55,7 @@ namespace EvoMath {
 
 namespace Factory {
 
-    EvoIndividual get_random_evo_individual(int row_count, int predictor_column_count, XoshiroCpp::Xoshiro256Plus& random_engine);
+    EvoIndividual get_random_evo_individual(EvoRegression::EvoDataSet const& dataset, XoshiroCpp::Xoshiro256Plus& random_engine);
     MergeAllele get_random_merge_allele(int column_index, int predictor_column_count, XoshiroCpp::Xoshiro256Plus& random_engine);
     TransformXAllele get_random_transform_xallele(int column_index, XoshiroCpp::Xoshiro256Plus& random_engine);
     TransformYAllele get_random_transform_yallele(XoshiroCpp::Xoshiro256Plus& random_engine);
