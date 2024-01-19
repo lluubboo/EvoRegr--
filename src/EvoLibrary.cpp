@@ -96,11 +96,11 @@ std::vector<EvoIndividual> Factory::generate_random_generation(
     int size,
     EvoRegression::EvoDataSet dataset,
     XoshiroCpp::Xoshiro256Plus& random_engine,
-    std::function<double(Eigen::MatrixXd const&, Eigen::VectorXd const&)> solver
+    std::function<double(EvoRegression::EvoDataSet const& dataset)> solver
 ) {
     std::vector<EvoIndividual> generation(size);
-    std::generate(generation.begin(), generation.end(), [&]() {return Factory::getRandomEvoIndividual(dataset.learn_predictor.rows(), dataset.learn_predictor.cols(), random_engine);});
-    std::for_each(generation.begin(), generation.end(), [&](EvoIndividual& individual) {individual.evaluate(EvoMath::get_fitness<std::function<double(Eigen::MatrixXd const&, Eigen::VectorXd const&)>>(Transform::transform_dataset_copy(dataset, individual, true), solver));});
+    std::generate(generation.begin(), generation.end(), [&]() {return Factory::getRandomEvoIndividual(dataset.training_predictor.rows(), dataset.training_predictor.cols(), random_engine);});
+    std::for_each(generation.begin(), generation.end(), [&](EvoIndividual& individual) {individual.evaluate(EvoMath::get_fitness<std::function<double(EvoRegression::EvoDataSet const& dataset)>>(Transform::transform_dataset_copy(dataset, individual, true), solver));});
     return generation;
 };
 
@@ -361,12 +361,16 @@ void Transform::half_target_transform(Eigen::VectorXd& vector, EvoIndividual con
 EvoRegression::EvoDataSet& Transform::transform_dataset(EvoRegression::EvoDataSet& dataset, EvoIndividual const& individual, bool robust) {
     // robust = filtering outliers
     if (robust) {
-        Transform::full_predictor_transform(dataset.learn_predictor, individual);
-        Transform::full_target_transform(dataset.learn_target, individual);
+        Transform::full_predictor_transform(dataset.training_predictor, individual);
+        Transform::full_target_transform(dataset.training_target, individual);
+        Transform::half_predictor_transform(dataset.test_predictor, individual);
+        Transform::half_target_transform(dataset.test_target, individual);
     }
     else {
-        Transform::half_predictor_transform(dataset.learn_predictor, individual);
-        Transform::half_target_transform(dataset.learn_target, individual);
+        Transform::half_predictor_transform(dataset.training_predictor, individual);
+        Transform::half_target_transform(dataset.training_target, individual);
+        Transform::half_predictor_transform(dataset.test_predictor, individual);
+        Transform::half_target_transform(dataset.test_target, individual);
     }
     return dataset;
 };
@@ -374,12 +378,16 @@ EvoRegression::EvoDataSet& Transform::transform_dataset(EvoRegression::EvoDataSe
 EvoRegression::EvoDataSet Transform::transform_dataset_copy(EvoRegression::EvoDataSet dataset, EvoIndividual const& individual, bool robust) {
     // robust = filtering outliers
     if (robust) {
-        Transform::full_predictor_transform(dataset.learn_predictor, individual);
-        Transform::full_target_transform(dataset.learn_target, individual);
+        Transform::full_predictor_transform(dataset.training_predictor, individual);
+        Transform::full_target_transform(dataset.training_target, individual);
+        Transform::half_predictor_transform(dataset.test_predictor, individual);
+        Transform::half_target_transform(dataset.test_target, individual);
     }
     else {
-        Transform::half_predictor_transform(dataset.learn_predictor, individual);
-        Transform::half_target_transform(dataset.learn_target, individual);
+        Transform::half_predictor_transform(dataset.training_predictor, individual);
+        Transform::half_target_transform(dataset.training_target, individual);
+        Transform::half_predictor_transform(dataset.test_predictor, individual);
+        Transform::half_target_transform(dataset.test_target, individual);
     }
     return dataset;
 };
@@ -398,11 +406,11 @@ EvoRegression::EvoDataSet Transform::transform_dataset_copy(EvoRegression::EvoDa
  */
 template <typename T>
 double EvoMath::get_fitness(EvoRegression::EvoDataSet const& dataset, T solver) {
-    return solver(dataset.learn_predictor, dataset.learn_target);
+    return solver(dataset);
 }
 
 // Explicit instantiation
-template double EvoMath::get_fitness(EvoRegression::EvoDataSet const& dataset, std::function<double(Eigen::MatrixXd const&, Eigen::VectorXd const&)> solver);
+template double EvoMath::get_fitness(EvoRegression::EvoDataSet const& dataset, std::function<double(EvoRegression::EvoDataSet const&)> solver);
 
 /**
  * @brief Extracts a column from a 1D vector representing a 2D matrix.

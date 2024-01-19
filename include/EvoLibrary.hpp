@@ -62,7 +62,7 @@ namespace Factory {
     TransformXAllele getRandomTransformXAllele(int column_index, XoshiroCpp::Xoshiro256Plus& random_engine);
     TransformYAllele getRandomTransformYAllele(XoshiroCpp::Xoshiro256Plus& random_engine);
     RobustAllele getRandomRobustAllele(int row_count, XoshiroCpp::Xoshiro256Plus& random_engine);
-    std::vector<EvoIndividual> generate_random_generation(int, EvoRegression::EvoDataSet, XoshiroCpp::Xoshiro256Plus&, std::function<double(Eigen::MatrixXd const&, Eigen::VectorXd const&)>);
+    std::vector<EvoIndividual> generate_random_generation(int, EvoRegression::EvoDataSet, XoshiroCpp::Xoshiro256Plus&, std::function<double(EvoRegression::EvoDataSet const&)>);
 
 }
 

@@ -14,8 +14,7 @@ class EvoCore : public IEvoAPI {
     // input data (robust = without outliers, nonrobust = with outliers)
     // algorithm is making basic selection of data based on robustness
 
-    EvoRegression::EvoDataSet original_training_dataset;
-    EvoRegression::EvoDataSet original_testing_dataset;
+    EvoRegression::EvoDataSet original_dataset;
 
     EvoRegression::EvoDataSet titan_dataset_robust;
     EvoRegression::EvoDataSet titan_dataset_nonrobust;
@@ -35,7 +34,7 @@ class EvoCore : public IEvoAPI {
     std::vector<LRUCache<std::string, double>> caches;
 
     // solver functor
-    std::function<double(Eigen::MatrixXd const&, Eigen::VectorXd const&)> solver;
+    std::function<double(EvoRegression::EvoDataSet const&)> solver;
 
     // titan 
     EvoIndividual titan;

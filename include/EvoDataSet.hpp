@@ -6,22 +6,22 @@ namespace EvoRegression {
 
     struct EvoDataSet {
 
-        Eigen::MatrixXd learn_predictor;
-        Eigen::VectorXd learn_target;
+        Eigen::MatrixXd training_predictor;
+        Eigen::VectorXd training_target;
 
         Eigen::MatrixXd test_predictor;
         Eigen::VectorXd test_target;
 
-        EvoDataSet(Eigen::MatrixXd learn_predictor, Eigen::VectorXd learn_target, Eigen::MatrixXd test_predictor, Eigen::VectorXd test_target) :
-            learn_predictor(learn_predictor), 
-            learn_target(learn_target), 
-            test_predictor(test_predictor), 
+        EvoDataSet(Eigen::MatrixXd training_predictor, Eigen::VectorXd training_target, Eigen::MatrixXd test_predictor, Eigen::VectorXd test_target) :
+            training_predictor(training_predictor),
+            training_target(training_target),
+            test_predictor(test_predictor),
             test_target(test_target)
         {}
 
         EvoDataSet() :
-            learn_predictor(Eigen::MatrixXd()), 
-            learn_target(Eigen::VectorXd()),
+            training_predictor(Eigen::MatrixXd()),
+            training_target(Eigen::VectorXd()),
             test_predictor(Eigen::MatrixXd()),
             test_target(Eigen::VectorXd())
         {}

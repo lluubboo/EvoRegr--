@@ -1,5 +1,6 @@
 #pragma once
 #include <Eigen/Dense>
+#include "EvoDataSet.hpp"
 
 struct RegressionDetailedResult {
     Eigen::VectorXd theta;
@@ -23,16 +24,16 @@ struct RegressionDetailedResult {
     bool isUsable;
 };
 
-RegressionDetailedResult solve_system_detailed(Eigen::MatrixXd const&, Eigen::VectorXd const&);
+RegressionDetailedResult solve_system_detailed(Eigen::MatrixXd const& predictors, Eigen::VectorXd const& target);
 
 struct LLTSolver {
-    double operator()(Eigen::MatrixXd const&, Eigen::VectorXd const&) const;
+    double operator()(EvoRegression::EvoDataSet const&) const;
 };
 
 struct LDLTSolver {
-    double operator()(Eigen::MatrixXd const&, Eigen::VectorXd const&) const;
+    double operator()(EvoRegression::EvoDataSet const&) const;
 };
 
 struct ColPivHouseholderQrSolver {
-    double operator()(Eigen::MatrixXd const&, Eigen::VectorXd const&) const;
+    double operator()(EvoRegression::EvoDataSet const&) const;
 };

@@ -8,10 +8,10 @@
  *
  * @return The regression result table as a string.
  */
-std::string EvoRegression::get_regression_result_table(double* prediction_dataset_nonrobust, size_t size) {
+std::string EvoRegression::get_regression_result_table(double* prediction_dataset, size_t size) {
     Plotter<double> plt = Plotter(
-        prediction_dataset_nonrobust,
-        "Regression result summary with outliers",
+        prediction_dataset,
+        "Regression result summary",
         { "Target", "Prediction", "Difference", "Percentage difference" },
         149,
         size,
@@ -164,8 +164,8 @@ Eigen::MatrixXd EvoRegression::get_regression_summary_matrix(
     const EvoRegression::EvoDataSet& original
 ) {
     // get target and predicted target for comparison
-    Eigen::VectorXd target = original.learn_target;
-    Eigen::VectorXd prediction = original.learn_predictor * regression_coefficients;
+    Eigen::VectorXd target = original.test_target;
+    Eigen::VectorXd prediction = original.test_predictor * regression_coefficients;
 
     // transform target back to original values for presentation
     auto& transformer = titan.y_transformer_chromosome.at(0);
@@ -174,7 +174,7 @@ Eigen::MatrixXd EvoRegression::get_regression_summary_matrix(
 
     // assembly result matrix
     const int numColumns = 4;
-    Eigen::MatrixXd regression_result_matrix(original.learn_predictor.rows(), numColumns);
+    Eigen::MatrixXd regression_result_matrix(original.test_predictor.rows(), numColumns);
     regression_result_matrix.col(0) = target;
     regression_result_matrix.col(1) = prediction;
     regression_result_matrix.col(2) = target - prediction;
