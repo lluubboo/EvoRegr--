@@ -121,7 +121,6 @@ std::string EvoIndividual::to_string_code() const {
 
     // robuster chromosomes
     string_genome.append(tr_robuster_chromosome.at(0).to_string_code());
-    string_genome.append(te_robuster_chromosome.at(0).to_string_code());
     
     return string_genome;
 }

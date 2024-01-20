@@ -53,13 +53,25 @@ RegressionDetailedResult solve_system_detailed(Eigen::MatrixXd const& predictors
 }
 
 double LLTSolver::operator()(EvoRegression::EvoDataSet const& dataset) const {
-    // calc to save one transpose operation
-    Eigen::MatrixXd predictor_transposed = dataset.training_predictor.transpose();
-    Eigen::VectorXd coefficients = (predictor_transposed * dataset.training_predictor).llt().solve(predictor_transposed* dataset.training_target);
+
+    // Calculate the number of training examples
+    int num_train = static_cast<int>(dataset.training_predictor.rows() * 0.7);
+
+    // Create blocks for training and testing
+    auto train_predictor = dataset.training_predictor.block(0, 0, num_train, dataset.training_predictor.cols());
+    auto train_target = dataset.training_target.segment(0, num_train);
+    auto test_predictor = dataset.training_predictor.block(num_train, 0, dataset.training_predictor.rows() - num_train, dataset.training_predictor.cols());
+    auto test_target = dataset.training_target.segment(num_train, dataset.training_target.size() - num_train);
+
+
+    // Calculate coefficients using training data
+    Eigen::MatrixXd predictor_transposed = train_predictor.transpose();
+    Eigen::VectorXd coefficients = (predictor_transposed * train_predictor).llt().solve(predictor_transposed * train_target);
 
     // Check if the result is usable (no NaN or infinite values)
     if (!coefficients.hasNaN() && coefficients.allFinite()) {
-        return (dataset.test_target - (dataset.test_predictor * coefficients)).squaredNorm();
+        // Calculate fitness using test data
+        return (test_target - (test_predictor * coefficients)).squaredNorm();
     }
     else {
         // Set sum of squares errors to maximum value
@@ -68,13 +80,25 @@ double LLTSolver::operator()(EvoRegression::EvoDataSet const& dataset) const {
 }
 
 double LDLTSolver::operator()(EvoRegression::EvoDataSet const& dataset) const {
-    // calc to save one transpose operation
-    Eigen::MatrixXd predictor_transposed = dataset.training_predictor.transpose();
-    Eigen::VectorXd coefficients = (predictor_transposed * dataset.training_predictor).ldlt().solve(predictor_transposed * dataset.training_target);
+
+    // Calculate the number of training examples
+    int num_train = static_cast<int>(dataset.training_predictor.rows() * 0.7);
+
+    // Create blocks for training and testing
+    auto train_predictor = dataset.training_predictor.block(0, 0, num_train, dataset.training_predictor.cols());
+    auto train_target = dataset.training_target.segment(0, num_train);
+    auto test_predictor = dataset.training_predictor.block(num_train, 0, dataset.training_predictor.rows() - num_train, dataset.training_predictor.cols());
+    auto test_target = dataset.training_target.segment(num_train, dataset.training_target.size() - num_train);
+
+
+    // Calculate coefficients using training data
+    Eigen::MatrixXd predictor_transposed = train_predictor.transpose();
+    Eigen::VectorXd coefficients = (predictor_transposed * train_predictor).ldlt().solve(predictor_transposed * train_target);
 
     // Check if the result is usable (no NaN or infinite values)
     if (!coefficients.hasNaN() && coefficients.allFinite()) {
-        return (dataset.test_target - (dataset.test_predictor * coefficients)).squaredNorm();
+        // Calculate fitness using test data
+        return (test_target - (test_predictor * coefficients)).squaredNorm();
     }
     else {
         // Set sum of squares errors to maximum value
@@ -83,13 +107,25 @@ double LDLTSolver::operator()(EvoRegression::EvoDataSet const& dataset) const {
 }
 
 double ColPivHouseholderQrSolver::operator()(EvoRegression::EvoDataSet const& dataset) const {
-    // calc to save one transpose operation
-    Eigen::MatrixXd predictor_transposed = dataset.training_predictor.transpose();
-    Eigen::VectorXd coefficients = (predictor_transposed * dataset.training_predictor).colPivHouseholderQr().solve(predictor_transposed * dataset.training_target);
+
+    // Calculate the number of training examples
+    int num_train = static_cast<int>(dataset.training_predictor.rows() * 0.7);
+
+    // Create blocks for training and testing
+    auto train_predictor = dataset.training_predictor.block(0, 0, num_train, dataset.training_predictor.cols());
+    auto train_target = dataset.training_target.segment(0, num_train);
+    auto test_predictor = dataset.training_predictor.block(num_train, 0, dataset.training_predictor.rows() - num_train, dataset.training_predictor.cols());
+    auto test_target = dataset.training_target.segment(num_train, dataset.training_target.size() - num_train);
+
+
+    // Calculate coefficients using training data
+    Eigen::MatrixXd predictor_transposed = train_predictor.transpose();
+    Eigen::VectorXd coefficients = (predictor_transposed * train_predictor).colPivHouseholderQr().solve(predictor_transposed * train_target);
 
     // Check if the result is usable (no NaN or infinite values)
     if (!coefficients.hasNaN() && coefficients.allFinite()) {
-        return (dataset.test_target - (dataset.test_predictor * coefficients)).squaredNorm();
+        // Calculate fitness using test data
+        return (test_target - (test_predictor * coefficients)).squaredNorm();
     }
     else {
         // Set sum of squares errors to maximum value

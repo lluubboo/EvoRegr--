@@ -68,7 +68,6 @@ void Migration::short_distance_migration(std::vector<EvoIndividual>& population,
 EvoIndividual Factory::get_random_evo_individual(EvoRegression::EvoDataSet const& dataset, XoshiroCpp::Xoshiro256Plus& random_engine) {
     EvoIndividual individual{};
     int training_row_count = dataset.training_predictor.rows();
-    int test_row_count = dataset.test_predictor.rows();
     int column_count = dataset.training_predictor.cols();
     // create genofond
     for (int i = 0; i < column_count; i++)
@@ -77,7 +76,6 @@ EvoIndividual Factory::get_random_evo_individual(EvoRegression::EvoDataSet const
         individual.x_transformer_chromosome.push_back(Factory::get_random_transform_xallele(i, random_engine));
     }
     individual.tr_robuster_chromosome.push_back(Factory::get_random_robust_allele(training_row_count, random_engine));
-    individual.te_robuster_chromosome.push_back(Factory::get_random_robust_allele(test_row_count, random_engine));
     individual.y_transformer_chromosome.push_back(Factory::get_random_transform_yallele(random_engine));
     return individual;
 }
@@ -191,6 +189,7 @@ RobustAllele Factory::get_random_robust_allele(int row_count, XoshiroCpp::Xoshir
     std::iota(begin(choosen_rows), end(choosen_rows), 0);
     std::shuffle(choosen_rows.begin(), choosen_rows.end(), random_engine);
     choosen_rows.erase(choosen_rows.end() - rows_to_erase, choosen_rows.end());
+    std::sort(choosen_rows.begin(), choosen_rows.end());
     robust_allele.allele = choosen_rows;
     return robust_allele;
 };
@@ -201,12 +200,10 @@ void Crossover::cross(EvoIndividual& child, const EvoIndividual& parent1, const 
     int m_crossover_twist_index = RandomNumbers::rand_interval_int(0, chromosome_size, random_engine);
     int t_crossover_twist_index = RandomNumbers::rand_interval_int(0, chromosome_size, random_engine);
     int rtr_crossover_twist_index = RandomNumbers::rand_interval_int(0, 1, random_engine);
-    int rte_crossover_twist_index = RandomNumbers::rand_interval_int(0, 1, random_engine);
     int y_crossover_twist_index = RandomNumbers::rand_interval_int(0, 1, random_engine);
 
     // cross single gene chromosomes robuster & ytransformer
     child.tr_robuster_chromosome = (rtr_crossover_twist_index == 0) ? parent1.tr_robuster_chromosome : parent2.tr_robuster_chromosome;
-    child.te_robuster_chromosome = (rte_crossover_twist_index == 0) ? parent1.te_robuster_chromosome : parent2.te_robuster_chromosome;
     child.y_transformer_chromosome = (y_crossover_twist_index == 0) ? parent1.y_transformer_chromosome : parent2.y_transformer_chromosome;
 
     // cross multi gene chromosomes merger & xtransformer
@@ -233,10 +230,10 @@ void Crossover::cross(EvoIndividual& child, const EvoIndividual& parent1, const 
  * The function first selects a random mutation point in the chromosomes of the individual.
  * Then, it selects a random chromosome to mutate, and finally mutates the allele at the selected mutation point.
  */
-void Mutation::mutate(EvoIndividual& individual, int chromosome_size, int predictor_row_count, int test_predictor_row_count, int mutation_rate, XoshiroCpp::Xoshiro256Plus& random_engine) {
+void Mutation::mutate(EvoIndividual& individual, int chromosome_size, int predictor_row_count, int mutation_rate, XoshiroCpp::Xoshiro256Plus& random_engine) {
     int rand_num = RandomNumbers::rand_interval_int(0, 100, random_engine);
     if (rand_num <= mutation_rate) {
-        int mutation_index = RandomNumbers::rand_interval_int(0, 4, random_engine);
+        int mutation_index = RandomNumbers::rand_interval_int(0, 3, random_engine);
         if (mutation_index == 0) {
             int col = RandomNumbers::rand_interval_int(0, chromosome_size - 1, random_engine);
             individual.x_transformer_chromosome.at(col) = Factory::get_random_transform_xallele(col, random_engine);
@@ -250,9 +247,6 @@ void Mutation::mutate(EvoIndividual& individual, int chromosome_size, int predic
         }
         if (mutation_index == 3) {
             individual.y_transformer_chromosome.at(0) = Factory::get_random_transform_yallele(random_engine);
-        }
-        if (mutation_index == 4) {
-            individual.te_robuster_chromosome.at(0) = Factory::get_random_robust_allele(test_predictor_row_count, random_engine);
         }
     }
 }
@@ -346,18 +340,10 @@ EvoRegression::EvoDataSet& Transform::transform_dataset(EvoRegression::EvoDataSe
     if (robust) {
         Transform::full_predictor_transform(dataset.training_predictor, individual);
         Transform::full_target_transform(dataset.training_target, individual);
-
-        individual.te_robuster_chromosome.at(0).transform(dataset.test_predictor);
-        Transform::half_predictor_transform(dataset.test_predictor, individual);
-
-        individual.te_robuster_chromosome.at(0).transform_vector(dataset.test_target);
-        Transform::half_target_transform(dataset.test_target, individual);
     }
     else {
         Transform::half_predictor_transform(dataset.training_predictor, individual);
         Transform::half_target_transform(dataset.training_target, individual);
-        Transform::half_predictor_transform(dataset.test_predictor, individual);
-        Transform::half_target_transform(dataset.test_target, individual);
     }
     return dataset;
 };
@@ -367,19 +353,10 @@ EvoRegression::EvoDataSet Transform::transform_dataset_copy(EvoRegression::EvoDa
     if (robust) {
         Transform::full_predictor_transform(dataset.training_predictor, individual);
         Transform::full_target_transform(dataset.training_target, individual);
-
-        individual.te_robuster_chromosome.at(0).transform(dataset.test_predictor);
-        Transform::half_predictor_transform(dataset.test_predictor, individual);
-
-        individual.te_robuster_chromosome.at(0).transform_vector(dataset.test_target);
-        Transform::half_target_transform(dataset.test_target, individual);
     }
     else {
         Transform::half_predictor_transform(dataset.training_predictor, individual);
         Transform::half_target_transform(dataset.training_target, individual);
-
-        Transform::half_predictor_transform(dataset.test_predictor, individual);
-        Transform::half_target_transform(dataset.test_target, individual);
     }
     return dataset;
 };
