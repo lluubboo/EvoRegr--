@@ -21,7 +21,7 @@ namespace Crossover {
 }
 namespace Mutation {
 
-    void mutate(EvoIndividual&, int, int, int, XoshiroCpp::Xoshiro256Plus&);
+    void mutate(EvoIndividual&, int, int, int, int, XoshiroCpp::Xoshiro256Plus&);
 
 }
 

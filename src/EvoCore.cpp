@@ -279,6 +279,7 @@ void EvoCore::predict() {
                     newborn,
                     original_dataset.training_predictor.cols(),
                     original_dataset.training_predictor.rows(),
+                    original_dataset.test_predictor.rows(),
                     boundary_conditions.mutation_ratio,
                     random_engines[thread_id]
                 );

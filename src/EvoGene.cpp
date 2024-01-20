@@ -15,7 +15,7 @@ EvoGene::EvoGene() {}
 
 /**
  * @brief Constructs an instance of the EvoGene class.
- * 
+ *
  * @param index The index of the gene.
  */
 EvoGene::EvoGene(int index) : column_index{ index }, characteristic_number{ 0 } {}
@@ -29,14 +29,14 @@ EvoGene::~EvoGene() {}
 
 /**
  * @brief Constructs a MergeAllele object with the specified index.
- * 
+ *
  * @param index The index of the MergeAllele object.
  */
 MergeAllele::MergeAllele(int index) : EvoGene(index), allele() {}
 
 /**
  * @brief Destructor for the MergeAllele class.
- * 
+ *
  * This destructor is responsible for cleaning up any resources
  * allocated by the MergeAllele class.
  */
@@ -44,7 +44,7 @@ MergeAllele::~MergeAllele() {}
 
 /**
  * Transforms the given matrix according to the allele.
- * 
+ *
  * @param matrix The matrix to be transformed.
  */
 void MergeAllele::transform(Eigen::MatrixXd& matrix) const {
@@ -85,7 +85,7 @@ TransformXAllele::TransformXAllele(int index) : EvoGene(index), allele{} {}
 
 /**
  * @brief Destructor for the TransformXAllele class.
- * 
+ *
  * This destructor is responsible for cleaning up any resources
  * allocated by the TransformXAllele class.
  */
@@ -109,7 +109,7 @@ void TransformXAllele::transform(Eigen::MatrixXd& matrix) const {
         matrix.col(column_index) = matrix.col(column_index).unaryExpr([&](const auto s) { return (double)pow(s, characteristic_number); });
         break;
     case Transform_operator::Wek:
-        matrix.col(column_index) = matrix.col(column_index).unaryExpr([&](const auto s) { return (double)pow(s, 1/characteristic_number); });
+        matrix.col(column_index) = matrix.col(column_index).unaryExpr([&](const auto s) { return (double)pow(s, 1 / characteristic_number); });
         break;
     case Transform_operator::Sqt:
         matrix.col(column_index) = matrix.col(column_index).unaryExpr([&](const auto s) { return (double)sqrt(s); });
@@ -136,7 +136,7 @@ void TransformXAllele::transform(Eigen::MatrixXd& matrix) const {
 
 /**
  * Converts the TransformXAllele object to a string representation.
- * 
+ *
  * @return The string representation of the TransformXAllele object.
  */
 std::string TransformXAllele::to_string() const {
@@ -147,7 +147,7 @@ std::string TransformXAllele::to_string() const {
 
 /**
  * @brief Converts the TransformXAllele object to a string representation.
- * 
+ *
  * @return The string representation of the TransformXAllele object.
  */
 std::string TransformXAllele::to_string_code() const {
@@ -160,9 +160,9 @@ std::string TransformXAllele::to_string_code() const {
 
 /**
  * @brief Resets the characteristic number of the TransformXAllele object.
- * 
+ *
  * This function sets the characteristic number of the TransformXAllele object to the specified value.
- * 
+ *
  * @param number The new value for the characteristic number.
  */
 void TransformXAllele::resetCharacteristicNumber(float number) {
@@ -185,9 +185,9 @@ TransformYAllele::~TransformYAllele() {};
 
 /**
  * @brief Resets the characteristic number of the TransformYAllele object.
- * 
+ *
  * This function sets the characteristic number of the TransformYAllele object to the specified value.
- * 
+ *
  * @param number The new value for the characteristic number.
  */
 void TransformYAllele::resetCharacteristicNumber(float number) {
@@ -206,19 +206,19 @@ void TransformYAllele::transform(Eigen::MatrixXd& /*matrix*/) const {}
  *
  * @param vector The vector to be transformed.
  */
-void TransformYAllele::transformVector(Eigen::VectorXd& vector) const {
+void TransformYAllele::transform_vector(Eigen::VectorXd& vector) const {
     switch (allele) {
     case Transform_operator::Sqr:
-        vector = vector.unaryExpr([&](const auto s) { return s*s; });
+        vector = vector.unaryExpr([&](const auto s) { return s * s; });
         break;
     case Transform_operator::Cub:
-        vector = vector.unaryExpr([&](const auto s) { return s*s*s; });
+        vector = vector.unaryExpr([&](const auto s) { return s * s * s; });
         break;
     case Transform_operator::Pow:
         vector = vector.unaryExpr([&](const auto s) { return (double)pow(s, characteristic_number); });
         break;
     case Transform_operator::Wek:
-        vector = vector.unaryExpr([&](const auto s) { return (double)pow(s, 1/characteristic_number); });
+        vector = vector.unaryExpr([&](const auto s) { return (double)pow(s, 1 / characteristic_number); });
         break;
     case Transform_operator::Sqt:
         vector = vector.unaryExpr([&](const auto s) { return (double)sqrt(s); });
@@ -245,7 +245,7 @@ void TransformYAllele::transformVector(Eigen::VectorXd& vector) const {
 
 /**
  * Transforms the given vector back based on the selected allele.
- * 
+ *
  * @param vector The vector to be transformed.
  */
 void TransformYAllele::transformBack(Eigen::VectorXd& vector) const {
@@ -263,10 +263,10 @@ void TransformYAllele::transformBack(Eigen::VectorXd& vector) const {
         vector = vector.unaryExpr([&](const auto s) { return (double)pow(s, (characteristic_number)); });
         break;
     case Transform_operator::Sqt:
-        vector = vector.unaryExpr([&](const auto s) { return s*s; });
+        vector = vector.unaryExpr([&](const auto s) { return s * s; });
         break;
     case Transform_operator::Csqt:
-        vector = vector.unaryExpr([&](const auto s) { return s*s*s; });
+        vector = vector.unaryExpr([&](const auto s) { return s * s * s; });
         break;
     case Transform_operator::Let:
         break;
@@ -287,7 +287,7 @@ void TransformYAllele::transformBack(Eigen::VectorXd& vector) const {
 
 /**
  * Converts the TransformYAllele object to a string representation.
- * 
+ *
  * @return The string representation of the TransformYAllele object.
  */
 std::string TransformYAllele::to_string() const {
@@ -298,7 +298,7 @@ std::string TransformYAllele::to_string() const {
 
 /**
  * Converts the TransformYAllele object to a string representation.
- * 
+ *
  * @return The string representation of the TransformYAllele object.
  */
 std::string TransformYAllele::to_string_code() const {
@@ -325,7 +325,7 @@ RobustAllele::~RobustAllele() {};
 
 /**
  * Transforms the given matrix using the allele values.
- * 
+ *
  * @param matrix The matrix to be transformed.
  */
 void RobustAllele::transform(Eigen::MatrixXd& matrix) const {
@@ -340,17 +340,17 @@ void RobustAllele::transform(Eigen::MatrixXd& matrix) const {
  *
  * @param vector The vector to be transformed.
  */
-void RobustAllele::transformVector(Eigen::VectorXd& vector) const {
+void RobustAllele::transform_vector(Eigen::VectorXd& vector) const {
     Eigen::VectorXd transformeVector = vector(Eigen::Map<const Eigen::VectorXi>(allele.data(), allele.size()));
     vector.swap(transformeVector);
 }
 
 /**
  * Converts the RobustAllele object to a string representation.
- * 
+ *
  * @return The string representation of the RobustAllele object.
  */
-std::string RobustAllele::to_string() const { 
+std::string RobustAllele::to_string() const {
     std::string sallele;
     sallele = "(";
     for (auto const& index : allele) {
@@ -363,7 +363,7 @@ std::string RobustAllele::to_string() const {
 /**
  * Converts the RobustAllele object to a string representation.
  * The string representation includes the prefix "RA" followed by the characters in the allele.
- * 
+ *
  * @return The string representation of the RobustAllele object.
  */
 std::string RobustAllele::to_string_code() const {

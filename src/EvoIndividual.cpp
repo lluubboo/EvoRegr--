@@ -106,6 +106,7 @@ std::string EvoIndividual::to_math_formula() const {
  * @return a string representation of the code of an EvoIndividual object.
  */
 std::string EvoIndividual::to_string_code() const {
+    
     std::string string_genome;
     // merger chromosome
     for (auto const& allele : merger_chromosome) {
@@ -121,6 +122,7 @@ std::string EvoIndividual::to_string_code() const {
     // robuster chromosomes
     string_genome.append(tr_robuster_chromosome.at(0).to_string_code());
     string_genome.append(te_robuster_chromosome.at(0).to_string_code());
+    
     return string_genome;
 }
 

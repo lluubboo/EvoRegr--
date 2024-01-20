@@ -84,7 +84,7 @@ public:
     void transform(Eigen::MatrixXd&) const override;
     std::string to_string() const override;
     std::string to_string_code() const override;
-    void transformVector(Eigen::VectorXd&) const;
+    void transform_vector(Eigen::VectorXd&) const;
     void transformBack(Eigen::VectorXd&) const;
     void resetCharacteristicNumber(float);
 
@@ -98,7 +98,7 @@ public:
     void transform(Eigen::MatrixXd&) const override;
     std::string to_string() const override;
     std::string to_string_code() const override;
-    void transformVector(Eigen::VectorXd&) const;
+    void transform_vector(Eigen::VectorXd&) const;
 
     std::vector<int> allele;
 };

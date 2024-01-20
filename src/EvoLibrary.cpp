@@ -68,7 +68,7 @@ void Migration::short_distance_migration(std::vector<EvoIndividual>& population,
 EvoIndividual Factory::get_random_evo_individual(EvoRegression::EvoDataSet const& dataset, XoshiroCpp::Xoshiro256Plus& random_engine) {
     EvoIndividual individual{};
     int training_row_count = dataset.training_predictor.rows();
-    int test_row_count = dataset.training_predictor.cols();
+    int test_row_count = dataset.test_predictor.rows();
     int column_count = dataset.training_predictor.cols();
     // create genofond
     for (int i = 0; i < column_count; i++)
@@ -103,7 +103,7 @@ std::vector<EvoIndividual> Factory::generate_random_generation(
     std::function<double(EvoRegression::EvoDataSet const& dataset)> solver
 ) {
     std::vector<EvoIndividual> generation(size);
-    std::generate(generation.begin(), generation.end(), [&]() {return Factory::get_random_evo_individual(dataset.training_predictor.rows(), dataset.training_predictor.cols(), random_engine);});
+    std::generate(generation.begin(), generation.end(), [&]() {return Factory::get_random_evo_individual(dataset, random_engine);});
     std::for_each(generation.begin(), generation.end(), [&](EvoIndividual& individual) {individual.evaluate(EvoMath::get_fitness<std::function<double(EvoRegression::EvoDataSet const& dataset)>>(Transform::transform_dataset_copy(dataset, individual, true), solver));});
     return generation;
 };
@@ -186,7 +186,7 @@ TransformYAllele Factory::get_random_transform_yallele(XoshiroCpp::Xoshiro256Plu
  */
 RobustAllele Factory::get_random_robust_allele(int row_count, XoshiroCpp::Xoshiro256Plus& random_engine) {
     RobustAllele robust_allele{};
-    int rows_to_erase = RandomNumbers::rand_interval_int(0, row_count / 4., random_engine);
+    int rows_to_erase = row_count / 5.;
     std::vector<int> choosen_rows(row_count);
     std::iota(begin(choosen_rows), end(choosen_rows), 0);
     std::shuffle(choosen_rows.begin(), choosen_rows.end(), random_engine);
@@ -203,11 +203,13 @@ EvoIndividual Crossover::cross(const EvoIndividual& parent1, const EvoIndividual
     // indexes which points to place of chromosome cut & recombination
     int m_crossover_twist_index = RandomNumbers::rand_interval_int(0, chromosome_size, random_engine);
     int t_crossover_twist_index = RandomNumbers::rand_interval_int(0, chromosome_size, random_engine);
-    int r_crossover_twist_index = RandomNumbers::rand_interval_int(0, 1, random_engine);
+    int rtr_crossover_twist_index = RandomNumbers::rand_interval_int(0, 1, random_engine);
+    int rte_crossover_twist_index = RandomNumbers::rand_interval_int(0, 1, random_engine);
     int y_crossover_twist_index = RandomNumbers::rand_interval_int(0, 1, random_engine);
 
     // cross single gene chromosomes robuster & ytransformer
-    youngling.tr_robuster_chromosome = (r_crossover_twist_index == 0) ? parent1.tr_robuster_chromosome : parent2.tr_robuster_chromosome;
+    youngling.tr_robuster_chromosome = (rtr_crossover_twist_index == 0) ? parent1.tr_robuster_chromosome : parent2.tr_robuster_chromosome;
+    youngling.te_robuster_chromosome = (rte_crossover_twist_index == 0) ? parent1.te_robuster_chromosome : parent2.te_robuster_chromosome;
     youngling.y_transformer_chromosome = (y_crossover_twist_index == 0) ? parent1.y_transformer_chromosome : parent2.y_transformer_chromosome;
 
     // cross multi gene chromosomes merger & xtransformer
@@ -236,10 +238,10 @@ EvoIndividual Crossover::cross(const EvoIndividual& parent1, const EvoIndividual
  * The function first selects a random mutation point in the chromosomes of the individual.
  * Then, it selects a random chromosome to mutate, and finally mutates the allele at the selected mutation point.
  */
-void Mutation::mutate(EvoIndividual& individual, int chromosome_size, int predictor_row_count, int mutation_rate, XoshiroCpp::Xoshiro256Plus& random_engine) {
+void Mutation::mutate(EvoIndividual& individual, int chromosome_size, int predictor_row_count, int test_predictor_row_count, int mutation_rate, XoshiroCpp::Xoshiro256Plus& random_engine) {
     int rand_num = RandomNumbers::rand_interval_int(0, 100, random_engine);
     if (rand_num <= mutation_rate) {
-        int mutation_index = RandomNumbers::rand_interval_int(0, 3, random_engine);
+        int mutation_index = RandomNumbers::rand_interval_int(0, 4, random_engine);
         if (mutation_index == 0) {
             int col = RandomNumbers::rand_interval_int(0, chromosome_size - 1, random_engine);
             individual.x_transformer_chromosome.at(col) = Factory::get_random_transform_xallele(col, random_engine);
@@ -253,6 +255,9 @@ void Mutation::mutate(EvoIndividual& individual, int chromosome_size, int predic
         }
         if (mutation_index == 3) {
             individual.y_transformer_chromosome.at(0) = Factory::get_random_transform_yallele(random_engine);
+        }
+        if (mutation_index == 4) {
+            individual.te_robuster_chromosome.at(0) = Factory::get_random_robust_allele(test_predictor_row_count, random_engine);
         }
     }
 }
@@ -271,21 +276,8 @@ void Mutation::mutate(EvoIndividual& individual, int chromosome_size, int predic
  * Finally, it transforms predictors based on the x_transformer_chromosome of the EvoIndividual.
  */
 void Transform::full_predictor_transform(Eigen::MatrixXd& matrix, EvoIndividual const& individual) {
-
-    // erase some rows
     individual.tr_robuster_chromosome.at(0).transform(matrix);
-
-    //merge predictors
-    for (int i = 0; i < matrix.cols(); i++)
-    {
-        individual.merger_chromosome.at(i).transform(matrix);
-    }
-
-    //transform predictors
-    for (int i = 0; i < matrix.cols(); i++)
-    {
-        individual.x_transformer_chromosome.at(i).transform(matrix);
-    }
+    Transform::half_predictor_transform(matrix, individual);
 };
 
 /**
@@ -302,16 +294,8 @@ void Transform::full_predictor_transform(Eigen::MatrixXd& matrix, EvoIndividual 
  * Unlike the full_predictor_transform function, this function does not erase any rows from the predictor matrix.
  */
 void Transform::half_predictor_transform(Eigen::MatrixXd& matrix, EvoIndividual const& individual) {
-    //merge predictors
-    for (int i = 0; i < matrix.cols(); i++)
-    {
-        individual.merger_chromosome.at(i).transform(matrix);
-    }
-    //transform predictors
-    for (int i = 0; i < matrix.cols(); i++)
-    {
-        individual.x_transformer_chromosome.at(i).transform(matrix);
-    }
+    std::for_each(individual.merger_chromosome.begin(), individual.merger_chromosome.end(), [&matrix](auto& item) { item.transform(matrix); });
+    std::for_each(individual.x_transformer_chromosome.begin(), individual.x_transformer_chromosome.end(), [&matrix](auto& item) { item.transform(matrix); });
 };
 
 /**
@@ -342,8 +326,8 @@ void Transform::robust_predictor_transform(Eigen::MatrixXd& matrix, EvoIndividua
  * Then, it applies a transformation on the vector based on the y_transformer_chromosome of the EvoIndividual.
  */
 void Transform::full_target_transform(Eigen::VectorXd& vector, EvoIndividual const& individual) {
-    individual.tr_robuster_chromosome.at(0).transformVector(vector);
-    individual.y_transformer_chromosome.at(0).transformVector(vector);
+    individual.tr_robuster_chromosome.at(0).transform_vector(vector);
+    Transform::half_target_transform(vector, individual);
 };
 
 /**
@@ -359,7 +343,7 @@ void Transform::full_target_transform(Eigen::VectorXd& vector, EvoIndividual con
  * Unlike the full_target_transform function, this function does not apply any robust transformation.
  */
 void Transform::half_target_transform(Eigen::VectorXd& vector, EvoIndividual const& individual) {
-    individual.y_transformer_chromosome.at(0).transformVector(vector);
+    individual.y_transformer_chromosome.at(0).transform_vector(vector);
 };
 
 EvoRegression::EvoDataSet& Transform::transform_dataset(EvoRegression::EvoDataSet& dataset, EvoIndividual const& individual, bool robust) {
@@ -367,8 +351,12 @@ EvoRegression::EvoDataSet& Transform::transform_dataset(EvoRegression::EvoDataSe
     if (robust) {
         Transform::full_predictor_transform(dataset.training_predictor, individual);
         Transform::full_target_transform(dataset.training_target, individual);
+
         Transform::half_predictor_transform(dataset.test_predictor, individual);
+        individual.te_robuster_chromosome.at(0).transform(dataset.test_predictor);
+
         Transform::half_target_transform(dataset.test_target, individual);
+        individual.te_robuster_chromosome.at(0).transform_vector(dataset.test_target);
     }
     else {
         Transform::half_predictor_transform(dataset.training_predictor, individual);
@@ -384,12 +372,17 @@ EvoRegression::EvoDataSet Transform::transform_dataset_copy(EvoRegression::EvoDa
     if (robust) {
         Transform::full_predictor_transform(dataset.training_predictor, individual);
         Transform::full_target_transform(dataset.training_target, individual);
+
         Transform::half_predictor_transform(dataset.test_predictor, individual);
+        individual.te_robuster_chromosome.at(0).transform(dataset.test_predictor);
+
         Transform::half_target_transform(dataset.test_target, individual);
+        individual.te_robuster_chromosome.at(0).transform_vector(dataset.test_target);
     }
     else {
         Transform::half_predictor_transform(dataset.training_predictor, individual);
         Transform::half_target_transform(dataset.training_target, individual);
+
         Transform::half_predictor_transform(dataset.test_predictor, individual);
         Transform::half_target_transform(dataset.test_target, individual);
     }
