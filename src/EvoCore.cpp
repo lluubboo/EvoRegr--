@@ -260,7 +260,11 @@ void EvoCore::predict() {
                 // reset workspace to original state
                 compute_datasets[island_index] = original_dataset;
 
-                EvoIndividual newborn = Crossover::cross(
+                // newborn reference
+                EvoIndividual& newborn = newborns[entity_index];
+
+                Crossover::cross(
+                    newborn,
                     Selection::tournament_selection(
                         pensioners.begin() + boundary_conditions.island_borders[island_index][0],
                         boundary_conditions.island_generation_size,
@@ -285,20 +289,19 @@ void EvoCore::predict() {
                 );
 
                 newborn.evaluate(EvoMath::get_fitness<std::function<double(EvoRegression::EvoDataSet const& dataset)>>(Transform::transform_dataset(compute_datasets[island_index], newborn, true), solver));
-                newborns[entity_index] = std::move(newborn);
             }
         }
-        // move newoborns to old population, they are now old
-        pensioners = std::move(newborns);
-        // prepare new population of newborns
-        newborns.clear();
-        newborns.resize(boundary_conditions.global_generation_size);
 
+        // move newoborns to old population, they are now old
+        std::swap(pensioners, newborns);
+
+        // generation postprocessing
         clear_elite_groups();
         rank_past_generation();
         move_elites();
     }
 
+    // postprocessing
     find_titan();
     EvoRegression::Log::get_logger()->info("Evolution process finished");
 }

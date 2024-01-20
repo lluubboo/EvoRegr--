@@ -16,7 +16,7 @@ namespace Selection {
 }
 namespace Crossover {
 
-    EvoIndividual cross(EvoIndividual const&, EvoIndividual const&, int, XoshiroCpp::Xoshiro256Plus&);
+    void cross(EvoIndividual& child, EvoIndividual const& parent1, EvoIndividual const& parent2, int, XoshiroCpp::Xoshiro256Plus&);
 
 }
 namespace Mutation {

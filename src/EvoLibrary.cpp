@@ -195,9 +195,7 @@ RobustAllele Factory::get_random_robust_allele(int row_count, XoshiroCpp::Xoshir
     return robust_allele;
 };
 
-EvoIndividual Crossover::cross(const EvoIndividual& parent1, const EvoIndividual& parent2, int chromosome_size, XoshiroCpp::Xoshiro256Plus& random_engine) {
-
-    EvoIndividual youngling{}; //newborn
+void Crossover::cross(EvoIndividual& child, const EvoIndividual& parent1, const EvoIndividual& parent2, int chromosome_size, XoshiroCpp::Xoshiro256Plus& random_engine) {
 
     // indexes which points to place of chromosome cut & recombination
     int m_crossover_twist_index = RandomNumbers::rand_interval_int(0, chromosome_size, random_engine);
@@ -207,18 +205,16 @@ EvoIndividual Crossover::cross(const EvoIndividual& parent1, const EvoIndividual
     int y_crossover_twist_index = RandomNumbers::rand_interval_int(0, 1, random_engine);
 
     // cross single gene chromosomes robuster & ytransformer
-    youngling.tr_robuster_chromosome = (rtr_crossover_twist_index == 0) ? parent1.tr_robuster_chromosome : parent2.tr_robuster_chromosome;
-    youngling.te_robuster_chromosome = (rte_crossover_twist_index == 0) ? parent1.te_robuster_chromosome : parent2.te_robuster_chromosome;
-    youngling.y_transformer_chromosome = (y_crossover_twist_index == 0) ? parent1.y_transformer_chromosome : parent2.y_transformer_chromosome;
+    child.tr_robuster_chromosome = (rtr_crossover_twist_index == 0) ? parent1.tr_robuster_chromosome : parent2.tr_robuster_chromosome;
+    child.te_robuster_chromosome = (rte_crossover_twist_index == 0) ? parent1.te_robuster_chromosome : parent2.te_robuster_chromosome;
+    child.y_transformer_chromosome = (y_crossover_twist_index == 0) ? parent1.y_transformer_chromosome : parent2.y_transformer_chromosome;
 
     // cross multi gene chromosomes merger & xtransformer
-    youngling.merger_chromosome = parent1.merger_chromosome;
-    youngling.x_transformer_chromosome = parent1.x_transformer_chromosome;
+    child.merger_chromosome = parent1.merger_chromosome;
+    child.x_transformer_chromosome = parent1.x_transformer_chromosome;
 
-    std::copy(parent2.merger_chromosome.begin() + m_crossover_twist_index, parent2.merger_chromosome.end(), youngling.merger_chromosome.begin() + m_crossover_twist_index);
-    std::copy(parent2.x_transformer_chromosome.begin() + t_crossover_twist_index, parent2.x_transformer_chromosome.end(), youngling.x_transformer_chromosome.begin() + t_crossover_twist_index);
-
-    return youngling;
+    std::copy(parent2.merger_chromosome.begin() + m_crossover_twist_index, parent2.merger_chromosome.end(), child.merger_chromosome.begin() + m_crossover_twist_index);
+    std::copy(parent2.x_transformer_chromosome.begin() + t_crossover_twist_index, parent2.x_transformer_chromosome.end(), child.x_transformer_chromosome.begin() + t_crossover_twist_index);
 }
 
 /**
@@ -351,11 +347,11 @@ EvoRegression::EvoDataSet& Transform::transform_dataset(EvoRegression::EvoDataSe
         Transform::full_predictor_transform(dataset.training_predictor, individual);
         Transform::full_target_transform(dataset.training_target, individual);
 
-        Transform::half_predictor_transform(dataset.test_predictor, individual);
         individual.te_robuster_chromosome.at(0).transform(dataset.test_predictor);
+        Transform::half_predictor_transform(dataset.test_predictor, individual);
 
-        Transform::half_target_transform(dataset.test_target, individual);
         individual.te_robuster_chromosome.at(0).transform_vector(dataset.test_target);
+        Transform::half_target_transform(dataset.test_target, individual);
     }
     else {
         Transform::half_predictor_transform(dataset.training_predictor, individual);
@@ -372,11 +368,11 @@ EvoRegression::EvoDataSet Transform::transform_dataset_copy(EvoRegression::EvoDa
         Transform::full_predictor_transform(dataset.training_predictor, individual);
         Transform::full_target_transform(dataset.training_target, individual);
 
-        Transform::half_predictor_transform(dataset.test_predictor, individual);
         individual.te_robuster_chromosome.at(0).transform(dataset.test_predictor);
+        Transform::half_predictor_transform(dataset.test_predictor, individual);
 
-        Transform::half_target_transform(dataset.test_target, individual);
         individual.te_robuster_chromosome.at(0).transform_vector(dataset.test_target);
+        Transform::half_target_transform(dataset.test_target, individual);
     }
     else {
         Transform::half_predictor_transform(dataset.training_predictor, individual);
