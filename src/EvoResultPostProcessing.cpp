@@ -164,23 +164,23 @@ Eigen::MatrixXd EvoRegression::get_regression_summary_matrix(
     const EvoRegression::EvoDataSet& original
 ) {
     // get target and predicted target for comparison
-    //Eigen::VectorXd target = original.test_target;
-    //Eigen::VectorXd prediction = original.test_predictor * regression_coefficients;
+    Eigen::VectorXd target = original.training_target;
+    Eigen::VectorXd prediction = original.training_predictor * regression_coefficients;
 
     // transform target back to original values for presentation
-    //auto& transformer = titan.y_transformer_chromosome.at(0);
-    //transformer.transformBack(target);
-    //transformer.transformBack(prediction);
+    auto& transformer = titan.y_transformer_chromosome.at(0);
+    transformer.transformBack(target);
+    transformer.transformBack(prediction);
 
     // assembly result matrix
     const int numColumns = 4;
-    //Eigen::MatrixXd regression_result_matrix(original.test_predictor.rows(), numColumns);
-    //regression_result_matrix.col(0) = target;
-    //regression_result_matrix.col(1) = prediction;
-    //regression_result_matrix.col(2) = target - prediction;
+    Eigen::MatrixXd regression_result_matrix(original.training_predictor.rows(), numColumns);
+    regression_result_matrix.col(0) = target;
+    regression_result_matrix.col(1) = prediction;
+    regression_result_matrix.col(2) = target - prediction;
 
     const double percentageFactor = 100.0;
-    //regression_result_matrix.col(3) = percentageFactor - ((prediction.array() / target.array()) * percentageFactor);
+    regression_result_matrix.col(3) = percentageFactor - ((prediction.array() / target.array()) * percentageFactor);
 
     return Eigen::MatrixXd();
 }
