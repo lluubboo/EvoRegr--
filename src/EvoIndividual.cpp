@@ -42,19 +42,6 @@ std::vector<std::string> EvoIndividual::robust_tr_chromosome_to_string_vector() 
 };
 
 /**
- * The function converts the alleles of a robust chromosome into a vector of strings.
- *
- * @return The function `robust_chromosome_to_string_vector` returns a `std::vector<std::string>`.
- */
-std::vector<std::string> EvoIndividual::robust_te_chromosome_to_string_vector() const {
-    std::vector<std::string> string_vector;
-    for (auto const& allele : te_robuster_chromosome) {
-        string_vector.push_back(allele.to_string());
-    }
-    return string_vector;
-};
-
-/**
  * The function transforms a chromosome of alleles into a vector of strings.
  *
  * @return a vector of strings.
