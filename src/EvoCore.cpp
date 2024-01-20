@@ -234,11 +234,12 @@ void EvoCore::predict() {
             log_island_titans(gen_index);
         }
 
+        // loop through entities in island
+        int cache_hits = 0;
+
         // loop through islands
 #pragma omp parallel for schedule(guided)
         for (size_t island_index = 0; island_index < boundary_conditions.island_count; island_index++) {
-
-            // loop through entities in island
 
             for (size_t entity_index = boundary_conditions.island_borders[island_index][0]; entity_index <= boundary_conditions.island_borders[island_index][1]; entity_index++) {
 
@@ -281,6 +282,8 @@ void EvoCore::predict() {
 
                 if (opt_fitness.has_value()) {
                     newborn.fitness = opt_fitness.value();
+#pragma omp atomic
+                    cache_hits++;
                 }
                 else {
                     newborn.evaluate(
@@ -290,6 +293,8 @@ void EvoCore::predict() {
                 }
             }
         }
+
+        if (gen_index % 20 == 0 && gen_index != 0) EvoRegression::Log::get_logger()->info("Cache hit ratio: {}", cache_hits);
 
         // move newoborns to old population, they are now old
         std::swap(pensioners, newborns);
