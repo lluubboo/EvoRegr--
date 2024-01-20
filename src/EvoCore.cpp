@@ -284,20 +284,7 @@ void EvoCore::predict() {
                     random_engines[thread_id]
                 );
 
-                std::string genotype_key = newborn.to_string_code();
-
-                auto opt_fitness = caches[island_index].get(genotype_key);
-
-                if (opt_fitness.has_value()) {
-                    newborn.fitness = opt_fitness.value();
-                }
-                else {
-                    newborn.evaluate(
-                        EvoMath::get_fitness<std::function<double(EvoRegression::EvoDataSet const& dataset)>>(Transform::transform_dataset(compute_datasets[island_index], newborn, true), solver)
-                    );
-                    caches[island_index].put(genotype_key, newborn.fitness);
-                }
-
+                newborn.evaluate(EvoMath::get_fitness<std::function<double(EvoRegression::EvoDataSet const& dataset)>>(Transform::transform_dataset(compute_datasets[island_index], newborn, true), solver));
                 newborns[entity_index] = std::move(newborn);
             }
         }

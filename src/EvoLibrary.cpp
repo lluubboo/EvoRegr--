@@ -191,7 +191,6 @@ RobustAllele Factory::get_random_robust_allele(int row_count, XoshiroCpp::Xoshir
     std::iota(begin(choosen_rows), end(choosen_rows), 0);
     std::shuffle(choosen_rows.begin(), choosen_rows.end(), random_engine);
     choosen_rows.erase(choosen_rows.end() - rows_to_erase, choosen_rows.end());
-    std::sort(choosen_rows.begin(), choosen_rows.end());
     robust_allele.allele = choosen_rows;
     return robust_allele;
 };
