@@ -309,18 +309,18 @@ public:
     }
 
     std::string get_expression() const {
-        std::string result;
+        std::stringstream result;
         for (const auto& symbol : _expression) {
             if (symbol[0] == 'b') {
-                result += std::string(1, symbol[1]);
+                result << std::string(1, symbol[1]);
             }
             else if (symbol[0] == 'c') {
-                result += std::to_string(_constants[symbol[1] - '0']);
+                result << static_cast<int>(_constants[symbol[1] - '0']);
             }
             else if (symbol[0] == 'v') {
-                result += "v" + std::to_string(_variables[symbol[1] - '0']);
+                result << "v" << _variables[symbol[1] - '0'];
             }
         }
-        return result;
+        return result.str();
     }
 };

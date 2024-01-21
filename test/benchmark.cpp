@@ -80,7 +80,7 @@ void test_get_fitness_chache(std::vector<EvoRegression::EvoDataSet> datasets, st
 
         {
             volatile double dummy = 0;
-            
+
             Timer timer(population.size(), "GET FROM CACHE");
             for (const auto& individual : population) {
                 dummy += cache.get(individual.to_string_code()).value();

@@ -93,23 +93,23 @@ std::string EvoIndividual::to_math_formula() const {
  * @return a string representation of the code of an EvoIndividual object.
  */
 std::string EvoIndividual::to_string_code() const {
+    std::stringstream ss;
     
-    std::string string_genome;
     // merger chromosome
     for (auto const& allele : merger_chromosome) {
-        string_genome.append(allele.to_string_code());
+        ss << allele.to_string_code();
     }
+
     // transform X chromosome
     for (auto const& allele : x_transformer_chromosome) {
-        string_genome.append(allele.to_string_code());
+        ss << allele.to_string_code();
     }
     // transform Y chromosome
-    string_genome.append(y_transformer_chromosome.at(0).to_string_code());
+    ss << y_transformer_chromosome.at(0).to_string_code();
 
     // robuster chromosomes
-    string_genome.append(tr_robuster_chromosome.at(0).to_string_code());
-    
-    return string_genome;
+    ss << tr_robuster_chromosome.at(0).to_string_code();
+    return ss.str();
 }
 
 bool EvoIndividual::operator<(const EvoIndividual& other) const {

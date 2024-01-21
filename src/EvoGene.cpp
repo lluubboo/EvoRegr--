@@ -2,9 +2,11 @@
 #include <iostream>
 #include <cmath>
 #include <sstream>
+#include <numeric>
 #include "RandomChoices.hpp"
 #include "RandomNumberGenerator.hpp"
 #include "EvoGene.hpp"
+
 
 /*****************************************EvoGene**********************************************/
 
@@ -151,11 +153,12 @@ std::string TransformXAllele::to_string() const {
  * @return The string representation of the TransformXAllele object.
  */
 std::string TransformXAllele::to_string_code() const {
-    std::string sallele("TX");
-    sallele += std::to_string(column_index);
-    sallele += std::to_string(characteristic_number);
-    sallele += transform_operator_names.at(allele);
-    return sallele;
+    std::stringstream ss;
+    ss << "TX";
+    ss << static_cast<int>(column_index);
+    ss << static_cast<int>(characteristic_number);
+    ss << transform_operator_names.at(allele);
+    return ss.str();
 }
 
 /**
@@ -302,10 +305,11 @@ std::string TransformYAllele::to_string() const {
  * @return The string representation of the TransformYAllele object.
  */
 std::string TransformYAllele::to_string_code() const {
-    std::string sallele("TY");
-    sallele += std::to_string(characteristic_number);
-    sallele += transform_operator_names.at(allele);
-    return sallele;
+    std::stringstream ss;
+    ss << "TY";
+    ss << static_cast<int>(characteristic_number);
+    ss << transform_operator_names.at(allele);
+    return ss.str();
 }
 
 /*****************************************RobustAllele*****************************************/
@@ -362,15 +366,13 @@ std::string RobustAllele::to_string() const {
 
 /**
  * Converts the RobustAllele object to a string representation.
- * The string representation includes the prefix "RA" followed by the characters in the allele.
+ * The string representation includes the prefix "RA" followed by the sum of numbers in the allele.
  *
  * @return The string representation of the RobustAllele object.
  */
 std::string RobustAllele::to_string_code() const {
-    std::string result("RA");
-    result.reserve(2 + allele.size()); // 2 for "RA"
-    result.insert(result.end(), allele.begin(), allele.end());
-    return result;
+    int sum = std::accumulate(allele.begin(), allele.end(), 0);
+    return "RA" + std::to_string(sum);
 }
 
 
