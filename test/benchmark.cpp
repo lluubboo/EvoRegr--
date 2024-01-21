@@ -137,7 +137,6 @@ int main() {
 
     test_get_fitness_chache(datasets, population);
 
-
     std::cout << "Press ENTER to exit...";
     std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
     return 0;
