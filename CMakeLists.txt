@@ -12,7 +12,7 @@ if (CMAKE_BUILD_TYPE STREQUAL "Debug")
     add_compile_options(-Wall -Wpedantic -Wextra -fexceptions)
 elseif (CMAKE_BUILD_TYPE STREQUAL "Release")
     if(WIN32)
-        set(CMAKE_EXE_LINKER_FLAGS "-mwindows")
+# set(CMAKE_EXE_LINKER_FLAGS "-mwindows")
 # -flto -funroll-loops -fprefetch-loop-arrays -mavx -mavx2
 add_compile_options(-march=native)
     else()
@@ -42,6 +42,7 @@ find_package(FLTK REQUIRED NO_MODULE)
 add_subdirectory(external)
 add_subdirectory(include)
 add_subdirectory(src)
+add_subdirectory(test)
 
 target_link_libraries (${PROJECT_NAME} PRIVATE OpenMP::OpenMP_CXX Eigen3::Eigen spdlog::spdlog fltk includes_lib sources_lib externals_lib)
 
