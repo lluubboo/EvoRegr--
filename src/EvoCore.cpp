@@ -282,8 +282,6 @@ void EvoCore::predict() {
 
                 if (opt_fitness.has_value()) {
                     newborn.fitness = opt_fitness.value();
-#pragma omp atomic
-                    cache_hits++;
                 }
                 else {
                     newborn.evaluate(
