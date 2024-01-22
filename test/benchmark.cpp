@@ -29,7 +29,7 @@ void test_transforamtion(std::vector<EvoRegression::EvoDataSet> datasets, std::v
         Timer timer(population.size(), "TRANSFORM DATASET");
         int i = 0;
         for (const auto& individual : population) {
-            dummy += Transform::transform_dataset(datasets_copy[i++], individual, true).training_predictor.row(0)(0);
+            dummy += Transform::transform_dataset(datasets_copy[i++], individual, true).predictor.row(0)(0);
         }
     }
 }

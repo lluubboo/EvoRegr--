@@ -18,6 +18,7 @@ struct EvoBoundaryConditions {
     size_t migrants_count;                 
     size_t elites_count;
     std::vector<std::array<size_t, 2>> island_borders;
+    size_t splitting_ratio; // how much percent of the dataset is used for testing 
 
     EvoBoundaryConditions() :
         island_generation_size(100),
@@ -30,7 +31,8 @@ struct EvoBoundaryConditions {
         global_generation_size(island_generation_size* island_count),
         migrants_count(static_cast<size_t>((global_generation_size* migration_ratio) / 100)),
         elites_count(static_cast<size_t>((island_generation_size * 5) / 100)),
-        island_borders(0)
+        island_borders(0),
+        splitting_ratio(20)
     {
 
         // Initialize island_borders
@@ -49,7 +51,7 @@ struct EvoBoundaryConditions {
         size_t island_count,
         size_t migration_ratio,
         size_t migration_interval
-    ) :
+        ) :
         island_generation_size(island_generation_size),
         generation_count(generation_count),
         interaction_cols(interaction_cols),
@@ -60,7 +62,8 @@ struct EvoBoundaryConditions {
         global_generation_size(island_generation_size* island_count),
         migrants_count(static_cast<size_t>((global_generation_size* migration_ratio) / 100)),
         elites_count(static_cast<size_t>((island_generation_size * 5) / 100)),
-        island_borders(0)
+        island_borders(0),
+        splitting_ratio(20)
     {
 
         // Initialize island_borders

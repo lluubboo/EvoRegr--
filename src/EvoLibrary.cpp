@@ -67,8 +67,8 @@ void Migration::short_distance_migration(std::vector<EvoIndividual>& population,
  */
 EvoIndividual Factory::get_random_evo_individual(EvoRegression::EvoDataSet const& dataset, XoshiroCpp::Xoshiro256Plus& random_engine) {
     EvoIndividual individual{};
-    int training_row_count = dataset.training_predictor.rows();
-    int column_count = dataset.training_predictor.cols();
+    int training_row_count = dataset.predictor.rows();
+    int column_count = dataset.predictor.cols();
     // create genofond
     for (int i = 0; i < column_count; i++)
     {
@@ -338,12 +338,12 @@ void Transform::half_target_transform(Eigen::VectorXd& vector, EvoIndividual con
 EvoRegression::EvoDataSet& Transform::transform_dataset(EvoRegression::EvoDataSet& dataset, EvoIndividual const& individual, bool robust) {
     // robust = filtering outliers
     if (robust) {
-        Transform::full_predictor_transform(dataset.training_predictor, individual);
-        Transform::full_target_transform(dataset.training_target, individual);
+        Transform::full_predictor_transform(dataset.predictor, individual);
+        Transform::full_target_transform(dataset.target, individual);
     }
     else {
-        Transform::half_predictor_transform(dataset.training_predictor, individual);
-        Transform::half_target_transform(dataset.training_target, individual);
+        Transform::half_predictor_transform(dataset.predictor, individual);
+        Transform::half_target_transform(dataset.target, individual);
     }
     return dataset;
 };
@@ -351,12 +351,12 @@ EvoRegression::EvoDataSet& Transform::transform_dataset(EvoRegression::EvoDataSe
 EvoRegression::EvoDataSet Transform::transform_dataset_copy(EvoRegression::EvoDataSet dataset, EvoIndividual const& individual, bool robust) {
     // robust = filtering outliers
     if (robust) {
-        Transform::full_predictor_transform(dataset.training_predictor, individual);
-        Transform::full_target_transform(dataset.training_target, individual);
+        Transform::full_predictor_transform(dataset.predictor, individual);
+        Transform::full_target_transform(dataset.target, individual);
     }
     else {
-        Transform::half_predictor_transform(dataset.training_predictor, individual);
-        Transform::half_target_transform(dataset.training_target, individual);
+        Transform::half_predictor_transform(dataset.predictor, individual);
+        Transform::half_target_transform(dataset.target, individual);
     }
     return dataset;
 };

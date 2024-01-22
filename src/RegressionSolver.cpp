@@ -55,13 +55,13 @@ RegressionDetailedResult solve_system_detailed(Eigen::MatrixXd const& predictors
 double LLTSolver::operator()(EvoRegression::EvoDataSet const& dataset) const {
 
     // Calculate the number of training examples
-    int num_train = static_cast<int>(dataset.training_predictor.rows() * 0.7);
+    int num_train = static_cast<int>(dataset.predictor.rows() * 0.7);
 
     // Create blocks for training and testing
-    auto train_predictor = dataset.training_predictor.block(0, 0, num_train, dataset.training_predictor.cols());
-    auto train_target = dataset.training_target.segment(0, num_train);
-    auto test_predictor = dataset.training_predictor.block(num_train, 0, dataset.training_predictor.rows() - num_train, dataset.training_predictor.cols());
-    auto test_target = dataset.training_target.segment(num_train, dataset.training_target.size() - num_train);
+    auto train_predictor = dataset.predictor.block(0, 0, num_train, dataset.predictor.cols());
+    auto train_target = dataset.target.segment(0, num_train);
+    auto test_predictor = dataset.predictor.block(num_train, 0, dataset.predictor.rows() - num_train, dataset.predictor.cols());
+    auto test_target = dataset.target.segment(num_train, dataset.target.size() - num_train);
 
 
     // Calculate coefficients using training data
@@ -82,13 +82,13 @@ double LLTSolver::operator()(EvoRegression::EvoDataSet const& dataset) const {
 double LDLTSolver::operator()(EvoRegression::EvoDataSet const& dataset) const {
 
     // Calculate the number of training examples
-    int num_train = static_cast<int>(dataset.training_predictor.rows() * 0.7);
+    int num_train = static_cast<int>(dataset.predictor.rows() * 0.7);
 
     // Create blocks for training and testing
-    auto train_predictor = dataset.training_predictor.block(0, 0, num_train, dataset.training_predictor.cols());
-    auto train_target = dataset.training_target.segment(0, num_train);
-    auto test_predictor = dataset.training_predictor.block(num_train, 0, dataset.training_predictor.rows() - num_train, dataset.training_predictor.cols());
-    auto test_target = dataset.training_target.segment(num_train, dataset.training_target.size() - num_train);
+    auto train_predictor = dataset.predictor.block(0, 0, num_train, dataset.predictor.cols());
+    auto train_target = dataset.target.segment(0, num_train);
+    auto test_predictor = dataset.predictor.block(num_train, 0, dataset.predictor.rows() - num_train, dataset.predictor.cols());
+    auto test_target = dataset.target.segment(num_train, dataset.target.size() - num_train);
 
 
     // Calculate coefficients using training data
@@ -109,13 +109,13 @@ double LDLTSolver::operator()(EvoRegression::EvoDataSet const& dataset) const {
 double ColPivHouseholderQrSolver::operator()(EvoRegression::EvoDataSet const& dataset) const {
 
     // Calculate the number of training examples
-    int num_train = static_cast<int>(dataset.training_predictor.rows() * 0.7);
+    int num_train = static_cast<int>(dataset.predictor.rows() * 0.7);
 
     // Create blocks for training and testing
-    auto train_predictor = dataset.training_predictor.block(0, 0, num_train, dataset.training_predictor.cols());
-    auto train_target = dataset.training_target.segment(0, num_train);
-    auto test_predictor = dataset.training_predictor.block(num_train, 0, dataset.training_predictor.rows() - num_train, dataset.training_predictor.cols());
-    auto test_target = dataset.training_target.segment(num_train, dataset.training_target.size() - num_train);
+    auto train_predictor = dataset.predictor.block(0, 0, num_train, dataset.predictor.cols());
+    auto train_target = dataset.target.segment(0, num_train);
+    auto test_predictor = dataset.predictor.block(num_train, 0, dataset.predictor.rows() - num_train, dataset.predictor.cols());
+    auto test_target = dataset.target.segment(num_train, dataset.target.size() - num_train);
 
 
     // Calculate coefficients using training data
