@@ -412,10 +412,15 @@ void EvoCore::titan_postprocessing() {
     double splitting_ratio_fraction = static_cast<double>(boundary_conditions.splitting_ratio) / 100.0;
     int result_rows = static_cast<int>(original_dataset.predictor.rows() * splitting_ratio_fraction);
 
-    // robust 
+    // robust ... TODO rename to training dataset
     titan_dataset_robust = Transform::transform_dataset_copy(original_dataset, titan, true);
     titan_dataset_robust.predictor = titan_dataset_robust.predictor.topRows(original_dataset.predictor.rows() - result_rows);
     titan_dataset_robust.target = titan_dataset_robust.target.topRows(original_dataset.predictor.rows() - result_rows);
+
+    // robust ... TODO rename to test dataset
+    titan_dataset_nonrobust = Transform::transform_dataset_copy(original_dataset, titan, true);
+    titan_dataset_nonrobust.predictor = titan_dataset_robust.predictor.bottomRows(result_rows);
+    titan_dataset_nonrobust.target = titan_dataset_robust.target.bottomRows(result_rows);
 
     // regression result
     titan_result = solve_system_detailed(titan_dataset_robust.predictor, titan_dataset_robust.target);
@@ -439,6 +444,15 @@ void EvoCore::log_result() {
             titan_dataset_robust
         ).data(),
         titan_dataset_robust.target.size() * 4
+    );
+
+    table << EvoRegression::get_regression_result_table(
+        EvoRegression::get_regression_summary_matrix(
+            titan,
+            titan_result.theta,
+            titan_dataset_nonrobust
+        ).data(),
+        titan_dataset_nonrobust.target.size() * 4
     );
 
     table << EvoRegression::get_result_metrics_table(
