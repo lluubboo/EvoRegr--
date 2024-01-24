@@ -89,6 +89,64 @@ void test_get_fitness_chache(std::vector<EvoRegression::EvoDataSet> datasets, st
     }
 }
 
+Eigen::VectorXd gradescent(EvoRegression::EvoDataSet const& dataset) {
+
+    // boundaries
+    int iterations = 1e3;
+    double alpha = 0.01;
+    double error_norm = 0;
+    double old_error_norm = std::numeric_limits<double>::max();
+    double threshold = 1e-6;
+
+    // memmory
+    Eigen::VectorXd coefficients = Eigen::VectorXd::Ones(dataset.predictor.cols());
+    Eigen::VectorXd errors(dataset.predictor.rows());
+    Eigen::VectorXd gradient(dataset.predictor.cols());
+
+    for (int i = 0; i < iterations; i++) {
+
+        // compute errors 
+        errors.noalias() = dataset.predictor * coefficients - dataset.target;
+
+        // compute coefficients
+        coefficients.noalias() -= alpha * (dataset.predictor.transpose() * errors);
+
+        // check error threshold
+        error_norm = errors.norm();
+        if (abs(old_error_norm - error_norm) < threshold) return coefficients;
+        old_error_norm = error_norm;
+    }
+
+    return coefficients;
+}
+
+void test_gradescent_vs_colpivhoushodler(std::vector<EvoRegression::EvoDataSet> datasets) {
+
+    Eigen::VectorXd coefficients = Eigen::VectorXd::Ones(datasets[0].predictor.cols());
+
+    {
+        volatile double dummy = 0;
+        Timer timer(datasets.size(), "ColPivHouseholderQrSolver");
+        for (auto& dataset : datasets) {
+            coefficients = (dataset.predictor.transpose() * dataset.predictor).colPivHouseholderQr().solve(dataset.predictor.transpose() * dataset.target);
+            dummy += coefficients(0);
+        }
+        std::cout << dummy << std::endl;
+    }
+
+    coefficients = Eigen::VectorXd::Ones(datasets[0].predictor.cols());
+
+    {
+        volatile double dummy = 0;
+        Timer timer(datasets.size(), "Gradient descent");
+        for (auto& dataset : datasets) {
+            coefficients = gradescent(dataset);
+            dummy += coefficients(0);
+        }
+        std::cout << dummy << std::endl;
+    }
+}
+
 int main() {
     std::cout << "Benchmark started... "  << std::endl;
     
@@ -111,7 +169,7 @@ int main() {
 
     // datasets
     std::vector<EvoRegression::EvoDataSet> datasets(pop_size);
-    std::for_each(datasets.begin(), datasets.end(), [&](EvoRegression::EvoDataSet& dataset) {dataset = EvoRegression::EvoDataSet(Eigen::MatrixXd::Random(300, 6), Eigen::VectorXd::Random(300, 1));});
+    std::for_each(datasets.begin(), datasets.end(), [&](EvoRegression::EvoDataSet& dataset) {dataset = EvoRegression::EvoDataSet(Eigen::MatrixXd::Random(300, 20), Eigen::VectorXd::Random(300, 20));});
 
     std::cout << "Datasets initialized... " << std::endl;
     
@@ -136,6 +194,8 @@ int main() {
     test_trans_and_comp(datasets, population);
 
     test_get_fitness_chache(datasets, population);
+
+    test_gradescent_vs_colpivhoushodler(datasets);
 
     std::cout << "Press ENTER to exit...";
     std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');

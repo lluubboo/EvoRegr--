@@ -8,10 +8,10 @@
  *
  * @return The regression result table as a string.
  */
-std::string EvoRegression::get_regression_result_table(double* prediction_dataset, size_t size) {
+std::string EvoRegression::get_regression_test_table(double* prediction_dataset, size_t size) {
     Plotter<double> plt = Plotter(
         prediction_dataset,
-        "Regression result summary",
+        "Regression result test part",
         { "Target", "Prediction", "Difference", "Percentage difference" },
         149,
         size,
@@ -28,10 +28,10 @@ std::string EvoRegression::get_regression_result_table(double* prediction_datase
  *
  * @return The regression result table as a string.
  */
-std::string EvoRegression::get_regression_robust_result_table(double* prediction_dataset_robust, size_t size) {
+std::string EvoRegression::get_regression_learning_table(double* prediction_dataset_robust, size_t size) {
     Plotter<double> plt = Plotter(
         prediction_dataset_robust,
-        "Regression result summary without outliers",
+        "Regression result learning part",
         { "Target", "Prediction", "Difference", "Percentage difference" },
         149,
         size,

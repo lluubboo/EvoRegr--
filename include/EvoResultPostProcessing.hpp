@@ -7,9 +7,9 @@
 
 namespace EvoRegression {
 
-    std::string get_regression_result_table(double* prediction_dataset_nonrobust, size_t size);
+    std::string get_regression_test_table(double* prediction_dataset_nonrobust, size_t size);
 
-    std::string get_regression_robust_result_table(double* prediction_dataset_robust, size_t size);
+    std::string get_regression_learning_table(double* prediction_dataset_robust, size_t size);
 
     std::string get_regression_coefficients_table(double* regression_coefficients, size_t size);
 

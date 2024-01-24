@@ -16,8 +16,8 @@ class EvoCore : public IEvoAPI {
 
     EvoRegression::EvoDataSet original_dataset;
 
-    EvoRegression::EvoDataSet titan_dataset_robust; // testing dataset part without outliers
-    EvoRegression::EvoDataSet titan_dataset_nonrobust; // testing dataset part with outliers
+    EvoRegression::EvoDataSet titan_dataset_training; // testing dataset part without outliers
+    EvoRegression::EvoDataSet titan_dataset_test; // testing dataset part with outliers
     EvoRegression::EvoDataSet titan_dataset_full; // whole dataset 
 
     // settings

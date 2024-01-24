@@ -8,8 +8,8 @@
 
 EvoCore::EvoCore() :
     original_dataset(),
-    titan_dataset_robust(),
-    titan_dataset_nonrobust(),
+    titan_dataset_training(),
+    titan_dataset_test(),
     boundary_conditions(),
     solver(LDLTSolver()),
     titan(),
@@ -413,17 +413,17 @@ void EvoCore::titan_postprocessing() {
     int result_rows = static_cast<int>(original_dataset.predictor.rows() * splitting_ratio_fraction);
 
     // robust ... TODO rename to training dataset
-    titan_dataset_robust = Transform::transform_dataset_copy(original_dataset, titan, true);
-    titan_dataset_robust.predictor = titan_dataset_robust.predictor.topRows(original_dataset.predictor.rows() - result_rows);
-    titan_dataset_robust.target = titan_dataset_robust.target.topRows(original_dataset.predictor.rows() - result_rows);
+    titan_dataset_training = Transform::transform_dataset_copy(original_dataset, titan, true);
+    titan_dataset_training.predictor = titan_dataset_training.predictor.topRows(original_dataset.predictor.rows() - result_rows);
+    titan_dataset_training.target = titan_dataset_training.target.topRows(original_dataset.predictor.rows() - result_rows);
 
     // robust ... TODO rename to test dataset
-    titan_dataset_nonrobust = Transform::transform_dataset_copy(original_dataset, titan, true);
-    titan_dataset_nonrobust.predictor = titan_dataset_robust.predictor.bottomRows(result_rows);
-    titan_dataset_nonrobust.target = titan_dataset_robust.target.bottomRows(result_rows);
+    titan_dataset_test = Transform::transform_dataset_copy(original_dataset, titan, true);
+    titan_dataset_test.predictor = titan_dataset_test.predictor.bottomRows(result_rows);
+    titan_dataset_test.target = titan_dataset_test.target.bottomRows(result_rows);
 
     // regression result
-    titan_result = solve_system_detailed(titan_dataset_robust.predictor, titan_dataset_robust.target);
+    titan_result = solve_system_detailed(titan_dataset_training.predictor, titan_dataset_training.target);
     EvoRegression::Log::get_logger()->info("Titan postprocessing finished.");
 }
 
@@ -437,29 +437,30 @@ void EvoCore::log_result() {
     EvoRegression::Log::get_logger()->info("Logging results...");
     std::stringstream table;
 
-    table << EvoRegression::get_regression_robust_result_table(
+    table << EvoRegression::get_regression_learning_table(
         EvoRegression::get_regression_summary_matrix(
             titan,
             titan_result.theta,
-            titan_dataset_robust
+            titan_dataset_training
         ).data(),
-        titan_dataset_robust.target.size() * 4
+        titan_dataset_training.target.size() * 4
     );
 
-    table << EvoRegression::get_regression_result_table(
+    table << EvoRegression::get_regression_test_table(
         EvoRegression::get_regression_summary_matrix(
             titan,
             titan_result.theta,
-            titan_dataset_nonrobust
+            titan_dataset_test
         ).data(),
-        titan_dataset_nonrobust.target.size() * 4
+        titan_dataset_test.target.size() * 4
     );
 
+    //TODO
     table << EvoRegression::get_result_metrics_table(
         {
-            DescriptiveStatistics::median(titan_dataset_robust.target.data(), titan_dataset_robust.target.size()),
-            titan_result.standard_deviation,
-            titan_result.rsquared
+            DescriptiveStatistics::median(titan_dataset_test.target.data(), titan_dataset_test.target.size()),
+            0,
+            0
         }
     );
 

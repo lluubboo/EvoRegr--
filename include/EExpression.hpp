@@ -17,6 +17,16 @@ class EExpression {
         std::array<char, 2>{'b', '/'}
     };
 
+    static constexpr std::array<std::array<char, 2>, 7> _unary_operators = {
+        std::array<char, 2>{'u', '2'}, // square
+        std::array<char, 2>{'u', '3'}, // cube
+        std::array<char, 2>{'u', '4'}, // 4
+        std::array<char, 2>{'u', 'i'}, // inverse
+        std::array<char, 2>{'u', 's'}, // 2 root
+        std::array<char, 2>{'u', 'c'}, // 3 root
+        std::array<char, 2>{'u', 'q'}  // 4 root
+    };
+
     // the number shows how many variables I have available
     // it must be known at instance creation
     unsigned int _var_count;
@@ -48,7 +58,7 @@ class EExpression {
      * @return The result of the operation as an Eigen::VectorXd.
      *         If the operation is not recognized, returns a zero vector of the same size as operand1.
      */
-    Eigen::VectorXd perform_operation(const Eigen::VectorXd& operand1, const Eigen::VectorXd& operand2, char operation) const noexcept {
+    Eigen::VectorXd perform_binary_operation(const Eigen::VectorXd& operand1, const Eigen::VectorXd& operand2, char operation) const noexcept {
         switch (operation) {
         case '+':
             return operand1.array() + operand2.array();
@@ -60,7 +70,39 @@ class EExpression {
             return operand1.array() / operand2.array();
         default:
             //ignore the operation
-            return Eigen::VectorXd::Zero(operand1.size());
+            return operand1;
+        }
+    }
+
+    /**
+     * Performs a unary operation on the given operand vector.
+     * 
+     * @param operand The input vector on which the operation is performed.
+     * @param operation The operation to be performed on the operand vector.
+     * @return The resulting vector after applying the unary operation.
+     *         If the operation is not recognized, the original operand vector is returned.
+     */
+    Eigen::VectorXd perform_unary_operation(const Eigen::VectorXd& operand, char operation) const noexcept {
+        switch (operation) {
+        case '2':
+            return operand.array() * operand.array();
+        case '3':
+            return operand.array() * operand.array() * operand.array();
+        case '4': {
+            Eigen::ArrayXd operand_squared = operand.array().square();
+            return operand_squared * operand_squared;
+        }
+        case 'i':
+            return 1 / operand.array();
+        case 's':
+            return operand.array().sqrt();
+        case 'c':
+            return operand.array().pow(0.333);
+        case 'q':
+            return operand.array().pow(0.25);
+        default:
+            //ignore the operation
+            return operand;
         }
     }
 
@@ -80,6 +122,19 @@ class EExpression {
     }
 
     /**
+     * Checks if a unary operation is accepted based on a random probability.
+     * 
+     * @tparam Engine The type of the random number engine.
+     * @param engine The random number engine used for generating random numbers.
+     * @return True if the unary operation is accepted, false otherwise.
+     */
+    template<typename Engine>
+    bool unary_operation_accepted(Engine& engine) {
+        std::uniform_real_distribution<double> distribution(0.0, 1.0);
+        return distribution(engine) <= 0.3;
+    }
+
+    /**
      * Generates a random binary operator using the specified engine.
      * The generated operator is in the form of a character array with two elements.
      * The first element is always 'b', and the second element is one of the following: '+', '-', '*', or '/'.
@@ -91,6 +146,12 @@ class EExpression {
     inline std::array<char, 2> get_random_binary_operator(Engine& engine) {
         std::uniform_int_distribution<int> distribution(0, EExpression::_binary_operators.size() - 1);
         return EExpression::_binary_operators[distribution(engine)];
+    }
+
+    template<typename Engine>
+    inline std::array<char, 2> get_random_unary_operator(Engine& engine) {
+        std::uniform_int_distribution<int> distribution(0, EExpression::_unary_operators.size() - 1);
+        return EExpression::_unary_operators[distribution(engine)];
     }
 
     /**
@@ -174,9 +235,11 @@ class EExpression {
             }
             else {
                 --currentWalkValue;
+                if (unary_operation_accepted(engine)) _expression.push_back(get_random_unary_operator(engine));
                 _expression.push_back(get_random_operand(engine));
             }
         }
+        if (unary_operation_accepted(engine)) _expression.push_back(get_random_unary_operator(engine));
         _expression.push_back(get_random_operand(engine));
     }
 
@@ -269,13 +332,18 @@ public:
                 Eigen::VectorXd operand2 = std::move(stack.back());
                 stack.pop_back();
 
-                stack.push_back(perform_operation(operand1, operand2, symbol[1]));
+                stack.push_back(perform_binary_operation(operand1, operand2, symbol[1]));
             }
             else if (symbol[0] == 'c') {
                 stack.emplace_back(Eigen::VectorXd::Constant(data.rows(), _constants[symbol[1] - '0']));
             }
             else if (symbol[0] == 'v') {
                 stack.push_back(data.col(_variables[symbol[1] - '0']));
+            }
+            else if (symbol[0] == 'u') {
+                Eigen::VectorXd operand = std::move(stack.back());
+                stack.pop_back();
+                stack.push_back(perform_unary_operation(operand, symbol[1]));
             }
         }
         
@@ -319,6 +387,9 @@ public:
             }
             else if (symbol[0] == 'v') {
                 result << "v" << _variables[symbol[1] - '0'];
+            }
+            else if (symbol[0] == 'u') {
+                result << std::string(1, symbol[0]) << std::string(1, symbol[1]);
             }
         }
         return result.str();
