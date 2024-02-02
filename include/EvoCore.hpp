@@ -20,6 +20,9 @@ class EvoCore : public IEvoAPI {
     EvoRegression::EvoDataSet titan_dataset_test; // testing dataset part with outliers
     EvoRegression::EvoDataSet titan_dataset_full; // whole dataset 
 
+    Eigen::MatrixXd training_result;
+    Eigen::MatrixXd testing_result;
+
     // settings
 
     EvoBoundaryConditions boundary_conditions;

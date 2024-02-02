@@ -412,18 +412,21 @@ void EvoCore::titan_postprocessing() {
     double splitting_ratio_fraction = static_cast<double>(boundary_conditions.splitting_ratio) / 100.0;
     int result_rows = static_cast<int>(original_dataset.predictor.rows() * splitting_ratio_fraction);
 
-    // robust ... TODO rename to training dataset
     titan_dataset_training = Transform::transform_dataset_copy(original_dataset, titan, true);
     titan_dataset_training.predictor = titan_dataset_training.predictor.topRows(original_dataset.predictor.rows() - result_rows);
     titan_dataset_training.target = titan_dataset_training.target.topRows(original_dataset.predictor.rows() - result_rows);
 
-    // robust ... TODO rename to test dataset
     titan_dataset_test = Transform::transform_dataset_copy(original_dataset, titan, true);
     titan_dataset_test.predictor = titan_dataset_test.predictor.bottomRows(result_rows);
     titan_dataset_test.target = titan_dataset_test.target.bottomRows(result_rows);
 
-    // regression result
+    // titan detailed result
     titan_result = solve_system_detailed(titan_dataset_training.predictor, titan_dataset_training.target);
+
+    // result matrices
+    training_result = EvoRegression::get_regression_summary_matrix(titan, titan_result.theta, titan_dataset_training);
+    testing_result = EvoRegression::get_regression_summary_matrix(titan, titan_result.theta, titan_dataset_test);
+
     EvoRegression::Log::get_logger()->info("Titan postprocessing finished.");
 }
 
@@ -437,30 +440,21 @@ void EvoCore::log_result() {
     EvoRegression::Log::get_logger()->info("Logging results...");
     std::stringstream table;
 
-    table << EvoRegression::get_regression_learning_table(
-        EvoRegression::get_regression_summary_matrix(
-            titan,
-            titan_result.theta,
-            titan_dataset_training
-        ).data(),
+    table << EvoRegression::get_regression_training_table(
+        training_result.data(),
         titan_dataset_training.target.size() * 4
     );
 
-    table << EvoRegression::get_regression_test_table(
-        EvoRegression::get_regression_summary_matrix(
-            titan,
-            titan_result.theta,
-            titan_dataset_test
-        ).data(),
+    table << EvoRegression::get_regression_testing_table(
+        testing_result.data(),
         titan_dataset_test.target.size() * 4
     );
 
-    //TODO
     table << EvoRegression::get_result_metrics_table(
         {
-            DescriptiveStatistics::median(titan_dataset_test.target.data(), titan_dataset_test.target.size()),
+            DescriptiveStatistics::median(testing_result.col(2).data(), testing_result.col(2).size()),
+            DescriptiveStatistics::standard_deviation(testing_result.col(2).data(), testing_result.col(2).size()),
             0,
-            0
         }
     );
 

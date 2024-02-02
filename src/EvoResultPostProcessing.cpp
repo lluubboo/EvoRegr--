@@ -8,11 +8,11 @@
  *
  * @return The regression result table as a string.
  */
-std::string EvoRegression::get_regression_test_table(double* prediction_dataset, size_t size) {
+std::string EvoRegression::get_regression_testing_table(double* prediction_dataset, size_t size) {
     Plotter<double> plt = Plotter(
         prediction_dataset,
         "Regression result test part",
-        { "Target", "Prediction", "Difference", "Percentage difference" },
+        { "Target", "Prediction", "Error", "Error [%]" },
         149,
         size,
         DataArrangement::ColumnMajor
@@ -28,11 +28,11 @@ std::string EvoRegression::get_regression_test_table(double* prediction_dataset,
  *
  * @return The regression result table as a string.
  */
-std::string EvoRegression::get_regression_learning_table(double* prediction_dataset_robust, size_t size) {
+std::string EvoRegression::get_regression_training_table(double* prediction_dataset_robust, size_t size) {
     Plotter<double> plt = Plotter(
         prediction_dataset_robust,
         "Regression result learning part",
-        { "Target", "Prediction", "Difference", "Percentage difference" },
+        { "Target", "Prediction", "Error", "Error [%]" },
         149,
         size,
         DataArrangement::ColumnMajor
@@ -150,7 +150,7 @@ std::string EvoRegression::get_result_metrics_table(std::vector<double> regressi
     Plotter<double> plt = Plotter(
         regression_metrics.data(),
         "Regression result metrics [robust]",
-        { "Result median", "Result standard deviation", "Robust result COD (R2)" },
+        { "Error median", "Error standard deviation", "COD (R2)" },
         149,
         regression_metrics.size(),
         DataArrangement::RowMajor
@@ -178,9 +178,7 @@ Eigen::MatrixXd EvoRegression::get_regression_summary_matrix(
     regression_result_matrix.col(0) = target;
     regression_result_matrix.col(1) = prediction;
     regression_result_matrix.col(2) = target - prediction;
-
-    const double percentageFactor = 100.0;
-    regression_result_matrix.col(3) = percentageFactor - ((prediction.array() / target.array()) * percentageFactor);
+    regression_result_matrix.col(3) = (regression_result_matrix.col(2).array() / regression_result_matrix.col(0).array()) * 100;
 
     return regression_result_matrix;
 }
