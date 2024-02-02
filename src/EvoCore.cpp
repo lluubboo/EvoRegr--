@@ -452,9 +452,9 @@ void EvoCore::log_result() {
 
     table << EvoRegression::get_result_metrics_table(
         {
-            DescriptiveStatistics::median(testing_result.col(2).data(), testing_result.col(2).size()),
-            DescriptiveStatistics::standard_deviation(testing_result.col(2).data(), testing_result.col(2).size()),
-            0,
+            Statistics::median(testing_result.col(2).data(), testing_result.col(2).size()),
+            Statistics::standard_deviation(testing_result.col(2).data(), testing_result.col(2).size()),
+            Statistics::cod(testing_result.col(0).data(), testing_result.col(1).data(),testing_result.col(0).size())
         }
     );
 

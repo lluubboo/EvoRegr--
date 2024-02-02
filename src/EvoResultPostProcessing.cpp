@@ -150,7 +150,7 @@ std::string EvoRegression::get_result_metrics_table(std::vector<double> regressi
     Plotter<double> plt = Plotter(
         regression_metrics.data(),
         "Regression result metrics [robust]",
-        { "Error median", "Error standard deviation", "COD (R2)" },
+        { "Residuals median", "Residuals standard deviation", "COD (R2)" },
         149,
         regression_metrics.size(),
         DataArrangement::RowMajor
