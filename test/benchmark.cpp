@@ -91,6 +91,8 @@ void test_get_fitness_chache(std::vector<EvoRegression::EvoDataSet> datasets, st
 
 Eigen::VectorXd gradescent(EvoRegression::EvoDataSet const& dataset) {
 
+    // new theta = old theta - alpha * (X^T * (X * theta - y)) / m
+
     // boundaries
     int iterations = 1e3;
     double alpha = 0.01;
@@ -101,7 +103,6 @@ Eigen::VectorXd gradescent(EvoRegression::EvoDataSet const& dataset) {
     // memmory
     Eigen::VectorXd coefficients = Eigen::VectorXd::Ones(dataset.predictor.cols());
     Eigen::VectorXd errors(dataset.predictor.rows());
-    Eigen::VectorXd gradient(dataset.predictor.cols());
 
     for (int i = 0; i < iterations; i++) {
 
