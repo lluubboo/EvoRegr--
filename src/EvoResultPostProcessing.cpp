@@ -12,7 +12,7 @@ std::string EvoRegression::get_regression_testing_table(double* prediction_datas
     Plotter<double> plt = Plotter(
         prediction_dataset,
         "Regression result test part",
-        { "Target", "Prediction", "Error", "Error [%]" },
+        { "Target", "Prediction", "Residual", "Residual [%]" },
         149,
         size,
         DataArrangement::ColumnMajor
@@ -32,7 +32,7 @@ std::string EvoRegression::get_regression_training_table(double* prediction_data
     Plotter<double> plt = Plotter(
         prediction_dataset_robust,
         "Regression result learning part",
-        { "Target", "Prediction", "Error", "Error [%]" },
+        { "Target", "Prediction", "Residual", "Residual [%]" },
         149,
         size,
         DataArrangement::ColumnMajor
