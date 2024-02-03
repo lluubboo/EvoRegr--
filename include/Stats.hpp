@@ -121,14 +121,38 @@ namespace Statistics {
     }
 
     template <typename T>
-    T cod(std::vector<T> target, std::vector<T> measurement) {
+    T cod(std::vector<T> target, std::vector<T> residuals) {
         check_arguments(target);
-        check_arguments(measurement);
-        return sum_squared_residuals(target, mean(target)) / sum_squared_residuals(measurement, mean(target));
+        check_arguments(residuals);
+
+        // square it
+        residuals = squared_residuals(residuals, T(0));
+
+        // create sums
+        T residual_sum_squares = std::accumulate(residuals.begin(), residuals.end(), T(0));
+        T total_sum_squares = sum_squared_residuals(target, mean(target));
+        return 1 - (residual_sum_squares / total_sum_squares);
     }
 
     template <typename T>
-    T cod(T* target, T* measurement, unsigned int size) {
-        return cod(generate_vector(target, size), generate_vector(measurement, size));
+    T cod(T* target, T* residuals, unsigned int size) {
+        return cod(generate_vector(target, size), generate_vector(residuals, size));
+    }
+
+    template <typename T>
+    T coda(std::vector<T> target, std::vector<T> residuals, unsigned int predictor_count) {
+        check_arguments(target);
+        check_arguments(residuals);
+        // square it
+        residuals = squared_residuals(residuals, T(0));
+        // create sums
+        T residual_sum_squares = std::accumulate(residuals.begin(), residuals.end(), T(0));
+        T total_sum_squares = sum_squared_residuals(target, mean(target));
+        return 1 - ((residual_sum_squares / (target.size() - predictor_count)) / (total_sum_squares / (target.size() - 1)));
+    }
+
+    template <typename T>
+    T coda(T* target, T* residuals, unsigned int size, unsigned int predictor_count) {
+        return coda(generate_vector(target, size), generate_vector(residuals, size), predictor_count);
     }
 }

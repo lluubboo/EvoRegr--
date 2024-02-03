@@ -454,7 +454,8 @@ void EvoCore::log_result() {
         {
             Statistics::median(testing_result.col(2).data(), testing_result.col(2).size()),
             Statistics::standard_deviation(testing_result.col(2).data(), testing_result.col(2).size()),
-            Statistics::cod(testing_result.col(0).data(), testing_result.col(1).data(),testing_result.col(0).size())
+            Statistics::cod(testing_result.col(0).data(), testing_result.col(2).data(),testing_result.col(0).size()),
+            Statistics::coda(testing_result.col(0).data(), testing_result.col(2).data(), testing_result.col(0).size(), titan_result.theta.size())
         }
     );
 
