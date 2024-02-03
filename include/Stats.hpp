@@ -39,11 +39,11 @@ namespace Statistics {
         }
         else if (vector_size % 2 == 0) {
             //if size is even, return arithmetic mean of the midlle vector members
-            return ((vector.at(vector_size / 2) - 1) + vector.at(vector_size / 2)) / 2.;
+            return (vector.at(vector_size / 2 - 1) + vector.at(vector_size / 2)) / 2.;
         }
         else {
-            //if size is odd, return midlle member (beware of floor at size/2 divide operation)
-            return vector.at((vector_size / 2) + 1);
+            //if size is odd, return middle member (floor division)
+            return vector.at(vector_size / 2);
         }
     }
 
