@@ -71,7 +71,7 @@ double LLTSolver::operator()(EvoRegression::EvoDataSet const& dataset) const {
     // Check if the result is usable (no NaN or infinite values)
     if (!coefficients.hasNaN() && coefficients.allFinite()) {
         // Calculate fitness using test data
-        return (test_target - (test_predictor * coefficients)).squaredNorm();
+        return (test_target - (test_predictor * coefficients)).squaredNorm() / test_target.size();
     }
     else {
         // Set sum of squares errors to maximum value
@@ -98,7 +98,7 @@ double LDLTSolver::operator()(EvoRegression::EvoDataSet const& dataset) const {
     // Check if the result is usable (no NaN or infinite values)
     if (!coefficients.hasNaN() && coefficients.allFinite()) {
         // Calculate fitness using test data
-        return (test_target - (test_predictor * coefficients)).squaredNorm();
+        return (test_target - (test_predictor * coefficients)).squaredNorm() / test_target.size();
     }
     else {
         // Set sum of squares errors to maximum value
@@ -124,8 +124,8 @@ double ColPivHouseholderQrSolver::operator()(EvoRegression::EvoDataSet const& da
 
     // Check if the result is usable (no NaN or infinite values)
     if (!coefficients.hasNaN() && coefficients.allFinite()) {
-        // Calculate fitness using test data
-        return (test_target - (test_predictor * coefficients)).squaredNorm();
+        // Calculate fitness using test data MSE
+        return (test_target - (test_predictor * coefficients)).squaredNorm() / test_target.size();
     }
     else {
         // Set sum of squares errors to maximum value
