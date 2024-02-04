@@ -17,7 +17,9 @@ namespace EvoRegression {
 
     std::string get_formula_table(std::vector<std::string> formula);
 
-    std::string get_result_metrics_table(std::vector<double> regression_metrics);
+    std::string get_test_result_metrics_table(std::vector<double> regression_metrics);
+
+    std::string get_training_result_metrics_table(std::vector<double> regression_metrics);
 
     Eigen::MatrixXd get_regression_summary_matrix(EvoIndividual const& titan, Eigen::VectorXd const& regression_coefficcients, EvoRegression::EvoDataSet const& original_dataset);
 

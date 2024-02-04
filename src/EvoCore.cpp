@@ -127,7 +127,14 @@ void EvoCore::prepare_input_datasets(std::tuple<int, std::vector<double>> input)
     Eigen::MatrixXd raw_data_matrix = Eigen::Map<Eigen::MatrixXd>(data.data(), output_rows, output_cols);
 
     // populate datasets
-    split_dataset(raw_data_matrix, 0.8);
+    original_dataset.predictor = raw_data_matrix.block(0, 0, raw_data_matrix.rows(), raw_data_matrix.cols() - 1).eval();
+    original_dataset.target = raw_data_matrix.block(0, raw_data_matrix.cols() - 1, raw_data_matrix.rows(), 1).eval();
+
+    // add interaction columns
+    for (int i = 0; i < boundary_conditions.interaction_cols; i++) {
+        original_dataset.predictor.conservativeResize(original_dataset.predictor.rows(), original_dataset.predictor.cols() + 1);
+        original_dataset.predictor.col(original_dataset.predictor.cols() - 1).setOnes();
+    }
 
     EvoRegression::Log::get_logger()->info(
         "Predictor training matrix initialized with {} rows and {} columns",
@@ -135,18 +142,6 @@ void EvoCore::prepare_input_datasets(std::tuple<int, std::vector<double>> input)
         original_dataset.predictor.cols()
     );
 }
-
-/**
- * Splits the given dataset into training and testing datasets according to the specified ratio.
- *
- * @param dataset The dataset to be split.
- * @param ratio The ratio of training data to total data.
- */
-void EvoCore::split_dataset(Eigen::MatrixXd& dataset, double ratio) {
-    // split raw matrix to test & training predictor and target matrices
-    original_dataset.predictor = dataset.block(0, 0, dataset.rows(), dataset.cols() - 1).eval();
-    original_dataset.target = dataset.block(0, dataset.cols() - 1, dataset.rows(), 1).eval();
-};
 
 /**
  * Calls the predict method to perform prediction and logs the elapsed time.
@@ -234,9 +229,6 @@ void EvoCore::predict() {
             log_island_titans(gen_index);
         }
 
-        // loop through entities in island
-        int cache_hits = 0;
-
         // loop through islands
 #pragma omp parallel for schedule(guided)
         for (size_t island_index = 0; island_index < boundary_conditions.island_count; island_index++) {
@@ -291,8 +283,6 @@ void EvoCore::predict() {
                 }
             }
         }
-
-        if (gen_index % 20 == 0 && gen_index != 0) EvoRegression::Log::get_logger()->info("Cache hit ratio: {}", cache_hits);
 
         // move newoborns to old population, they are now old
         std::swap(pensioners, newborns);
@@ -450,7 +440,16 @@ void EvoCore::log_result() {
         titan_dataset_test.target.size() * 4
     );
 
-    table << EvoRegression::get_result_metrics_table(
+    table << EvoRegression::get_training_result_metrics_table(
+        {
+            Statistics::median(training_result.col(2).data(), training_result.col(2).size()),
+            Statistics::standard_deviation(training_result.col(2).data(), training_result.col(2).size()),
+            Statistics::cod(training_result.col(0).data(), training_result.col(2).data(),training_result.col(0).size()),
+            Statistics::coda(training_result.col(0).data(), training_result.col(2).data(), training_result.col(0).size(), titan_result.theta.size())
+        }
+    );
+
+    table << EvoRegression::get_test_result_metrics_table(
         {
             Statistics::median(testing_result.col(2).data(), testing_result.col(2).size()),
             Statistics::standard_deviation(testing_result.col(2).data(), testing_result.col(2).size()),

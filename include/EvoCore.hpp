@@ -46,7 +46,6 @@ class EvoCore : public IEvoAPI {
     RegressionDetailedResult titan_result;
 
     void prepare_input_datasets(std::tuple<int, std::vector<double>>);
-    void split_dataset(Eigen::MatrixXd& dataset, double ratio);
     void prepare_for_prediction();
     void predict();
     void rank_past_generation();

@@ -146,10 +146,22 @@ std::string EvoRegression::get_formula_table(std::vector<std::string> formula) {
  *
  * @return A string representing a table of the regression result metrics.
  */
-std::string EvoRegression::get_result_metrics_table(std::vector<double> regression_metrics) {
+std::string EvoRegression::get_test_result_metrics_table(std::vector<double> regression_metrics) {
     Plotter<double> plt = Plotter(
         regression_metrics.data(),
-        "Regression result metrics [robust]",
+        "Test set metrics [robust]",
+        { "Residuals median", "Residuals standard deviation", "COD", "COD adjusted" },
+        149,
+        regression_metrics.size(),
+        DataArrangement::RowMajor
+    );
+    return plt.get_table();
+};
+
+std::string EvoRegression::get_training_result_metrics_table(std::vector<double> regression_metrics) {
+    Plotter<double> plt = Plotter(
+        regression_metrics.data(),
+        "Training set metrics [robust]",
         { "Residuals median", "Residuals standard deviation", "COD", "COD adjusted" },
         149,
         regression_metrics.size(),
