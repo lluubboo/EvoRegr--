@@ -310,10 +310,13 @@ void EvoView::load_file_button_callback(Fl_Widget* /*w*/, void* v) {
         T->generations_count,
         T->interference_size,
         T->mutation_rate,
+        T->basis_function_complexity,
+        T->regularization_parameter,
         T->island_count,
         T->migration_ratio,
-        T->migration_interval
-    );
+        T->migration_interval,
+        T->test_ratio
+        );
 
     T->_api->set_boundary_conditions(bc);
     T->_api->load_file(T->filepath);
