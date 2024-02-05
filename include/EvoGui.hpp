@@ -36,9 +36,12 @@ class EvoView : public Fl_Window {
     int generations_size;
     int interference_size;
     int mutation_rate;
+    int basis_function_complexity;
+    int regularization_parameter;
     int island_count;
     int migration_ratio;
     int migration_interval;
+    int test_ratio;
 
     //widgets
 
@@ -48,8 +51,14 @@ class EvoView : public Fl_Window {
     Fl_Pack* main_widget_pack;
     Fl_Button* load_button;
     Fl_Button* batch_predict_button;
+    Fl_Box* basis_function_complexity_label;
+    Fl_Input* basis_function_complexity_box;
+    Fl_Box* regularization_parameter_label;
+    Fl_Input* regularization_parameter_box;
     Fl_Box* mutation_rate_label;
     Fl_Input* mutation_rate_box;
+    Fl_Box* test_ratio_label;
+    Fl_Input* test_ratio_box;
     Fl_Box* gen_count_label;
     Fl_Input* gen_count_box;
     Fl_Box* gen_size_label;
@@ -73,6 +82,9 @@ class EvoView : public Fl_Window {
     static void gen_size_input_callback(Fl_Widget* w, void* v);
     static void gen_interference_size_callback(Fl_Widget* w, void* v);
     static void mutation_rate_callback(Fl_Widget* w, void* v);
+    static void basis_function_complexity_callback(Fl_Widget* w, void* v);
+    static void regularization_parameter_callback(Fl_Widget* w, void* v);
+    static void test_ratio_callback(Fl_Widget* w, void* v);
     static void island_count_callback(Fl_Widget* w, void* v);
     static void migration_ratio_callback(Fl_Widget* w, void* v);
     static void migration_interval_callback(Fl_Widget* w, void* v);
@@ -88,6 +100,9 @@ class EvoView : public Fl_Window {
     Fl_Pack* create_main_widget_pack(int x, int y, int w, int h);
     Fl_Button* create_load_button(int h);
     Fl_Button* create_batch_predict_button(int h);
+    Fl_Input* create_basis_function_complexity_box(int h);
+    Fl_Input* create_regularization_parameter_box(int h);
+    Fl_Input* create_test_ratio_box(int h);
     Fl_Choice* create_combo_box(int h);
     Fl_Input* create_gen_count_box(int h);
     Fl_Input* create_gen_size_box(int h);
@@ -106,7 +121,7 @@ class EvoView : public Fl_Window {
 
 public:
     
-    EvoView(int width, int height, const char* title);
+    EvoView(const char* title);
     void bind_to_backend(std::unique_ptr<IEvoAPI>);
 };
 

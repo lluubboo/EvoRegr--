@@ -23,7 +23,7 @@
 
 static constexpr const char* WINDOW_NAME = "EVOREGR++ 1.0.0";
 static constexpr int WINDOW_WIDTH = 1500;
-static constexpr int WINDOW_HEIGHT = 600;
+static constexpr int WINDOW_HEIGHT = 800;
 static constexpr int MAIN_WIDGET_PACK_WIDTH = 200;
 static constexpr int BUTTON_HEIGHT = 30;
 static constexpr int SPACER_HEIGHT = 0;
@@ -40,16 +40,19 @@ static constexpr int MENU_HEIGHT = 30;
  * @param height The height of the window in pixels.
  * @param title The title of the window.
  */
-EvoView::EvoView(int width, int height, const char* title) :
-    Fl_Window(width, height, title),
+EvoView::EvoView(const char* title) :
+    Fl_Window(WINDOW_WIDTH, WINDOW_HEIGHT, title),
     decomposition_method{ "LDLT" },
     generations_count{ 100 },
     generations_size{ 100 },
     interference_size{ 0 },
     mutation_rate{ 15 },
+    basis_function_complexity{ 4 },
+    regularization_parameter{ 1 },
     island_count{ 12 },
     migration_ratio{ 5 },
-    migration_interval{ 5 }
+    migration_interval{ 5 },
+    test_ratio{ 20 }
 {
     set_appearance();
     render_main_window();
@@ -149,7 +152,7 @@ void EvoView::gen_interference_size_callback(Fl_Widget* w, void* v) {
     std::string input_value = ((Fl_Input*)w)->value();
     if (!input_value.empty() && std::all_of(input_value.begin(), input_value.end(), ::isdigit)) {
         T->interference_size = std::stoi(input_value);
-        EvoRegression::Log::get_logger()->info("Interference columns size set to: " + std::to_string(T->interference_size));
+        EvoRegression::Log::get_logger()->info("Interaction columns size set to: " + std::to_string(T->interference_size));
     }
     else {
         EvoRegression::Log::get_logger()->error("Invalid input. Please enter a valid integer.");
@@ -214,6 +217,45 @@ void EvoView::migration_ratio_callback(Fl_Widget* w, void* v) {
     else {
         T->migration_ratio = value;
         EvoRegression::Log::get_logger()->info("Migration ratio set to: " + std::to_string(T->migration_ratio));
+    }
+}
+
+void EvoView::basis_function_complexity_callback(Fl_Widget* w, void* v) {
+    EvoView* T = (EvoView*)v;
+    std::istringstream iss(((Fl_Input*)w)->value());
+    int value;
+    if (!(iss >> value) || !iss.eof() || value < 0) {
+        EvoRegression::Log::get_logger()->error("Invalid input. Please enter an integer number.");
+    }
+    else {
+        T->basis_function_complexity = value;
+        EvoRegression::Log::get_logger()->info("Basis function complexity set to: " + std::to_string(T->basis_function_complexity));
+    }
+}
+
+void EvoView::regularization_parameter_callback(Fl_Widget* w, void* v) {
+    EvoView* T = (EvoView*)v;
+    std::istringstream iss(((Fl_Input*)w)->value());
+    float value;
+    if (!(iss >> value) || !iss.eof()) {
+        EvoRegression::Log::get_logger()->error("Invalid input. Please enter a floating point number.");
+    }
+    else {
+        T->regularization_parameter = value;
+        EvoRegression::Log::get_logger()->info("Regularization parameter set to: " + std::to_string(T->regularization_parameter));
+    }
+}
+
+void EvoView::test_ratio_callback(Fl_Widget* w, void* v) {
+    EvoView* T = (EvoView*)v;
+    std::istringstream iss(((Fl_Input*)w)->value());
+    int value;
+    if (!(iss >> value) || !iss.eof()) {
+        EvoRegression::Log::get_logger()->error("Invalid input. Please enter an integer number.");
+    }
+    else {
+        T->test_ratio = value;
+        EvoRegression::Log::get_logger()->info("Test ratio set to: " + std::to_string(T->test_ratio));
     }
 }
 
@@ -477,6 +519,7 @@ Fl_Choice* EvoView::create_combo_box(int h) {
     combo_box->add("LLT");
     combo_box->add("LDLT");
     combo_box->add("ColPivHouseholderQr");
+    combo_box->add("Gradient descent");
     combo_box->value(1);
     combo_box->tooltip("Choose the decomposition method");
     combo_box->callback(decomposition_choice_callback, (void*)this);
@@ -545,6 +588,30 @@ Fl_Input* EvoView::create_mutation_rate_box(int h) {
     inputBox->value(mutation_rate);
     inputBox->tooltip("Enter the mutation ratio here 0 - 100 [%]");
     inputBox->callback(mutation_rate_callback, (void*)(this));
+    return inputBox;
+}
+
+Fl_Input* EvoView::create_basis_function_complexity_box(int h) {
+    Fl_Input* inputBox = new Fl_Input(0, 0, 0, h);
+    inputBox->value(basis_function_complexity);
+    inputBox->tooltip("Enter the the count of operands in basis function here");
+    inputBox->callback(basis_function_complexity_callback, (void*)(this));
+    return inputBox;
+}
+
+Fl_Input* EvoView::create_regularization_parameter_box(int h) {
+    Fl_Input* inputBox = new Fl_Input(0, 0, 0, h);
+    inputBox->value(regularization_parameter);
+    inputBox->tooltip("Enter the value of ridge regularization parameter here");
+    inputBox->callback(regularization_parameter_callback, (void*)(this));
+    return inputBox;
+}
+
+Fl_Input* EvoView::create_test_ratio_box(int h) {
+    Fl_Input* inputBox = new Fl_Input(0, 0, 0, h);
+    inputBox->value(test_ratio);
+    inputBox->tooltip("Enter the test ratio here 0 - 100 [%]");
+    inputBox->callback(basis_function_complexity_callback, (void*)(this));
     return inputBox;
 }
 
@@ -636,16 +703,22 @@ void EvoView::render_main_window() {
             gen_count_box = create_gen_count_box(BUTTON_HEIGHT);
             gen_size_label = create_label(LABEL_HEIGHT, "Generation size:");
             gen_size_box = create_gen_size_box(BUTTON_HEIGHT);
-            inter_size_label = create_label(LABEL_HEIGHT, "Interference columns:");
+            inter_size_label = create_label(LABEL_HEIGHT, "Interaction columns:");
             inter_size_box = create_inter_size_box(BUTTON_HEIGHT);
             mutation_rate_label = create_label(LABEL_HEIGHT, "Mutation rate:");
             mutation_rate_box = create_mutation_rate_box(BUTTON_HEIGHT);
+            basis_function_complexity_label = create_label(LABEL_HEIGHT, "Basis function complexity:");
+            basis_function_complexity_box = create_basis_function_complexity_box(BUTTON_HEIGHT);
+            regularization_parameter_label = create_label(LABEL_HEIGHT, "Regularization parameter:");
+            regularization_parameter_box = create_regularization_parameter_box(BUTTON_HEIGHT);
             island_count_label = create_label(LABEL_HEIGHT, "Island count:");
             island_count_box = create_island_count_box(BUTTON_HEIGHT);
             migration_ratio_label = create_label(LABEL_HEIGHT, "Migration ratio:");
             migration_ratio_box = create_migration_ratio_box(BUTTON_HEIGHT);
             migration_interval_label = create_label(LABEL_HEIGHT, "Migration interval:");
             migration_interval_box = create_migration_interval_box(BUTTON_HEIGHT);
+            test_ratio_label = create_label(LABEL_HEIGHT, "Test ratio:");
+            test_ratio_box = create_test_ratio_box(BUTTON_HEIGHT);
             load_button = create_load_button(BUTTON_HEIGHT);
             decomposition_choice_chbox = create_combo_box(BUTTON_HEIGHT);
             batch_predict_button = create_batch_predict_button(BUTTON_HEIGHT);

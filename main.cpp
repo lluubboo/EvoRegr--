@@ -10,7 +10,7 @@ int main(int, char**) {
     EvoRegression::Log::init();
 
     // initialize GUI
-    EvoView* view = new EvoView(1500, 600, "EVOREGR++ 1.0.0");
+    EvoView* view = new EvoView("EVOREGR++ 1.0.0");
 
     // connect GUI and backend
     std::unique_ptr<IEvoAPI> api = std::make_unique<EvoCore>();
