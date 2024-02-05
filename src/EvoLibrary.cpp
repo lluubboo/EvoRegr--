@@ -65,14 +65,14 @@ void Migration::short_distance_migration(std::vector<EvoIndividual>& population,
  * The EvoIndividual object contains several chromosomes, each of which is a vector of alleles.
  * The function generates these chromosomes by calling other functions in the Factory class to generate random alleles.
  */
-EvoIndividual Factory::get_random_evo_individual(EvoRegression::EvoDataSet const& dataset, XoshiroCpp::Xoshiro256Plus& random_engine) {
+EvoIndividual Factory::get_random_evo_individual(EvoBoundaryConditions boundaries, EvoRegression::EvoDataSet const& dataset, XoshiroCpp::Xoshiro256Plus& random_engine) {
     EvoIndividual individual{};
     int training_row_count = dataset.predictor.rows();
     int column_count = dataset.predictor.cols();
     // create genofond
     for (int i = 0; i < column_count; i++)
     {
-        individual.merger_chromosome.push_back(Factory::get_random_merge_allele(i, column_count, random_engine));
+        individual.merger_chromosome.push_back(Factory::get_random_merge_allele(i, column_count, boundaries.basis_function_complexity, random_engine));
         individual.x_transformer_chromosome.push_back(Factory::get_random_transform_xallele(i, random_engine));
     }
     individual.tr_robuster_chromosome.push_back(Factory::get_random_robust_allele(training_row_count, random_engine));
@@ -95,13 +95,13 @@ EvoIndividual Factory::get_random_evo_individual(EvoRegression::EvoDataSet const
  * @return std::vector<EvoIndividual> The generated generation of individuals.
  */
 std::vector<EvoIndividual> Factory::generate_random_generation(
-    int size,
+    EvoBoundaryConditions boundary_conditions,
     EvoRegression::EvoDataSet dataset,
     XoshiroCpp::Xoshiro256Plus& random_engine,
     std::function<double(EvoRegression::EvoDataSet const& dataset)> solver
 ) {
-    std::vector<EvoIndividual> generation(size);
-    std::generate(generation.begin(), generation.end(), [&]() {return Factory::get_random_evo_individual(dataset, random_engine);});
+    std::vector<EvoIndividual> generation(boundary_conditions.global_generation_size);
+    std::generate(generation.begin(), generation.end(), [&]() {return Factory::get_random_evo_individual(boundary_conditions, dataset, random_engine);});
     std::for_each(generation.begin(), generation.end(), [&](EvoIndividual& individual) {individual.evaluate(EvoMath::get_fitness<std::function<double(EvoRegression::EvoDataSet const& dataset)>>(Transform::transform_dataset_copy(dataset, individual, true), solver));});
     return generation;
 };
@@ -119,11 +119,11 @@ std::vector<EvoIndividual> Factory::generate_random_generation(
  * The MergeAllele object contains several alleles, each of which is a vector of MergeTwins.
  * The function generates these alleles by calling other functions in the Factory class to generate random MergeTwins.
  */
-MergeAllele Factory::get_random_merge_allele(int column_index, int predictor_column_count, XoshiroCpp::Xoshiro256Plus& random_engine) {
+MergeAllele Factory::get_random_merge_allele(int column_index, int predictor_column_count, int basis_function_complexity, XoshiroCpp::Xoshiro256Plus& random_engine) {
     MergeAllele merge_allele{ column_index };
     // column index 0 marks x0 (no merging)
     if (column_index != 0) {
-        merge_allele.allele = EExpression{ predictor_column_count, predictor_column_count * 0.75, random_engine };
+        merge_allele.allele = EExpression{ predictor_column_count, basis_function_complexity, random_engine };
     }
     return merge_allele;
 };
@@ -230,7 +230,7 @@ void Crossover::cross(EvoIndividual& child, const EvoIndividual& parent1, const 
  * The function first selects a random mutation point in the chromosomes of the individual.
  * Then, it selects a random chromosome to mutate, and finally mutates the allele at the selected mutation point.
  */
-void Mutation::mutate(EvoIndividual& individual, int chromosome_size, int predictor_row_count, int mutation_rate, XoshiroCpp::Xoshiro256Plus& random_engine) {
+void Mutation::mutate(EvoIndividual& individual, int chromosome_size, int predictor_row_count, int mutation_rate, int basis_function_complexity, XoshiroCpp::Xoshiro256Plus& random_engine) {
     int rand_num = RandomNumbers::rand_interval_int(0, 100, random_engine);
     if (rand_num <= mutation_rate) {
         int mutation_index = RandomNumbers::rand_interval_int(0, 3, random_engine);
@@ -240,7 +240,7 @@ void Mutation::mutate(EvoIndividual& individual, int chromosome_size, int predic
         }
         if (mutation_index == 1) {
             int col = RandomNumbers::rand_interval_int(0, chromosome_size - 1, random_engine);
-            individual.merger_chromosome.at(col) = Factory::get_random_merge_allele(col, chromosome_size, random_engine);
+            individual.merger_chromosome.at(col) = Factory::get_random_merge_allele(col, chromosome_size, basis_function_complexity, random_engine);
         }
         if (mutation_index == 2) {
             individual.tr_robuster_chromosome.at(0) = Factory::get_random_robust_allele(predictor_row_count, random_engine);

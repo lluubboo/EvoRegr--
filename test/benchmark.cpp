@@ -180,7 +180,8 @@ int main() {
     std::cout << "Cache initialized... " << std::endl;
 
     //create random population
-    std::vector<EvoIndividual> population = Factory::generate_random_generation(pop_size, datasets[0], master_random_engine, solver);
+    EvoBoundaryConditions boundary_conditions = EvoBoundaryConditions(200, 20, 20, 20, 20, 20, 20, 20, 20, 20);
+    std::vector<EvoIndividual> population = Factory::generate_random_generation(boundary_conditions, datasets[0], master_random_engine, solver);
 
     std::cout << "Population initialized... " << std::endl;
 

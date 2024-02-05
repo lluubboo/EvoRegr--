@@ -131,7 +131,7 @@ void EvoCore::prepare_input_datasets(std::tuple<int, std::vector<double>> input)
     original_dataset.target = raw_data_matrix.block(0, raw_data_matrix.cols() - 1, raw_data_matrix.rows(), 1).eval();
 
     // add interaction columns
-    for (int i = 0; i < boundary_conditions.interaction_cols; i++) {
+    for (unsigned int i = 0; i < boundary_conditions.interaction_cols; i++) {
         original_dataset.predictor.conservativeResize(original_dataset.predictor.rows(), original_dataset.predictor.cols() + 1);
         original_dataset.predictor.col(original_dataset.predictor.cols() - 1).setOnes();
     }
@@ -196,7 +196,7 @@ void EvoCore::prepare_for_prediction() {
     // create old population as a genofond pool
     pensioners = std::vector<EvoIndividual>(
         Factory::generate_random_generation(
-            boundary_conditions.global_generation_size,
+            boundary_conditions,
             original_dataset,
             random_engines[0],
             solver
@@ -265,6 +265,7 @@ void EvoCore::predict() {
                     original_dataset.predictor.cols(),
                     original_dataset.predictor.rows(),
                     boundary_conditions.mutation_ratio,
+                    boundary_conditions.basis_function_complexity,
                     random_engines[thread_id]
                 );
 
