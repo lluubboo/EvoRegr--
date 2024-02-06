@@ -48,7 +48,7 @@ namespace Transform {
 namespace EvoMath {
 
     template <typename T>
-    double get_fitness(EvoRegression::EvoDataSet const& dataset, T solver);
+    double get_fitness(EvoRegression::EvoDataSet const& dataset, int test_ratio, float regularization_coefficient, T solver);
 
     template <typename T>
     std::vector<T> extract_column(std::vector<T> data, unsigned int column_count, unsigned int column_index);
@@ -61,7 +61,7 @@ namespace Factory {
     TransformXAllele get_random_transform_xallele(int column_index, XoshiroCpp::Xoshiro256Plus& random_engine);
     TransformYAllele get_random_transform_yallele(XoshiroCpp::Xoshiro256Plus& random_engine);
     RobustAllele get_random_robust_allele(int row_count, XoshiroCpp::Xoshiro256Plus& random_engine);
-    std::vector<EvoIndividual> generate_random_generation(EvoBoundaryConditions, EvoRegression::EvoDataSet, XoshiroCpp::Xoshiro256Plus&, std::function<double(EvoRegression::EvoDataSet const&)>);
+    std::vector<EvoIndividual> generate_random_generation(EvoBoundaryConditions, EvoRegression::EvoDataSet, XoshiroCpp::Xoshiro256Plus&, std::function<double(EvoRegression::EvoDataSet const&, int, float)>);
 
 }
 

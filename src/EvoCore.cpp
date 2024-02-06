@@ -278,7 +278,12 @@ void EvoCore::predict() {
                 }
                 else {
                     newborn.evaluate(
-                        EvoMath::get_fitness<std::function<double(EvoRegression::EvoDataSet const& dataset)>>(Transform::transform_dataset(compute_datasets[island_index], newborn, true), solver)
+                        EvoMath::get_fitness<std::function<double(EvoRegression::EvoDataSet const& dataset, int, float)>>(
+                            Transform::transform_dataset(compute_datasets[island_index], newborn, true),
+                            boundary_conditions.test_ratio,
+                            boundary_conditions.regularization_parameter,
+                            solver
+                        )
                     );
                     caches[island_index].put(genotype_key, newborn.fitness);
                 }
@@ -400,8 +405,8 @@ void EvoCore::titan_postprocessing() {
     EvoRegression::Log::get_logger()->info("Titan postprocessing has begun.");
 
     // get number of rows
-    double splitting_ratio_fraction = static_cast<double>(boundary_conditions.splitting_ratio) / 100.0;
-    int result_rows = static_cast<int>(original_dataset.predictor.rows() * splitting_ratio_fraction);
+    double test_ratio_fraction = static_cast<double>(boundary_conditions.test_ratio) / 100.0;
+    int result_rows = static_cast<int>(original_dataset.predictor.rows() * test_ratio_fraction);
 
     titan_dataset_training = Transform::transform_dataset_copy(original_dataset, titan, true);
     titan_dataset_training.predictor = titan_dataset_training.predictor.topRows(original_dataset.predictor.rows() - result_rows);

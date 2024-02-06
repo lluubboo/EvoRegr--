@@ -98,11 +98,11 @@ std::vector<EvoIndividual> Factory::generate_random_generation(
     EvoBoundaryConditions boundary_conditions,
     EvoRegression::EvoDataSet dataset,
     XoshiroCpp::Xoshiro256Plus& random_engine,
-    std::function<double(EvoRegression::EvoDataSet const& dataset)> solver
+    std::function<double(EvoRegression::EvoDataSet const& dataset, int, float)> solver
 ) {
     std::vector<EvoIndividual> generation(boundary_conditions.global_generation_size);
     std::generate(generation.begin(), generation.end(), [&]() {return Factory::get_random_evo_individual(boundary_conditions, dataset, random_engine);});
-    std::for_each(generation.begin(), generation.end(), [&](EvoIndividual& individual) {individual.evaluate(EvoMath::get_fitness<std::function<double(EvoRegression::EvoDataSet const& dataset)>>(Transform::transform_dataset_copy(dataset, individual, true), solver));});
+    std::for_each(generation.begin(), generation.end(), [&](EvoIndividual& individual) {individual.evaluate(EvoMath::get_fitness<std::function<double(EvoRegression::EvoDataSet const& dataset, int, float)>>(Transform::transform_dataset_copy(dataset, individual, true), boundary_conditions.test_ratio, boundary_conditions.regularization_parameter, solver));});
     return generation;
 };
 
@@ -374,12 +374,12 @@ EvoRegression::EvoDataSet Transform::transform_dataset_copy(EvoRegression::EvoDa
  * The fitness is calculated as the sum of squares of errors of the solver on the dataset.
  */
 template <typename T>
-double EvoMath::get_fitness(EvoRegression::EvoDataSet const& dataset, T solver) {
-    return solver(dataset);
+double EvoMath::get_fitness(EvoRegression::EvoDataSet const& dataset, int test_ratio, float regularization_coefficient, T solver) {
+    return solver(dataset, test_ratio, regularization_coefficient);
 }
 
 // Explicit instantiation
-template double EvoMath::get_fitness(EvoRegression::EvoDataSet const& dataset, std::function<double(EvoRegression::EvoDataSet const&)> solver);
+template double EvoMath::get_fitness(EvoRegression::EvoDataSet const& dataset, int test_ratio, float regularization_coefficient, std::function<double(EvoRegression::EvoDataSet const&, int, float)> solver);
 
 /**
  * @brief Extracts a column from a 1D vector representing a 2D matrix.

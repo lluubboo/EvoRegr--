@@ -24,7 +24,6 @@ class EvoCore : public IEvoAPI {
     Eigen::MatrixXd testing_result;
 
     // settings
-
     EvoBoundaryConditions boundary_conditions;
 
     // population containers used in main loop
@@ -38,7 +37,7 @@ class EvoCore : public IEvoAPI {
     std::vector<LRUCache<std::string, double>> caches;
 
     // solver functor
-    std::function<double(EvoRegression::EvoDataSet const&)> solver;
+    std::function<double(EvoRegression::EvoDataSet const&, int test_ratio, float regularizaton_parameter)> solver;
 
     // titan 
     EvoIndividual titan;
