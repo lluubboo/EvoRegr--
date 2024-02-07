@@ -114,9 +114,12 @@ double ColPivHouseholderQrSolver::operator()(EvoRegression::EvoDataSet const& da
     auto test_predictor = dataset.predictor.block(num_train, 0, dataset.predictor.rows() - num_train, dataset.predictor.cols());
     auto test_target = dataset.target.segment(num_train, dataset.target.size() - num_train);
 
+    // Identity matrix
+    Eigen::MatrixXd identity_matrix = Eigen::MatrixXd::Identity(train_predictor.cols(), train_predictor.cols());
+
     // Calculate coefficients using training data
     Eigen::MatrixXd predictor_transposed = train_predictor.transpose();
-    Eigen::VectorXd coefficients = (predictor_transposed * train_predictor).colPivHouseholderQr().solve(predictor_transposed * train_target);
+    Eigen::VectorXd coefficients = (predictor_transposed * train_predictor + regularizaton_parameter * identity_matrix).colPivHouseholderQr().solve(predictor_transposed * train_target);
 
     // Check if the result is usable (no NaN or infinite values)
     if (!coefficients.hasNaN() && coefficients.allFinite()) {
