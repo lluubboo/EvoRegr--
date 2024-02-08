@@ -34,6 +34,20 @@ namespace Migration {
 
 namespace Transform {
 
+    struct TemporarySplittedDataset {
+        Eigen::Block<Eigen::MatrixXd> train_predictor;
+        Eigen::Block<Eigen::MatrixXd> test_predictor;
+        Eigen::VectorBlock<Eigen::VectorXd> train_target;
+        Eigen::VectorBlock<Eigen::VectorXd> test_target;
+
+        TemporarySplittedDataset(EvoRegression::EvoDataSet& dataset, int test_rows) :
+            train_predictor(dataset.predictor.block(0, 0, dataset.predictor.rows() - test_rows, dataset.predictor.cols())),
+            test_predictor(dataset.predictor.block(dataset.predictor.rows() - test_rows, 0, test_rows, dataset.predictor.cols())),
+            train_target(dataset.target.segment(0, dataset.target.size() - test_rows)),
+            test_target(dataset.target.segment(dataset.target.size() - test_rows, test_rows))
+        {}
+    };
+
     void full_predictor_transform(Eigen::MatrixXd&, EvoIndividual const&);
     void full_target_transform(Eigen::VectorXd&, EvoIndividual const&);
 

@@ -161,6 +161,19 @@ void EvoCore::call_predict_method() {
         elapsed.count()
     );
 
+    EvoRegression::Log::get_logger()->info("Starting optimization process...");
+
+    start = std::chrono::high_resolution_clock::now();
+    optimize();
+    end = std::chrono::high_resolution_clock::now();
+
+    elapsed = end - start;
+
+    EvoRegression::Log::get_logger()->info(
+        "Optimization process finished in {} seconds",
+        elapsed.count()
+    );
+
     titan_postprocessing();
     log_result();
 }
@@ -304,6 +317,36 @@ void EvoCore::predict() {
     EvoRegression::Log::get_logger()->info("Evolution process finished");
 }
 
+void EvoCore::optimize() {
+
+    EvoRegression::EvoDataSet input = Transform::transform_dataset_copy(original_dataset, titan, true);
+
+    // prepare data
+    Transform::TemporarySplittedDataset dataset(
+        input,
+        input.predictor.rows() * boundary_conditions.test_ratio / 100
+    );
+
+    // Define the range of regularization coefficients to try
+    std::vector<std::vector<double>> alphas;
+    for (double alpha = 0.01; alpha <= 100.0; alpha += 0.01) {
+        alphas.push_back({ alpha , std::numeric_limits<double>::max() });
+    }
+
+    for (auto& alpha : alphas) {
+
+        // Perform Ridge Regression with the current alpha
+        Eigen::MatrixXd I = Eigen::MatrixXd::Identity(dataset.train_predictor.cols(), dataset.train_predictor.cols());
+        Eigen::VectorXd beta = (dataset.train_predictor.transpose() * dataset.train_predictor + alpha[0] * I).colPivHouseholderQr().solve(dataset.train_predictor.transpose() * dataset.train_target);
+
+        alpha[1] = (dataset.test_target - (dataset.test_predictor * beta)).squaredNorm() / dataset.test_target.size();
+    }
+
+    for (auto alpha : alphas) {
+        EvoRegression::Log::get_logger()->info("alpha: {}, mss: {}", alpha[0], alpha[1]);
+    }
+}
+
 void EvoCore::rank_past_generation() {
     // find group of generation elites for each island
 
@@ -417,11 +460,11 @@ void EvoCore::titan_postprocessing() {
     titan_dataset_test.target = titan_dataset_test.target.bottomRows(result_rows);
 
     // titan detailed result
-    titan_result = solve_system_detailed(titan_dataset_training.predictor, titan_dataset_training.target);
+    titan_result = solve_system_detailed(titan_dataset_training.predictor, titan_dataset_training.target, boundary_conditions.regularization_parameter);
 
     // result matrices
-    training_result = EvoRegression::get_regression_summary_matrix(titan, titan_result.theta, titan_dataset_training);
-    testing_result = EvoRegression::get_regression_summary_matrix(titan, titan_result.theta, titan_dataset_test);
+    titan_training_result = EvoRegression::get_regression_summary_matrix(titan, titan_result.theta, titan_dataset_training);
+    titan_testing_result = EvoRegression::get_regression_summary_matrix(titan, titan_result.theta, titan_dataset_test);
 
     EvoRegression::Log::get_logger()->info("Titan postprocessing finished.");
 }
@@ -437,30 +480,30 @@ void EvoCore::log_result() {
     std::stringstream table;
 
     table << EvoRegression::get_regression_training_table(
-        training_result.data(),
+        titan_training_result.data(),
         titan_dataset_training.target.size() * 4
     );
 
     table << EvoRegression::get_regression_testing_table(
-        testing_result.data(),
+        titan_testing_result.data(),
         titan_dataset_test.target.size() * 4
     );
 
     table << EvoRegression::get_training_result_metrics_table(
         {
-            Statistics::median(training_result.col(2).data(), training_result.col(2).size()),
-            Statistics::standard_deviation(training_result.col(2).data(), training_result.col(2).size()),
-            Statistics::cod(training_result.col(0).data(), training_result.col(2).data(),training_result.col(0).size()),
-            Statistics::coda(training_result.col(0).data(), training_result.col(2).data(), training_result.col(0).size(), titan_result.theta.size())
+            Statistics::median(titan_training_result.col(2).data(), titan_training_result.col(2).size()),
+            Statistics::standard_deviation(titan_training_result.col(2).data(), titan_training_result.col(2).size()),
+            Statistics::cod(titan_training_result.col(0).data(), titan_training_result.col(2).data(),titan_training_result.col(0).size()),
+            Statistics::coda(titan_training_result.col(0).data(), titan_training_result.col(2).data(), titan_training_result.col(0).size(), titan_result.theta.size())
         }
     );
 
     table << EvoRegression::get_test_result_metrics_table(
         {
-            Statistics::median(testing_result.col(2).data(), testing_result.col(2).size()),
-            Statistics::standard_deviation(testing_result.col(2).data(), testing_result.col(2).size()),
-            Statistics::cod(testing_result.col(0).data(), testing_result.col(2).data(),testing_result.col(0).size()),
-            Statistics::coda(testing_result.col(0).data(), testing_result.col(2).data(), testing_result.col(0).size(), titan_result.theta.size())
+            Statistics::median(titan_testing_result.col(2).data(), titan_testing_result.col(2).size()),
+            Statistics::standard_deviation(titan_testing_result.col(2).data(), titan_testing_result.col(2).size()),
+            Statistics::cod(titan_testing_result.col(0).data(), titan_testing_result.col(2).data(),titan_testing_result.col(0).size()),
+            Statistics::coda(titan_testing_result.col(0).data(), titan_testing_result.col(2).data(), titan_testing_result.col(0).size(), titan_result.theta.size())
         }
     );
 

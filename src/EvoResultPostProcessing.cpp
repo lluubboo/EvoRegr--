@@ -173,11 +173,11 @@ std::string EvoRegression::get_training_result_metrics_table(std::vector<double>
 Eigen::MatrixXd EvoRegression::get_regression_summary_matrix(
     const EvoIndividual& titan,
     const Eigen::VectorXd& regression_coefficients,
-    const EvoRegression::EvoDataSet& original
+    const EvoRegression::EvoDataSet& dataset
 ) {
     // get target and predicted target for comparison
-    Eigen::VectorXd target = original.target;
-    Eigen::VectorXd prediction = original.predictor * regression_coefficients;
+    Eigen::VectorXd target = dataset.target;
+    Eigen::VectorXd prediction = dataset.predictor * regression_coefficients;
 
     // transform target back to original values for presentation
     auto& transformer = titan.y_transformer_chromosome.at(0);
@@ -186,7 +186,7 @@ Eigen::MatrixXd EvoRegression::get_regression_summary_matrix(
 
     // assembly result matrix
     const int numColumns = 4;
-    Eigen::MatrixXd regression_result_matrix(original.predictor.rows(), numColumns);
+    Eigen::MatrixXd regression_result_matrix(dataset.predictor.rows(), numColumns);
     regression_result_matrix.col(0) = target;
     regression_result_matrix.col(1) = prediction;
     regression_result_matrix.col(2) = target - prediction;
