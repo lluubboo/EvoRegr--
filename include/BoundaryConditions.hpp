@@ -21,6 +21,9 @@ struct EvoBoundaryConditions {
     size_t migrants_count;                 
     size_t elites_count;
     std::vector<std::array<size_t, 2>> island_borders;
+    size_t test_set_size;
+    size_t training_set_size;
+
 
     EvoBoundaryConditions() :
         island_generation_size(100),
@@ -36,7 +39,9 @@ struct EvoBoundaryConditions {
         global_generation_size(island_generation_size* island_count),
         migrants_count(static_cast<size_t>((global_generation_size* migration_ratio) / 100)),
         elites_count(static_cast<size_t>((island_generation_size * 5) / 100)),
-        island_borders(0)
+        island_borders(0),
+        test_set_size(0),
+        training_set_size(0)
     {
 
         // Initialize island_borders
@@ -72,7 +77,9 @@ struct EvoBoundaryConditions {
         global_generation_size(island_generation_size* island_count),
         migrants_count(static_cast<size_t>((global_generation_size* migration_ratio) / 100)),
         elites_count(static_cast<size_t>((island_generation_size * 5) / 100)),
-        island_borders(0)
+        island_borders(0),
+        test_set_size(0),
+        training_set_size(0)
     {
 
         // Initialize island_borders

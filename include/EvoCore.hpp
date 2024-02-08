@@ -11,7 +11,6 @@
 
 class EvoCore : public IEvoAPI {
 
-
     EvoRegression::EvoDataSet original_dataset;
 
     EvoRegression::EvoDataSet titan_dataset_training, titan_dataset_test, titan_dataset_full;
@@ -33,13 +32,14 @@ class EvoCore : public IEvoAPI {
     std::vector<LRUCache<std::string, double>> caches;
 
     // solver functor
-    std::function<double(EvoRegression::EvoDataSet const&, int test_ratio, float regularizaton_parameter)> solver;
+    std::function<double(EvoRegression::EvoDataSet&, int test_ratio, float regularizaton_parameter)> solver;
 
     // titan 
     EvoIndividual titan, optitan;
     std::vector<EvoIndividual> island_titans;
     RegressionDetailedResult titan_result;
 
+    void finalize_boundary_conditions();
     void prepare_input_datasets(std::tuple<int, std::vector<double>>);
     void prepare_for_prediction();
     void predict();

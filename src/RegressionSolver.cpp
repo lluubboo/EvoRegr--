@@ -11,25 +11,25 @@ RegressionDetailedResult solve_system_detailed(Eigen::MatrixXd const& predictor,
     return result;
 }
 
-double LLTSolver::operator()(EvoRegression::EvoDataSet const& dataset, int test_ratio, float regularizaton_parameter) const {
-
-    // Calculate the number of training examples
-    int num_train = static_cast<int>(dataset.predictor.rows() * 0.7);
+double LLTSolver::operator()(EvoRegression::EvoDataSet& original_dataset, int test_set_size, float regularizaton_parameter) const {
 
     // Create blocks for training and testing
-    auto train_predictor = dataset.predictor.block(0, 0, num_train, dataset.predictor.cols());
-    auto train_target = dataset.target.segment(0, num_train);
-    auto test_predictor = dataset.predictor.block(num_train, 0, dataset.predictor.rows() - num_train, dataset.predictor.cols());
-    auto test_target = dataset.target.segment(num_train, dataset.target.size() - num_train);
+    int training_set_size = original_dataset.predictor.rows() - test_set_size;
+
+    Transform::TemporarySplittedDataset dataset_view(
+        original_dataset,
+        test_set_size,
+        training_set_size
+    );
 
     // Calculate coefficients using training data
-    Eigen::MatrixXd predictor_transposed = train_predictor.transpose();
-    Eigen::VectorXd coefficients = (predictor_transposed * train_predictor).llt().solve(predictor_transposed * train_target);
+    Eigen::MatrixXd predictor_transposed = dataset_view.train_predictor.transpose();
+    Eigen::VectorXd coefficients = (predictor_transposed * dataset_view.train_predictor).llt().solve(predictor_transposed * dataset_view.train_target);
 
     // Check if the result is usable (no NaN or infinite values)
     if (!coefficients.hasNaN() && coefficients.allFinite()) {
         // Calculate fitness using test data
-        return (test_target - (test_predictor * coefficients)).squaredNorm() / test_target.size();
+        return (dataset_view.test_target - (dataset_view.test_predictor * coefficients)).squaredNorm() / dataset_view.test_target.size();
     }
     else {
         // Set sum of squares errors to maximum value
@@ -37,7 +37,7 @@ double LLTSolver::operator()(EvoRegression::EvoDataSet const& dataset, int test_
     }
 }
 
-double LDLTSolver::operator()(EvoRegression::EvoDataSet const& dataset, int test_ratio, float regularizaton_parameter) const {
+double LDLTSolver::operator()(EvoRegression::EvoDataSet& dataset, int test_set_size, float regularizaton_parameter) const {
 
     // Calculate the number of training examples
     int num_train = static_cast<int>(dataset.predictor.rows() * 0.7);
@@ -63,7 +63,7 @@ double LDLTSolver::operator()(EvoRegression::EvoDataSet const& dataset, int test
     }
 }
 
-double ColPivHouseholderQrSolver::operator()(EvoRegression::EvoDataSet const& dataset, int test_ratio, float regularizaton_parameter) const {
+double ColPivHouseholderQrSolver::operator()(EvoRegression::EvoDataSet& dataset, int test_set_size, float regularizaton_parameter) const {
 
     // Calculate the number of training examples
     int num_train = static_cast<int>(dataset.predictor.rows() * 0.7);
@@ -91,4 +91,23 @@ double ColPivHouseholderQrSolver::operator()(EvoRegression::EvoDataSet const& da
         return std::numeric_limits<double>::max();
     }
 }
+
+bool validate_coefficients(Eigen::VectorXd const& regression_coefficients) {
+    return !regression_coefficients.hasNaN() && regression_coefficients.allFinite();
+};
+
+double calculate_fitness(Eigen::VectorXd const& regression_coefficients, Eigen::Block<Eigen::MatrixXd>& predictor_view, Eigen::VectorBlock<Eigen::VectorXd>& target_view) {
+    if (validate_coefficients(regression_coefficients)) {
+
+        // Calculate fitness using test data MSE - mean square error
+        return (target_view - (predictor_view * regression_coefficients)).squaredNorm() / target_view.size();
+    }
+    else {
+
+        // Set sum of squares errors to maximum value, calculation is thus invalid
+        return std::numeric_limits<double>::max();
+    }
+}
+
+
 

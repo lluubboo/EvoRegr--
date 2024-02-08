@@ -43,6 +43,11 @@ void EvoCore::set_boundary_conditions(EvoBoundaryConditions const& boundary_cond
     );
 }
 
+void EvoCore::finalize_boundary_conditions() {
+    boundary_conditions.test_set_size = static_cast<size_t>(original_dataset.predictor.rows() * boundary_conditions.test_ratio / 100);
+    boundary_conditions.training_set_size = original_dataset.predictor.rows() - boundary_conditions.test_set_size;
+}
+
 /**
  * Sets the solver for EvoCore.
  *
@@ -82,7 +87,11 @@ void EvoCore::set_solver(std::string const& solver_name) {
 void EvoCore::load_file(const std::string& filename) {
 
     try {
+        //load data
         prepare_input_datasets(parse_csv<double>(filename));
+
+        // add info about datasets to boundary conditions
+        finalize_boundary_conditions();
     }
     catch (const std::exception& e) {
         EvoRegression::Log::get_logger()->error(
@@ -144,8 +153,8 @@ void EvoCore::prepare_input_datasets(std::tuple<int, std::vector<double>> input)
 }
 
 /**
- * Calls the predict method to perform prediction and logs the elapsed time.
- * After prediction, it performs post-processing and logs the result.
+ * Calls the predict & optimization method to perform prediction and logs the elapsed time.
+ * After prediction process, it performs post-processing and logs the result.
  */
 void EvoCore::call_predict_method() {
     EvoRegression::Log::get_logger()->info("Starting prediction process...");
@@ -291,9 +300,9 @@ void EvoCore::predict() {
                 }
                 else {
                     newborn.evaluate(
-                        EvoMath::get_fitness<std::function<double(EvoRegression::EvoDataSet const& dataset, int, float)>>(
+                        EvoMath::get_fitness<std::function<double(EvoRegression::EvoDataSet& dataset, int, float)>>(
                             Transform::transform_dataset(compute_datasets[island_index], newborn, true),
-                            boundary_conditions.test_ratio,
+                            boundary_conditions.test_set_size,
                             boundary_conditions.regularization_parameter,
                             solver
                         )
@@ -324,7 +333,8 @@ void EvoCore::optimize() {
     // prepare data
     Transform::TemporarySplittedDataset dataset(
         input,
-        input.predictor.rows() * boundary_conditions.test_ratio / 100
+        boundary_conditions.test_set_size,
+        boundary_conditions.training_set_size
     );
 
     // Define the range of regularization coefficients to try

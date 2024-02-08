@@ -37,14 +37,14 @@ void test_transforamtion(std::vector<EvoRegression::EvoDataSet> datasets, std::v
 void test_solve(std::vector<EvoRegression::EvoDataSet> datasets, std::vector<EvoIndividual> population) {
     {
         //solver
-        std::function<double(EvoRegression::EvoDataSet const&, int, float)> solver = ColPivHouseholderQrSolver();
+        std::function<double(EvoRegression::EvoDataSet&, int, float)> solver = ColPivHouseholderQrSolver();
 
         volatile double dummy = 0;
         int i = 0;
 
         Timer timer(population.size(), "SOLVE REGRESSION");
         for (const auto& individual : population) {
-            dummy += EvoMath::get_fitness<std::function<double(EvoRegression::EvoDataSet const& dataset, int, float)>>(datasets[i++], 20, 1, solver);
+            dummy += EvoMath::get_fitness<std::function<double(EvoRegression::EvoDataSet& dataset, int, float)>>(datasets[i++], 20, 1, solver);
         }
     }
 }
@@ -52,14 +52,14 @@ void test_solve(std::vector<EvoRegression::EvoDataSet> datasets, std::vector<Evo
 void test_trans_and_comp(std::vector<EvoRegression::EvoDataSet> datasets, std::vector<EvoIndividual> population) {
     {
         //solver
-        std::function<double(EvoRegression::EvoDataSet const&, int, float)> solver = ColPivHouseholderQrSolver();
+        std::function<double(EvoRegression::EvoDataSet&, int, float)> solver = ColPivHouseholderQrSolver();
 
         volatile double dummy = 0;
         int i = 0;
 
         Timer timer(population.size(), "COMPUTE");
         for (const auto& individual : population) {
-            dummy += EvoMath::get_fitness<std::function<double(EvoRegression::EvoDataSet const& dataset, int, float)>>(Transform::transform_dataset(datasets[i++], individual, true), 20, 1, solver);
+            dummy += EvoMath::get_fitness<std::function<double(EvoRegression::EvoDataSet& dataset, int, float)>>(Transform::transform_dataset(datasets[i++], individual, true), 20, 1, solver);
         }
     }
 }
@@ -67,7 +67,7 @@ void test_trans_and_comp(std::vector<EvoRegression::EvoDataSet> datasets, std::v
 void test_get_fitness_chache(std::vector<EvoRegression::EvoDataSet> datasets, std::vector<EvoIndividual> population) {
     {
         //solver
-        std::function<double(EvoRegression::EvoDataSet const&, int, float)> solver = ColPivHouseholderQrSolver();
+        std::function<double(EvoRegression::EvoDataSet&, int, float)> solver = ColPivHouseholderQrSolver();
 
         //cache
         LRUCache<std::string, double> cache(population.size());
@@ -75,7 +75,7 @@ void test_get_fitness_chache(std::vector<EvoRegression::EvoDataSet> datasets, st
         //fill cache
         int i = 0;
         for (const auto& individual : population) {
-            cache.put(individual.to_string_code(), EvoMath::get_fitness<std::function<double(EvoRegression::EvoDataSet const& dataset, int, float)>>(Transform::transform_dataset(datasets[i++], individual, true), 20, 1, solver));
+            cache.put(individual.to_string_code(), EvoMath::get_fitness<std::function<double(EvoRegression::EvoDataSet& dataset, int, float)>>(Transform::transform_dataset(datasets[i++], individual, true), 20, 1, solver));
         }
 
         {
@@ -164,7 +164,7 @@ int main() {
     std::cout << "Random engine initialized... " << std::endl;
 
     //solver
-    std::function<double(EvoRegression::EvoDataSet const&, int, float)> solver = ColPivHouseholderQrSolver();
+    std::function<double(EvoRegression::EvoDataSet&, int, float)> solver = ColPivHouseholderQrSolver();
 
     std::cout << "Solver engine initialized... " << std::endl;
 

@@ -40,11 +40,11 @@ namespace Transform {
         Eigen::VectorBlock<Eigen::VectorXd> train_target;
         Eigen::VectorBlock<Eigen::VectorXd> test_target;
 
-        TemporarySplittedDataset(EvoRegression::EvoDataSet& dataset, int test_rows) :
-            train_predictor(dataset.predictor.block(0, 0, dataset.predictor.rows() - test_rows, dataset.predictor.cols())),
-            test_predictor(dataset.predictor.block(dataset.predictor.rows() - test_rows, 0, test_rows, dataset.predictor.cols())),
-            train_target(dataset.target.segment(0, dataset.target.size() - test_rows)),
-            test_target(dataset.target.segment(dataset.target.size() - test_rows, test_rows))
+        TemporarySplittedDataset(EvoRegression::EvoDataSet& dataset, int test_rows, int training_rows) :
+            train_predictor(dataset.predictor.block(0, 0, training_rows, dataset.predictor.cols())),
+            test_predictor(dataset.predictor.block(training_rows, 0, test_rows, dataset.predictor.cols())),
+            train_target(dataset.target.segment(0, training_rows)),
+            test_target(dataset.target.segment(training_rows, test_rows))
         {}
     };
 
@@ -62,7 +62,10 @@ namespace Transform {
 namespace EvoMath {
 
     template <typename T>
-    double get_fitness(EvoRegression::EvoDataSet const& dataset, int test_ratio, float regularization_coefficient, T solver);
+    double get_fitness(EvoRegression::EvoDataSet& dataset, int test_set_size, float regularization_coefficient, T solver);
+
+    template <typename T>
+    double get_fitness(EvoRegression::EvoDataSet&& dataset, int test_set_size, float regularization_coefficient, T solver);
 
     template <typename T>
     std::vector<T> extract_column(std::vector<T> data, unsigned int column_count, unsigned int column_index);
@@ -75,7 +78,7 @@ namespace Factory {
     TransformXAllele get_random_transform_xallele(int column_index, XoshiroCpp::Xoshiro256Plus& random_engine);
     TransformYAllele get_random_transform_yallele(XoshiroCpp::Xoshiro256Plus& random_engine);
     RobustAllele get_random_robust_allele(int row_count, XoshiroCpp::Xoshiro256Plus& random_engine);
-    std::vector<EvoIndividual> generate_random_generation(EvoBoundaryConditions, EvoRegression::EvoDataSet, XoshiroCpp::Xoshiro256Plus&, std::function<double(EvoRegression::EvoDataSet const&, int, float)>);
+    std::vector<EvoIndividual> generate_random_generation(EvoBoundaryConditions, EvoRegression::EvoDataSet, XoshiroCpp::Xoshiro256Plus&, std::function<double(EvoRegression::EvoDataSet&, int, float)>);
 
 }
 
