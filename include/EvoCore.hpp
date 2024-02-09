@@ -14,10 +14,8 @@ class EvoCore : public IEvoAPI {
     EvoRegression::EvoDataSet original_dataset;
 
     EvoRegression::EvoDataSet titan_dataset_training, titan_dataset_test, titan_dataset_full;
-    EvoRegression::EvoDataSet optitan_dataset_training, optitan_dataset_test, optitan_dataset_full;
 
     Eigen::MatrixXd titan_training_result, titan_testing_result;
-    Eigen::MatrixXd optitan_training_result, optitan_testing_result;
 
     // settings
     EvoBoundaryConditions boundary_conditions;
@@ -35,7 +33,7 @@ class EvoCore : public IEvoAPI {
     std::function<double(EvoRegression::EvoDataSet&, EvoBoundaryConditions const&)> solver;
 
     // titan 
-    EvoIndividual titan, optitan;
+    EvoIndividual titan;
     std::vector<EvoIndividual> island_titans;
     RegressionDetailedResult titan_result;
 
