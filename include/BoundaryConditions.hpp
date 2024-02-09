@@ -23,6 +23,7 @@ struct EvoBoundaryConditions {
     std::vector<std::array<size_t, 2>> island_borders;
     size_t test_set_size;
     size_t training_set_size;
+    float robustness;
 
 
     EvoBoundaryConditions() :
@@ -41,7 +42,8 @@ struct EvoBoundaryConditions {
         elites_count(static_cast<size_t>((island_generation_size * 5) / 100)),
         island_borders(0),
         test_set_size(0),
-        training_set_size(0)
+        training_set_size(0),
+        robustness(0.2)
     {
 
         // Initialize island_borders
@@ -79,7 +81,8 @@ struct EvoBoundaryConditions {
         elites_count(static_cast<size_t>((island_generation_size * 5) / 100)),
         island_borders(0),
         test_set_size(0),
-        training_set_size(0)
+        training_set_size(0),
+        robustness(0.2)
     {
 
         // Initialize island_borders

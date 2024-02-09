@@ -2,6 +2,7 @@
 #include <Eigen/Dense>
 #include "EvoDataSet.hpp"
 #include "EvoLibrary.hpp"
+#include "BoundaryConditions.hpp"
 
 struct RegressionDataset {
     Eigen::MatrixXd training_predictors;
@@ -12,20 +13,23 @@ struct RegressionDataset {
 
 struct RegressionDetailedResult {
     Eigen::VectorXd theta;
+
+    RegressionDetailedResult() : theta() {}
+    RegressionDetailedResult(Eigen::VectorXd vector) : theta(vector) {}
 };
 
-RegressionDetailedResult solve_system_detailed(Eigen::MatrixXd const& predictors, Eigen::VectorXd const& target, float regularizaton_parameter);
+RegressionDetailedResult solve_system_detailed(EvoRegression::EvoDataSet&, EvoBoundaryConditions const&);
 
 struct LLTSolver {
-    double operator()(EvoRegression::EvoDataSet&, int test_ratio, float regularizaton_parameter) const;
+    double operator()(EvoRegression::EvoDataSet&, EvoBoundaryConditions const&) const;
 };
 
 struct LDLTSolver {
-    double operator()(EvoRegression::EvoDataSet&, int test_ratio, float regularizaton_parameter) const;
+    double operator()(EvoRegression::EvoDataSet&, EvoBoundaryConditions const&) const;
 };
 
 struct ColPivHouseholderQrSolver {
-    double operator()(EvoRegression::EvoDataSet&, int test_ratio, float regularizaton_parameter) const;
+    double operator()(EvoRegression::EvoDataSet&, EvoBoundaryConditions const&) const;
 };
 
 bool validate_coefficients(Eigen::VectorXd const&);

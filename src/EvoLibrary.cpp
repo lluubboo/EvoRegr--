@@ -75,7 +75,7 @@ EvoIndividual Factory::get_random_evo_individual(EvoBoundaryConditions boundarie
         individual.merger_chromosome.push_back(Factory::get_random_merge_allele(i, column_count, boundaries.basis_function_complexity, random_engine));
         individual.x_transformer_chromosome.push_back(Factory::get_random_transform_xallele(i, random_engine));
     }
-    individual.tr_robuster_chromosome.push_back(Factory::get_random_robust_allele(training_row_count, random_engine));
+    individual.tr_robuster_chromosome.push_back(Factory::get_random_robust_allele(training_row_count, boundaries.robustness, random_engine));
     individual.y_transformer_chromosome.push_back(Factory::get_random_transform_yallele(random_engine));
     return individual;
 }
@@ -98,15 +98,14 @@ std::vector<EvoIndividual> Factory::generate_random_generation(
     EvoBoundaryConditions boundary_conditions,
     EvoRegression::EvoDataSet dataset,
     XoshiroCpp::Xoshiro256Plus& random_engine,
-    std::function<double(EvoRegression::EvoDataSet& dataset, int, float)> solver
+    std::function<double(EvoRegression::EvoDataSet& dataset, EvoBoundaryConditions const&)> solver
 ) {
     std::vector<EvoIndividual> generation(boundary_conditions.global_generation_size);
     std::generate(generation.begin(), generation.end(), [&]() {return Factory::get_random_evo_individual(boundary_conditions, dataset, random_engine);});
     std::for_each(generation.begin(), generation.end(), [&](EvoIndividual& individual) {individual.evaluate(
-        EvoMath::get_fitness<std::function<double(EvoRegression::EvoDataSet&, int, float)>>(
+        EvoMath::get_fitness<std::function<double(EvoRegression::EvoDataSet&, EvoBoundaryConditions const&)>>(
             Transform::transform_dataset_copy(dataset, individual, true),
-            boundary_conditions.test_ratio,
-            boundary_conditions.regularization_parameter,
+            boundary_conditions,
             solver
         )
     );});
@@ -189,9 +188,9 @@ TransformYAllele Factory::get_random_transform_yallele(XoshiroCpp::Xoshiro256Plu
  * The RobustAllele object contains a vector of integers representing the rows of the predictor matrix that should be used.
  * The function generates this vector by randomly selecting a subset of the rows from the predictor matrix.
  */
-RobustAllele Factory::get_random_robust_allele(int row_count, XoshiroCpp::Xoshiro256Plus& random_engine) {
+RobustAllele Factory::get_random_robust_allele(int row_count, float robustness, XoshiroCpp::Xoshiro256Plus& random_engine) {
     RobustAllele robust_allele{};
-    int rows_to_erase = row_count / 5.;
+    int rows_to_erase = row_count * robustness;
     std::vector<int> choosen_rows(row_count);
     std::iota(begin(choosen_rows), end(choosen_rows), 0);
     std::shuffle(choosen_rows.begin(), choosen_rows.end(), random_engine);
@@ -237,7 +236,7 @@ void Crossover::cross(EvoIndividual& child, const EvoIndividual& parent1, const 
  * The function first selects a random mutation point in the chromosomes of the individual.
  * Then, it selects a random chromosome to mutate, and finally mutates the allele at the selected mutation point.
  */
-void Mutation::mutate(EvoIndividual& individual, int chromosome_size, int predictor_row_count, int mutation_rate, int basis_function_complexity, XoshiroCpp::Xoshiro256Plus& random_engine) {
+void Mutation::mutate(EvoIndividual& individual, int chromosome_size, int predictor_row_count, int mutation_rate, int basis_function_complexity, float robustness, XoshiroCpp::Xoshiro256Plus& random_engine) {
     int rand_num = RandomNumbers::rand_interval_int(0, 100, random_engine);
     if (rand_num <= mutation_rate) {
         int mutation_index = RandomNumbers::rand_interval_int(0, 3, random_engine);
@@ -250,7 +249,7 @@ void Mutation::mutate(EvoIndividual& individual, int chromosome_size, int predic
             individual.merger_chromosome.at(col) = Factory::get_random_merge_allele(col, chromosome_size, basis_function_complexity, random_engine);
         }
         if (mutation_index == 2) {
-            individual.tr_robuster_chromosome.at(0) = Factory::get_random_robust_allele(predictor_row_count, random_engine);
+            individual.tr_robuster_chromosome.at(0) = Factory::get_random_robust_allele(predictor_row_count, robustness, random_engine);
         }
         if (mutation_index == 3) {
             individual.y_transformer_chromosome.at(0) = Factory::get_random_transform_yallele(random_engine);
@@ -381,19 +380,19 @@ EvoRegression::EvoDataSet Transform::transform_dataset_copy(EvoRegression::EvoDa
  * The fitness is calculated as the sum of squares of errors of the solver on the dataset.
  */
 template <typename T>
-double EvoMath::get_fitness(EvoRegression::EvoDataSet& dataset, int test_set_size, float regularization_coefficient, T solver) {
-    return solver(dataset, test_set_size, regularization_coefficient);
+double EvoMath::get_fitness(EvoRegression::EvoDataSet& dataset, EvoBoundaryConditions const& boundary_conditions, T solver) {
+    return solver(dataset, boundary_conditions);
 }
 
 // Explicit instantiation
-template double EvoMath::get_fitness(EvoRegression::EvoDataSet& dataset, int test_ratio, float regularization_coefficient, std::function<double(EvoRegression::EvoDataSet&, int, float)> solver);
+template double EvoMath::get_fitness(EvoRegression::EvoDataSet& dataset, EvoBoundaryConditions const&, std::function<double(EvoRegression::EvoDataSet&, EvoBoundaryConditions const&)> solver);
 
 template <typename T>
-double EvoMath::get_fitness(EvoRegression::EvoDataSet&& dataset, int test_set_size, float regularization_coefficient, T solver) {
-    return solver(dataset, test_set_size, regularization_coefficient);
+double EvoMath::get_fitness(EvoRegression::EvoDataSet&& dataset, EvoBoundaryConditions const& boundary_conditions, T solver) {
+    return solver(dataset, boundary_conditions);
 }
 
-template double EvoMath::get_fitness(EvoRegression::EvoDataSet&& dataset, int test_ratio, float regularization_coefficient, std::function<double(EvoRegression::EvoDataSet&, int, float)> solver);
+template double EvoMath::get_fitness(EvoRegression::EvoDataSet&& dataset, EvoBoundaryConditions const&, std::function<double(EvoRegression::EvoDataSet&, EvoBoundaryConditions const&)> solver);
 
 /**
  * @brief Extracts a column from a 1D vector representing a 2D matrix.

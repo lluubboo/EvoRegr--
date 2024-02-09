@@ -34,61 +34,6 @@ void test_transforamtion(std::vector<EvoRegression::EvoDataSet> datasets, std::v
     }
 }
 
-void test_solve(std::vector<EvoRegression::EvoDataSet> datasets, std::vector<EvoIndividual> population) {
-    {
-        //solver
-        std::function<double(EvoRegression::EvoDataSet&, int, float)> solver = ColPivHouseholderQrSolver();
-
-        volatile double dummy = 0;
-        int i = 0;
-
-        Timer timer(population.size(), "SOLVE REGRESSION");
-        for (const auto& individual : population) {
-            dummy += EvoMath::get_fitness<std::function<double(EvoRegression::EvoDataSet& dataset, int, float)>>(datasets[i++], 20, 1, solver);
-        }
-    }
-}
-
-void test_trans_and_comp(std::vector<EvoRegression::EvoDataSet> datasets, std::vector<EvoIndividual> population) {
-    {
-        //solver
-        std::function<double(EvoRegression::EvoDataSet&, int, float)> solver = ColPivHouseholderQrSolver();
-
-        volatile double dummy = 0;
-        int i = 0;
-
-        Timer timer(population.size(), "COMPUTE");
-        for (const auto& individual : population) {
-            dummy += EvoMath::get_fitness<std::function<double(EvoRegression::EvoDataSet& dataset, int, float)>>(Transform::transform_dataset(datasets[i++], individual, true), 20, 1, solver);
-        }
-    }
-}
-
-void test_get_fitness_chache(std::vector<EvoRegression::EvoDataSet> datasets, std::vector<EvoIndividual> population) {
-    {
-        //solver
-        std::function<double(EvoRegression::EvoDataSet&, int, float)> solver = ColPivHouseholderQrSolver();
-
-        //cache
-        LRUCache<std::string, double> cache(population.size());
-
-        //fill cache
-        int i = 0;
-        for (const auto& individual : population) {
-            cache.put(individual.to_string_code(), EvoMath::get_fitness<std::function<double(EvoRegression::EvoDataSet& dataset, int, float)>>(Transform::transform_dataset(datasets[i++], individual, true), 20, 1, solver));
-        }
-
-        {
-            volatile double dummy = 0;
-
-            Timer timer(population.size(), "GET FROM CACHE");
-            for (const auto& individual : population) {
-                dummy += cache.get(individual.to_string_code()).value();
-            }
-        }
-    }
-}
-
 Eigen::VectorXd gradescent(EvoRegression::EvoDataSet const& dataset) {
 
     // new theta = old theta - alpha * (X^T * (X * theta - y)) / m
@@ -163,11 +108,6 @@ int main() {
 
     std::cout << "Random engine initialized... " << std::endl;
 
-    //solver
-    std::function<double(EvoRegression::EvoDataSet&, int, float)> solver = ColPivHouseholderQrSolver();
-
-    std::cout << "Solver engine initialized... " << std::endl;
-
     // datasets
     std::vector<EvoRegression::EvoDataSet> datasets(pop_size);
     std::for_each(datasets.begin(), datasets.end(), [&](EvoRegression::EvoDataSet& dataset) {dataset = EvoRegression::EvoDataSet(Eigen::MatrixXd::Random(300, 20), Eigen::VectorXd::Random(300, 20));});
@@ -179,23 +119,7 @@ int main() {
 
     std::cout << "Cache initialized... " << std::endl;
 
-    //create random population
-    EvoBoundaryConditions boundary_conditions = EvoBoundaryConditions(200, 20, 20, 20, 20, 20, 20, 20, 20, 20);
-    std::vector<EvoIndividual> population = Factory::generate_random_generation(boundary_conditions, datasets[0], master_random_engine, solver);
-
-    std::cout << "Population initialized... " << std::endl;
-
     //*********************************************************************************** START TESTS ***********************************************************************************
-
-    test_to_string_method(population);
-
-    test_transforamtion(datasets, population);
-
-    test_solve(datasets, population);
-
-    test_trans_and_comp(datasets, population);
-
-    test_get_fitness_chache(datasets, population);
 
     test_gradescent_vs_colpivhoushodler(datasets);
 

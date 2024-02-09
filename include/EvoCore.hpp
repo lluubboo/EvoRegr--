@@ -32,7 +32,7 @@ class EvoCore : public IEvoAPI {
     std::vector<LRUCache<std::string, double>> caches;
 
     // solver functor
-    std::function<double(EvoRegression::EvoDataSet&, int test_ratio, float regularizaton_parameter)> solver;
+    std::function<double(EvoRegression::EvoDataSet&, EvoBoundaryConditions const&)> solver;
 
     // titan 
     EvoIndividual titan, optitan;

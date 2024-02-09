@@ -44,8 +44,9 @@ void EvoCore::set_boundary_conditions(EvoBoundaryConditions const& boundary_cond
 }
 
 void EvoCore::finalize_boundary_conditions() {
-    boundary_conditions.test_set_size = static_cast<size_t>(original_dataset.predictor.rows() * boundary_conditions.test_ratio / 100);
-    boundary_conditions.training_set_size = original_dataset.predictor.rows() - boundary_conditions.test_set_size;
+    int robust_rows = static_cast<int>(original_dataset.predictor.rows() * (1 - boundary_conditions.robustness));
+    boundary_conditions.test_set_size = static_cast<size_t>(robust_rows * boundary_conditions.test_ratio / 100);
+    boundary_conditions.training_set_size = robust_rows - boundary_conditions.test_set_size;
 }
 
 /**
@@ -230,6 +231,7 @@ void EvoCore::prepare_for_prediction() {
     newborns = std::vector<EvoIndividual>(
         boundary_conditions.global_generation_size
     );
+
     EvoRegression::Log::get_logger()->info("Population of newborns initialized");
     EvoRegression::Log::get_logger()->info("Preparation finished");
 }
@@ -252,7 +254,7 @@ void EvoCore::predict() {
         }
 
         // loop through islands
-#pragma omp parallel for schedule(guided)
+//#pragma omp parallel for schedule(guided)
         for (size_t island_index = 0; island_index < boundary_conditions.island_count; island_index++) {
 
             for (size_t entity_index = boundary_conditions.island_borders[island_index][0]; entity_index <= boundary_conditions.island_borders[island_index][1]; entity_index++) {
@@ -288,6 +290,7 @@ void EvoCore::predict() {
                     original_dataset.predictor.rows(),
                     boundary_conditions.mutation_ratio,
                     boundary_conditions.basis_function_complexity,
+                    boundary_conditions.robustness,
                     random_engines[thread_id]
                 );
 
@@ -300,10 +303,9 @@ void EvoCore::predict() {
                 }
                 else {
                     newborn.evaluate(
-                        EvoMath::get_fitness<std::function<double(EvoRegression::EvoDataSet& dataset, int, float)>>(
+                        EvoMath::get_fitness<std::function<double(EvoRegression::EvoDataSet & dataset, EvoBoundaryConditions const&)>>(
                             Transform::transform_dataset(compute_datasets[island_index], newborn, true),
-                            boundary_conditions.test_set_size,
-                            boundary_conditions.regularization_parameter,
+                            boundary_conditions,
                             solver
                         )
                     );
@@ -312,7 +314,7 @@ void EvoCore::predict() {
             }
         }
 
-        // move newoborns to old population, they are now old
+        // move newborns to old population, they are now old
         std::swap(pensioners, newborns);
 
         // generation postprocessing
@@ -353,7 +355,7 @@ void EvoCore::optimize() {
     }
 
     for (auto alpha : alphas) {
-        EvoRegression::Log::get_logger()->info("alpha: {}, mss: {}", alpha[0], alpha[1]);
+        //EvoRegression::Log::get_logger()->info("alpha: {}, mss: {}", alpha[0], alpha[1]);
     }
 }
 
@@ -470,7 +472,7 @@ void EvoCore::titan_postprocessing() {
     titan_dataset_test.target = titan_dataset_test.target.bottomRows(result_rows);
 
     // titan detailed result
-    titan_result = solve_system_detailed(titan_dataset_training.predictor, titan_dataset_training.target, boundary_conditions.regularization_parameter);
+    titan_result = solve_system_detailed(titan_dataset_training, boundary_conditions);
 
     // result matrices
     titan_training_result = EvoRegression::get_regression_summary_matrix(titan, titan_result.theta, titan_dataset_training);
