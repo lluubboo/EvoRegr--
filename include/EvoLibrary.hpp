@@ -42,9 +42,9 @@ namespace Transform {
 
         TemporarySplittedDataset(EvoRegression::EvoDataSet& dataset, int test_rows, int training_rows) :
             train_predictor(dataset.predictor.block(0, 0, training_rows, dataset.predictor.cols())),
-            test_predictor(dataset.predictor.block(training_rows, 0, test_rows + 1, dataset.predictor.cols())),
+            test_predictor(dataset.predictor.block(training_rows, 0, test_rows, dataset.predictor.cols())),
             train_target(dataset.target.segment(0, training_rows)),
-            test_target(dataset.target.segment(training_rows, test_rows + 1))
+            test_target(dataset.target.segment(training_rows, test_rows))
         {}
     };
 

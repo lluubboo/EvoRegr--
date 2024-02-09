@@ -1,12 +1,12 @@
 #include <Eigen/Dense>
 #include "RegressionSolver.hpp"
 
-RegressionDetailedResult solve_system_detailed(EvoRegression::EvoDataSet& dataset, EvoBoundaryConditions const& boundaries) {
+RegressionDetailedResult solve_system_detailed(EvoRegression::EvoDataSet& dataset, float regularization_parameter) {
     // Identity matrix
     Eigen::MatrixXd identity_matrix = Eigen::MatrixXd::Identity(dataset.predictor.cols(), dataset.predictor.cols());
     // Calculate coefficients using training data
     Eigen::MatrixXd predictor_transposed = dataset.predictor.transpose();
-    return { (predictor_transposed * dataset.predictor + boundaries.regularization_parameter * identity_matrix).colPivHouseholderQr().solve(predictor_transposed * dataset.target) };
+    return { (predictor_transposed * dataset.predictor + regularization_parameter * identity_matrix).colPivHouseholderQr().solve(predictor_transposed * dataset.target) };
 }
 
 double LLTSolver::operator()(EvoRegression::EvoDataSet& original_dataset, EvoBoundaryConditions const& boundaries) const {

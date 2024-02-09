@@ -37,7 +37,7 @@ class EvoView : public Fl_Window {
     int interference_size;
     int mutation_rate;
     int basis_function_complexity;
-    int regularization_parameter;
+    float regularization_parameter;
     int island_count;
     int migration_ratio;
     int migration_interval;

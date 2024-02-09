@@ -25,7 +25,10 @@ void EvoCore::set_boundary_conditions(EvoBoundaryConditions const& boundary_cond
         "Island generation size: {}\n"
         "Generation count: {}\n"
         "Interaction columns: {}\n"
+        "Basis function complexity: {}\n"
+        "Regularization parameter: {}\n"
         "Mutation ratio: {}\n"
+        "Test ratio: {}\n"
         "Island count: {}\n"
         "Migration ratio: {}\n"
         "Migration interval: {}\n"
@@ -34,7 +37,10 @@ void EvoCore::set_boundary_conditions(EvoBoundaryConditions const& boundary_cond
         boundary_conditions.island_generation_size,
         boundary_conditions.generation_count,
         boundary_conditions.interaction_cols,
+        boundary_conditions.basis_function_complexity,
+        boundary_conditions.regularization_parameter,
         boundary_conditions.mutation_ratio,
+        boundary_conditions.test_ratio,
         boundary_conditions.island_count,
         boundary_conditions.migration_ratio,
         boundary_conditions.migration_interval,
@@ -44,9 +50,15 @@ void EvoCore::set_boundary_conditions(EvoBoundaryConditions const& boundary_cond
 }
 
 void EvoCore::finalize_boundary_conditions() {
+    // calculate row count after robustness operation
     int robust_rows = static_cast<int>(original_dataset.predictor.rows() * (1 - boundary_conditions.robustness));
+    // set test and training set sizes
     boundary_conditions.test_set_size = static_cast<size_t>(robust_rows * boundary_conditions.test_ratio / 100);
     boundary_conditions.training_set_size = robust_rows - boundary_conditions.test_set_size;
+    // fix incorrect test size caused by rounding error
+    if (boundary_conditions.test_set_size + boundary_conditions.training_set_size < robust_rows) { ++boundary_conditions.test_set_size; };
+    // optitan regularization parameter
+    optitan_regularization_parameter = boundary_conditions.regularization_parameter;
 }
 
 /**
@@ -254,7 +266,7 @@ void EvoCore::predict() {
         }
 
         // loop through islands
-//#pragma omp parallel for schedule(guided)
+#pragma omp parallel for schedule(guided)
         for (size_t island_index = 0; island_index < boundary_conditions.island_count; island_index++) {
 
             for (size_t entity_index = boundary_conditions.island_borders[island_index][0]; entity_index <= boundary_conditions.island_borders[island_index][1]; entity_index++) {
@@ -330,33 +342,48 @@ void EvoCore::predict() {
 
 void EvoCore::optimize() {
 
+    // transform dataset according to titan
     EvoRegression::EvoDataSet input = Transform::transform_dataset_copy(original_dataset, titan, true);
 
-    // prepare data
+    // prepare training and testing datasets
     Transform::TemporarySplittedDataset dataset(
         input,
         boundary_conditions.test_set_size,
         boundary_conditions.training_set_size
     );
 
-    // Define the range of regularization coefficients to try
-    std::vector<std::vector<double>> alphas;
-    for (double alpha = 0.01; alpha <= 100.0; alpha += 0.01) {
-        alphas.push_back({ alpha , std::numeric_limits<double>::max() });
+    // define the range of regularization coefficients 
+    int alpha_count = 1000000;
+    std::vector<std::vector<double>> alphas(alpha_count, std::vector<double>(2, 0.0));
+    for (int i = 0; i < alpha_count; i++) {
+        alphas[i][0] = i * 0.00001;
     }
 
+    // calculate fitness for each alpha
     for (auto& alpha : alphas) {
 
-        // Perform Ridge Regression with the current alpha
-        Eigen::MatrixXd I = Eigen::MatrixXd::Identity(dataset.train_predictor.cols(), dataset.train_predictor.cols());
-        Eigen::VectorXd beta = (dataset.train_predictor.transpose() * dataset.train_predictor + alpha[0] * I).colPivHouseholderQr().solve(dataset.train_predictor.transpose() * dataset.train_target);
+        // Identity matrix
+        Eigen::MatrixXd identity_matrix = Eigen::MatrixXd::Identity(original_dataset.predictor.cols(), original_dataset.predictor.cols());
 
-        alpha[1] = (dataset.test_target - (dataset.test_predictor * beta)).squaredNorm() / dataset.test_target.size();
+        // Calculate coefficients using training data
+        Eigen::MatrixXd predictor_transposed = dataset.train_predictor.transpose();
+        Eigen::VectorXd coefficients = (predictor_transposed * dataset.train_predictor + alpha[0] * identity_matrix).llt().solve(predictor_transposed * dataset.train_target);
+
+        // fill sse
+        alpha[1] = calculate_fitness(coefficients, dataset.test_predictor, dataset.test_target);
     }
 
-    for (auto alpha : alphas) {
-        //EvoRegression::Log::get_logger()->info("alpha: {}, mss: {}", alpha[0], alpha[1]);
-    }
+    // sort alphas by fitness
+    std::sort(alphas.begin(), alphas.end(), [](std::vector<double> const& a, std::vector<double> const& b) {
+        return a[1] < b[1];
+        }
+    );
+
+    // get the best alpha
+    optitan_regularization_parameter = alphas[0][0];
+
+    EvoRegression::Log::get_logger()->info("Optitan regularization parameter found: {}", optitan_regularization_parameter);
+    EvoRegression::Log::get_logger()->info("Optitan fitness: {}", alphas[0][1]);
 }
 
 void EvoCore::rank_past_generation() {
@@ -457,28 +484,29 @@ void EvoCore::titan_evaluation(EvoIndividual const& individual) {
  *          have already been initialized.
  */
 void EvoCore::titan_postprocessing() {
-    EvoRegression::Log::get_logger()->info("Titan postprocessing has begun.");
+    EvoRegression::Log::get_logger()->info("Titans postprocessing has begun.");
 
-    // get number of rows
-    double test_ratio_fraction = static_cast<double>(boundary_conditions.test_ratio) / 100.0;
-    int result_rows = static_cast<int>(original_dataset.predictor.rows() * test_ratio_fraction);
-
+    // titan
     titan_dataset_training = Transform::transform_dataset_copy(original_dataset, titan, true);
-    titan_dataset_training.predictor = titan_dataset_training.predictor.topRows(original_dataset.predictor.rows() - result_rows);
-    titan_dataset_training.target = titan_dataset_training.target.topRows(original_dataset.predictor.rows() - result_rows);
+    titan_dataset_training.predictor = titan_dataset_training.predictor.topRows(boundary_conditions.training_set_size);
+    titan_dataset_training.target = titan_dataset_training.target.topRows(boundary_conditions.training_set_size);
 
     titan_dataset_test = Transform::transform_dataset_copy(original_dataset, titan, true);
-    titan_dataset_test.predictor = titan_dataset_test.predictor.bottomRows(result_rows);
-    titan_dataset_test.target = titan_dataset_test.target.bottomRows(result_rows);
+    titan_dataset_test.predictor = titan_dataset_test.predictor.bottomRows(boundary_conditions.test_set_size);
+    titan_dataset_test.target = titan_dataset_test.target.bottomRows(boundary_conditions.test_set_size);
 
-    // titan detailed result
-    titan_result = solve_system_detailed(titan_dataset_training, boundary_conditions);
+    // titans detailed result
+    titan_result = solve_system_detailed(titan_dataset_training, boundary_conditions.regularization_parameter);
+    optitan_result = solve_system_detailed(titan_dataset_training, optitan_regularization_parameter);
 
-    // result matrices
+    // titans result matrices
     titan_training_result = EvoRegression::get_regression_summary_matrix(titan, titan_result.theta, titan_dataset_training);
     titan_testing_result = EvoRegression::get_regression_summary_matrix(titan, titan_result.theta, titan_dataset_test);
 
-    EvoRegression::Log::get_logger()->info("Titan postprocessing finished.");
+    optitan_training_result = EvoRegression::get_regression_summary_matrix(titan, optitan_result.theta, titan_dataset_training);
+    optitan_testing_result = EvoRegression::get_regression_summary_matrix(titan, optitan_result.theta, titan_dataset_test);
+
+    EvoRegression::Log::get_logger()->info("Titans postprocessing finished.");
 }
 
 /**
@@ -488,7 +516,7 @@ void EvoCore::titan_postprocessing() {
  * genotype table, and the formula table.
  */
 void EvoCore::log_result() {
-    EvoRegression::Log::get_logger()->info("Logging results...");
+    EvoRegression::Log::get_logger()->info("Logging results of titan...");
     std::stringstream table;
 
     table << EvoRegression::get_regression_training_table(
@@ -522,5 +550,39 @@ void EvoCore::log_result() {
     table << EvoRegression::get_regression_coefficients_table(titan_result.theta.data(), titan_result.theta.size());
     table << EvoRegression::get_genotype_table(titan);
     table << EvoRegression::get_formula_table({ titan.to_math_formula() });
+
+    EvoRegression::Log::get_logger()->info("Logging results of optitan...");
+
+    table << EvoRegression::get_regression_training_table(
+        optitan_training_result.data(),
+        titan_dataset_training.target.size() * 4
+    );
+
+    table << EvoRegression::get_regression_testing_table(
+        optitan_testing_result.data(),
+        titan_dataset_test.target.size() * 4
+    );
+
+    table << EvoRegression::get_training_result_metrics_table(
+        {
+            Statistics::median(optitan_training_result.col(2).data(), optitan_training_result.col(2).size()),
+            Statistics::standard_deviation(optitan_training_result.col(2).data(), optitan_training_result.col(2).size()),
+            Statistics::cod(optitan_training_result.col(0).data(), optitan_training_result.col(2).data(),optitan_training_result.col(0).size()),
+            Statistics::coda(optitan_training_result.col(0).data(), optitan_training_result.col(2).data(), optitan_training_result.col(0).size(), optitan_result.theta.size())
+        }
+    );
+
+    table << EvoRegression::get_test_result_metrics_table(
+        {
+            Statistics::median(optitan_testing_result.col(2).data(), optitan_testing_result.col(2).size()),
+            Statistics::standard_deviation(optitan_testing_result.col(2).data(), optitan_testing_result.col(2).size()),
+            Statistics::cod(optitan_testing_result.col(0).data(), optitan_testing_result.col(2).data(),optitan_testing_result.col(0).size()),
+            Statistics::coda(optitan_testing_result.col(0).data(), optitan_testing_result.col(2).data(), optitan_testing_result.col(0).size(), optitan_result.theta.size())
+        }
+    );
+
+    table << EvoRegression::get_regression_coefficients_table(optitan_result.theta.data(), optitan_result.theta.size());
+
+
     EvoRegression::Log::get_logger()->info("Regression summary:\n{}", table.str());
 }

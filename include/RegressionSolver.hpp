@@ -18,7 +18,7 @@ struct RegressionDetailedResult {
     RegressionDetailedResult(Eigen::VectorXd vector) : theta(vector) {}
 };
 
-RegressionDetailedResult solve_system_detailed(EvoRegression::EvoDataSet&, EvoBoundaryConditions const&);
+RegressionDetailedResult solve_system_detailed(EvoRegression::EvoDataSet&, float regularization_parameter);
 
 struct LLTSolver {
     double operator()(EvoRegression::EvoDataSet&, EvoBoundaryConditions const&) const;
