@@ -39,24 +39,68 @@ template std::tuple<int, std::vector<int>> parse_csv(const std::string&);
 template std::tuple<int, std::vector<float>> parse_csv(const std::string&);
 template std::tuple<int, std::vector<double>> parse_csv(const std::string&);
 
-/**
- * @brief Returns the filename for a regression report.
- * 
- * This function generates a filename for a regression report based on the given prefix and the current date and time.
- * The filename format is "regression_report_prefix_year-month-day_hour-minute.txt".
- * 
- * @param prefix The prefix to be included in the filename.
- * @return The generated filename for the regression report.
- */
-std::string get_report_filename(std::string const& prefix) {
-    std::time_t t = std::time(nullptr);
-    std::tm tm = *std::localtime(&t);
-    std::string filename = prefix + "_";
-    filename += std::to_string(tm.tm_year + 1900) + "-";
-    filename += std::to_string(tm.tm_mon + 1) + "-";
-    filename += std::to_string(tm.tm_mday) + "_";
-    filename += std::to_string(tm.tm_hour) + "-";
-    filename += std::to_string(tm.tm_min) + "-";
-    filename += std::to_string(tm.tm_sec) + ".txt";
-    return filename;
-};
+template <typename T>
+void export_to_csv(const T* data, int datasize, int cols, const std::string& filename, const std::vector<std::string>& headers, IOTools::DataArrangement data_arrangement, const std::string& delimiter) {
+
+    bool print_headers = true;
+
+    if (data == nullptr) {
+        throw std::invalid_argument("Data pointer cannot be null.");
+    }
+
+    if (datasize % cols != 0) {
+        throw std::invalid_argument("Data size must be a multiple of the number of columns.");
+    }
+    if (headers.size() != cols || headers.size() == 0) {
+        print_headers = false;
+        std::cerr << "Number of headers does not match the number of columns. Skipping headers." << std::endl;
+    }
+
+    std::ofstream file(filename);
+    if (!file.is_open()) {
+        throw std::runtime_error("Failed to open file.");
+    }
+
+    if (print_headers) {
+        // Write the headers
+        for (int j = 0; j < cols; ++j) {
+            file << headers[j];
+            if (j < cols - 1) {
+                file << delimiter;
+            }
+        }
+        file << "\n";
+    }
+
+    // Write the data
+    int rows = datasize / cols;
+    if (data_arrangement == IOTools::DataArrangement::RowMajor) {
+        for (int i = 0; i < rows; ++i) {
+            for (int j = 0; j < cols; ++j) {
+                file << data[i * cols + j];
+                if (j < cols - 1) {
+                    file << delimiter;
+                }
+            }
+            file << "\n";
+        }
+    }
+    else {
+        for (int i = 0; i < rows; ++i) {
+            for (int j = 0; j < cols; ++j) {
+                file << data[i + j * rows];
+
+                if (j < cols - 1) {
+                    file << delimiter;
+                }
+            }
+            file << std::endl;
+        }
+    }
+
+    file.close();
+}
+
+template void export_to_csv<double>(const double* data, int datasize, int cols, const std::string& filename, const std::vector<std::string>& headers, IOTools::DataArrangement data_arrangement, const std::string& delimiter);
+template void export_to_csv<float>(const float* data, int datasize, int cols, const std::string& filename, const std::vector<std::string>& headers, IOTools::DataArrangement data_arrangement, const std::string& delimiter);
+template void export_to_csv<int>(const int* data, int datasize, int cols, const std::string& filename, const std::vector<std::string>& headers, IOTools::DataArrangement data_arrangement, const std::string& delimiter);

@@ -198,6 +198,14 @@ void EvoCore::call_predict_method() {
 
     titan_postprocessing();
     log_result();
+
+    EvoRegression::Log::get_logger()->info("Exporting results...");
+    export_result();
+    EvoRegression::Log::get_logger()->info("Results exported");
+
+    EvoRegression::Log::get_logger()->info("Exporting transformed datasets...");
+    export_transformed_dataset();
+    EvoRegression::Log::get_logger()->info("Datasets exported...");
 }
 
 /**
@@ -370,7 +378,7 @@ void EvoCore::optimize() {
         Eigen::VectorXd coefficients = (predictor_transposed * dataset.train_predictor + alpha[0] * identity_matrix).llt().solve(predictor_transposed * dataset.train_target);
 
         // fill sse
-        alpha[1] = calculate_fitness(coefficients, dataset.test_predictor, dataset.test_target);
+        alpha[1] = calculate_fitness(coefficients, input.predictor, input.target);
     }
 
     // sort alphas by fitness
@@ -495,11 +503,15 @@ void EvoCore::titan_postprocessing() {
     titan_dataset_test.predictor = titan_dataset_test.predictor.bottomRows(boundary_conditions.test_set_size);
     titan_dataset_test.target = titan_dataset_test.target.bottomRows(boundary_conditions.test_set_size);
 
+    titan_dataset_full = Transform::transform_dataset_copy(original_dataset, titan, true);
+
     // titans detailed result
     titan_result = solve_system_detailed(titan_dataset_training, boundary_conditions.regularization_parameter);
     optitan_result = solve_system_detailed(titan_dataset_training, optitan_regularization_parameter);
 
     // titans result matrices
+    titan_full_result = EvoRegression::get_regression_summary_matrix(titan, titan_result.theta, titan_dataset_full);
+
     titan_training_result = EvoRegression::get_regression_summary_matrix(titan, titan_result.theta, titan_dataset_training);
     titan_testing_result = EvoRegression::get_regression_summary_matrix(titan, titan_result.theta, titan_dataset_test);
 
@@ -585,4 +597,34 @@ void EvoCore::log_result() {
 
 
     EvoRegression::Log::get_logger()->info("Regression summary:\n{}", table.str());
+}
+
+void EvoCore::export_result() {
+    export_to_csv<double>(
+        titan_full_result.data(),
+        titan_full_result.array().size(),
+        titan_full_result.cols(),
+        "regression_result.csv",
+        { "Predictor", "Target", "Error", "Residual" },
+        IOTools::DataArrangement::ColumnMajor
+        );
+}
+
+void EvoCore::export_transformed_dataset() {
+    export_to_csv<double>(
+        titan_dataset_full.predictor.data(),
+        titan_dataset_full.predictor.array().size(),
+        titan_dataset_full.predictor.cols(),
+        "regression_transformed_predictor.csv",
+        {},
+        IOTools::DataArrangement::ColumnMajor
+    );
+    export_to_csv<double>(
+        titan_dataset_full.target.data(),
+        titan_dataset_full.target.array().size(),
+        1,
+        "regression_transformed_target.csv",
+        {},
+        IOTools::DataArrangement::ColumnMajor
+    );
 }

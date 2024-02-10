@@ -15,7 +15,7 @@ class EvoCore : public IEvoAPI {
 
     EvoRegression::EvoDataSet titan_dataset_training, titan_dataset_test, titan_dataset_full;
 
-    Eigen::MatrixXd titan_training_result, titan_testing_result, optitan_training_result, optitan_testing_result;
+    Eigen::MatrixXd titan_training_result, titan_testing_result, titan_full_result, optitan_training_result, optitan_testing_result;
 
     // settings
     EvoBoundaryConditions boundary_conditions;
@@ -54,6 +54,8 @@ class EvoCore : public IEvoAPI {
     void titan_postprocessing();
 
     void log_result();
+    void export_result();
+    void export_transformed_dataset();
 
 public:
 
