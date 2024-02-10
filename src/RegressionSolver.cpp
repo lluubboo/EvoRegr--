@@ -60,7 +60,7 @@ double ColPivHouseholderQrSolver::operator()(EvoRegression::EvoDataSet& original
     Eigen::MatrixXd predictor_transposed = dataset_view.train_predictor.transpose();
     Eigen::VectorXd coefficients = (predictor_transposed * dataset_view.train_predictor + boundaries.regularization_parameter * identity_matrix).colPivHouseholderQr().solve(predictor_transposed * dataset_view.train_target);
 
-    return calculate_fitness(coefficients, dataset_view.test_predictor, dataset_view.test_target);
+    return calculate_fitness(coefficients, original_dataset.predictor, original_dataset.target);
 }
 
 bool validate_coefficients(Eigen::VectorXd const& regression_coefficients) {
@@ -71,6 +71,17 @@ double calculate_fitness(Eigen::VectorXd const& regression_coefficients, Eigen::
     if (validate_coefficients(regression_coefficients)) {
         // Calculate fitness using test data MSE - mean square error
         return (target_view - (predictor_view * regression_coefficients)).squaredNorm() / target_view.size();
+    }
+    else {
+        // Set sum of squares errors to maximum value, calculation is thus invalid
+        return std::numeric_limits<double>::max();
+    }
+}
+
+double calculate_fitness(Eigen::VectorXd const& regression_coefficients, Eigen::MatrixXd& predictor, Eigen::VectorXd& target) {
+    if (validate_coefficients(regression_coefficients)) {
+        // Calculate fitness using test data MSE - mean square error
+        return (target - (predictor * regression_coefficients)).squaredNorm() / target.size();
     }
     else {
         // Set sum of squares errors to maximum value, calculation is thus invalid

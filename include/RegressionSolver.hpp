@@ -35,3 +35,5 @@ struct ColPivHouseholderQrSolver {
 bool validate_coefficients(Eigen::VectorXd const&);
 
 double calculate_fitness(Eigen::VectorXd const&, Eigen::Block<Eigen::MatrixXd>&, Eigen::VectorBlock<Eigen::VectorXd>&);
+
+double calculate_fitness(Eigen::VectorXd const&, Eigen::MatrixXd&, Eigen::VectorXd&);
