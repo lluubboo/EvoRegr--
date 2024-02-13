@@ -600,30 +600,40 @@ void EvoCore::log_result() {
 }
 
 void EvoCore::export_result() {
+    assert(matrix.size() >= 2);
+    auto result_matrix = titan_full_result.block(0, 0, titan_full_result.rows(), titan_full_result.cols() - 1);
     export_to_csv<double>(
-        titan_full_result.data(),
-        titan_full_result.array().size(),
-        titan_full_result.cols(),
+        result_matrix.data(),
+        result_matrix.array().size(),
+        result_matrix.cols(),
         "regression_result.csv",
-        { "Predictor", "Target", "Error", "Residual" },
+        { "Predictor", "Target", "Error" },
         IOTools::DataArrangement::ColumnMajor
-        );
+    );
 }
 
 void EvoCore::export_transformed_dataset() {
+
+    // Get the sizes of the predictor and target matrices
+    int predictorRows = titan_dataset_full.predictor.rows();
+    int predictorCols = titan_dataset_full.predictor.cols();
+    int targetRows = titan_dataset_full.target.rows();
+
+    // Create a new matrix to hold the combined data
+    Eigen::MatrixXd regression_dataset(predictorRows, predictorCols + 1);
+
+    // Copy the predictor data into the new matrix
+    regression_dataset.block(0, 0, predictorRows, predictorCols) = titan_dataset_full.predictor;
+
+    // Copy the target data into the new matrix
+    regression_dataset.block(0, predictorCols, targetRows, 1) = titan_dataset_full.target;
+
+    // Export the new matrix to a CSV file
     export_to_csv<double>(
-        titan_dataset_full.predictor.data(),
-        titan_dataset_full.predictor.array().size(),
-        titan_dataset_full.predictor.cols(),
-        "regression_transformed_predictor.csv",
-        {},
-        IOTools::DataArrangement::ColumnMajor
-    );
-    export_to_csv<double>(
-        titan_dataset_full.target.data(),
-        titan_dataset_full.target.array().size(),
-        1,
-        "regression_transformed_target.csv",
+        regression_dataset.data(),
+        regression_dataset.size(),
+        regression_dataset.cols(),
+        "regression_transformed_dataset.csv",
         {},
         IOTools::DataArrangement::ColumnMajor
     );

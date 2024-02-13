@@ -165,7 +165,7 @@ class EExpression {
      */
     template<typename Engine>
     inline std::array<char, 2> get_random_operand(Engine& engine) {
-        std::uniform_int_distribution<int> distribution(0, 5);
+        std::uniform_int_distribution<int> distribution(0, 3);
         if (distribution(engine) == 0) {
             return get_random_constant(engine);
         }
@@ -198,7 +198,7 @@ class EExpression {
      */
     template<typename Engine>
     inline std::array<char, 2> get_random_constant(Engine& engine) {
-        std::uniform_real_distribution<double> distribution(std::nextafter(0.0, 1.0), 100000.0);
+        std::uniform_real_distribution<double> distribution(std::nextafter(0.0, 1.0), 3e8);
         _constants.push_back(distribution(engine));
         return { 'c', static_cast<char>('0' + _constants.size() - 1) };
     }
